@@ -13,6 +13,7 @@ import {
   impliedAnswers,
   introSummary,
   isDontKnowOption,
+  LOCATION_QUESTION_ID,
   matchSetFor,
   mergeParsedAnswers,
   nextAsk,
@@ -84,12 +85,12 @@ export function SourcingExperience() {
   /** Options selected on the active ask, answered from the pinned bottom bar. */
   const [picked, setPicked] = useState<string[]>([]);
   const [thinking, setThinking] = useState(false);
-  /** Whether the agent pane is open. Closing it hands the width to the rail. */
+  /** Whether the define pane is open. Collapsing hands the width to the results. */
   const [agentOpen, setAgentOpen] = useState(true);
-  /* Phones lead with the results; the agent waits in the bottom tab. */
-  useEffect(() => {
-    if (window.matchMedia("(max-width: 640px)").matches) setAgentOpen(false);
-  }, []);
+  /** Phone view: which of the three stages the tab bar is showing. */
+  const [mobileTab, setMobileTab] = useState<"define" | "evaluate" | "engage">("evaluate");
+  /** Suppliers currently on the engage rail, reported up for the stage bar. */
+  const [railCount, setRailCount] = useState(0);
   /**
    * Compact accordion of every ask so far — answered, skipped, or still open —
    * so the buyer can scan the run and jump back into a question.
@@ -97,10 +98,6 @@ export function SourcingExperience() {
   const [browseAsks, setBrowseAsks] = useState(false);
   /** Deep Drawing hand-off confirm, opened from the process question. */
   const [deepDrawGateOpen, setDeepDrawGateOpen] = useState(false);
-  /** Left pane width in px; dragged via the divider. */
-  const [leftWidth, setLeftWidth] = useState(550);
-  const [dragging, setDragging] = useState(false);
-  const mainRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -122,66 +119,11 @@ export function SourcingExperience() {
     timers.current.push(setTimeout(fn, ms));
   }, []);
 
-  const startDrag = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDragging(true);
+  /** Engage tray's Refine: jump back into the define stage. */
+  const openDefine = useCallback(() => {
+    setMobileTab("define");
+    setAgentOpen(true);
   }, []);
-
-  const onDrag = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (!dragging || !mainRef.current) return;
-      const rect = mainRef.current.getBoundingClientRect();
-      // Never narrower than a readable question card, never past 70% of the split.
-      const width = event.clientX - rect.left;
-      setLeftWidth(Math.min(rect.width * 0.7, Math.max(360, width)));
-    },
-    [dragging],
-  );
-
-  const endDrag = useCallback(() => setDragging(false), []);
-
-  /* Mobile bottom sheet: swiping down from the grip at the top of the chat
-     follows the finger and dismisses the sheet to reveal the results. The
-     transform is written directly to the pane so tracking stays smooth. */
-  const sheetRef = useRef<HTMLElement>(null);
-  const sheetDrag = useRef<{ startY: number; delta: number } | null>(null);
-
-  const onSheetGripDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    sheetDrag.current = { startY: event.clientY, delta: 0 };
-    event.currentTarget.setPointerCapture(event.pointerId);
-    if (sheetRef.current) sheetRef.current.style.transition = "none";
-  }, []);
-
-  const onSheetGripMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    const drag = sheetDrag.current;
-    const pane = sheetRef.current;
-    if (!drag || !pane) return;
-    drag.delta = Math.max(0, event.clientY - drag.startY);
-    pane.style.transform = drag.delta > 0 ? `translateY(${drag.delta}px)` : "";
-  }, []);
-
-  const onSheetGripUp = useCallback(() => {
-    const drag = sheetDrag.current;
-    const pane = sheetRef.current;
-    sheetDrag.current = null;
-    if (!drag || !pane) return;
-    pane.style.transition = "transform 0.2s ease";
-    if (drag.delta > 110) {
-      // Past the dismiss threshold: finish the slide, then actually close.
-      pane.style.transform = "translateY(100%)";
-      later(200, () => {
-        setAgentOpen(false);
-        pane.style.transform = "";
-        pane.style.transition = "";
-      });
-    } else {
-      pane.style.transform = "";
-      later(220, () => {
-        pane.style.transition = "";
-      });
-    }
-  }, [later]);
 
   /** Queue the next question, or wrap up when nothing is left worth asking. */
   const advance = useCallback(
@@ -421,6 +363,14 @@ export function SourcingExperience() {
         ...answers.filter((answer) => answer.questionId !== questionId),
         { questionId, values, skipped: false },
       ];
+
+      // Location lives in the results header and All Filters drawer only —
+      // it never takes a card in the define pane.
+      if (questionId === LOCATION_QUESTION_ID) {
+        setAnswers(updated);
+        return;
+      }
+
       const activeSame = transcript.some(
         (entry) =>
           entry.kind === "ask" &&
@@ -615,6 +565,13 @@ export function SourcingExperience() {
     answerActive(picked, false);
   };
 
+  /* Stage bar counts: questions settled, suppliers matching, rail picks. */
+  const stageQuestionIds = browseableQuestionIds();
+  const answeredCount = stageQuestionIds.filter((id) =>
+    answers.some((answer) => answer.questionId === id),
+  ).length;
+  const matchCount = simulatedMatchCount(answers);
+
   /** Full questionnaire for browse mode — answered, skipped, active, or not yet asked. */
   const browseItems: BrowseItem[] = [];
   for (const questionId of browseableQuestionIds()) {
@@ -670,31 +627,62 @@ export function SourcingExperience() {
         }}
       />
 
+      {/* Stage bar: the three phases of the run, sized to the panes below. */}
+      <div className="stage-bar" aria-label="Sourcing stages">
+        <div className="stage-cell stage-define">
+          <span className="stage-num" aria-hidden="true">1</span>
+          <span className="stage-label">Define</span>
+        </div>
+        <div className="stage-cell stage-evaluate">
+          <span className="stage-num" aria-hidden="true">2</span>
+          <span className="stage-label">Evaluate</span>
+          <span className="stage-note">
+            <strong>{matchCount.toLocaleString()}</strong> of{" "}
+            {CATEGORY_SUPPLIER_COUNT.toLocaleString()} match
+          </span>
+        </div>
+        <div className="stage-cell stage-engage">
+          <span className="stage-num" aria-hidden="true">3</span>
+          <span className="stage-label">Engage</span>
+          <span className="stage-note">{railCount} selected</span>
+        </div>
+      </div>
+
+      {/* Phone: the stages become tabs that swap the single column. */}
+      <div className="mobile-tabs" role="tablist" aria-label="Sourcing stages">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileTab === "define"}
+          onClick={() => setMobileTab("define")}
+        >
+          1 Define{answeredCount >= stageQuestionIds.length ? " ✓" : ""}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileTab === "evaluate"}
+          onClick={() => setMobileTab("evaluate")}
+        >
+          2 Evaluate
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileTab === "engage"}
+          onClick={() => setMobileTab("engage")}
+        >
+          3 Engage{railCount > 0 ? ` · ${railCount}` : ""}
+        </button>
+      </div>
+
       <main
         className="app-main"
-        ref={mainRef}
-        data-dragging={dragging || undefined}
         data-agent-closed={!agentOpen || undefined}
-        style={{ gridTemplateColumns: agentOpen ? `${leftWidth}px auto 1fr` : "1fr" }}
+        data-mobile-tab={mobileTab}
       >
         {/* Left: define your need */}
-        <section
-          className="pane pane-left"
-          aria-label="Define your need"
-          hidden={!agentOpen}
-          ref={sheetRef}
-        >
-          {/* Mobile-only grab handle: swipe down to reveal the results. */}
-          <div
-            className="sheet-grip"
-            aria-hidden="true"
-            onPointerDown={onSheetGripDown}
-            onPointerMove={onSheetGripMove}
-            onPointerUp={onSheetGripUp}
-            onPointerCancel={onSheetGripUp}
-          >
-            <span className="sheet-grip-bar" />
-          </div>
+        <section className="pane pane-left" aria-label="Define your need" hidden={!agentOpen}>
           <div className="agent-card">
             <div className="agent-body" ref={scrollRef}>
             <div className="agent-header">
@@ -702,10 +690,8 @@ export function SourcingExperience() {
                 <l-icon name="sparkles" fill />
               </span>
               <div className="agent-header-copy flex-1">
-                <h4 className="mar-0">Intelligently refine your search</h4>
-                <p className="agent-searching mar-0">
-                  Answer questions to match with the right supplier for your need
-                </p>
+                <h4 className="mar-0">Smart filter your search</h4>
+                <p className="agent-searching mar-0">Find the perfect supplier</p>
               </div>
             </div>
             <div className="transcript" data-browse={browseAsks || undefined}>
@@ -847,119 +833,60 @@ export function SourcingExperience() {
                     </button>
                   </form>
                 )}
-                {/* Phone sheet: the results header is hidden behind the sheet,
-                    so the live match count rides above the controls. */}
-                <p className="footer-match-note mar-0">
-                  <span className="txt-blue-100 font-semi">
-                    {simulatedMatchCount(answers).toLocaleString()}
-                  </span>{" "}
-                  suppliers of {CATEGORY_SUPPLIER_COUNT.toLocaleString()} verified suppliers match
-                  your query.
-                </p>
+                {/* Footer toolbar, per the reference: collapse, back, skip,
+                    undo, and the all-questions accordion. */}
                 <div className="answer-actions">
-                  <div className="answer-actions-start">
-                    <button
-                      className="ghost-button answer-tool"
-                      type="button"
-                      title="Close chat"
-                      aria-label="Close chat"
-                      onClick={closeChat}
-                    >
-                      <svg
-                        className="panel-collapse-icon"
-                        viewBox="0 0 16 16"
-                        width="16"
-                        height="16"
-                        aria-hidden="true"
-                      >
-                        <rect
-                          x="1.25"
-                          y="1.25"
-                          width="13.5"
-                          height="13.5"
-                          rx="2.5"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.4"
-                        />
-                        <path
-                          d="M5.25 2.5v11"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.4"
-                          strokeLinecap="round"
-                        />
-                        <path
-                          d="M10.75 5.25 8.25 8l2.5 2.75"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="answer-actions-nav">
-                    <button
-                      className="ghost-button"
-                      type="button"
-                      disabled={!canGoBack || browseAsks}
-                      onClick={goBack}
-                    >
-                      <l-icon name="arrow-left" /> Back
-                    </button>
-                    <button
-                      className="ghost-button answer-tool"
-                      type="button"
-                      title="Reset your agent"
-                      aria-label="Reset your agent"
-                      onClick={reset}
-                    >
-                      <l-icon name="arrow-rotate-left" aria-hidden="true" />
-                    </button>
-                    <button
-                      className="ghost-button"
-                      type="button"
-                      disabled={browseAsks}
-                      onClick={() => answerActive([], true)}
-                    >
-                      Skip <l-icon name="arrow-right" />
-                    </button>
-                  </div>
-                  <div className="answer-actions-end">
-                    <button
-                      className="ghost-button answer-tool"
-                      type="button"
-                      title={browseAsks ? "Expand questions" : "Browse questions"}
-                      aria-label={browseAsks ? "Expand questions" : "Browse questions"}
-                      aria-pressed={browseAsks}
-                      onClick={() => setBrowseAsks((open) => !open)}
-                    >
-                      <l-icon name="list-ul" />
-                    </button>
-                  </div>
+                  <button
+                    className="ghost-button answer-tool"
+                    type="button"
+                    title={`Collapse to left edge — ${OPT_OUT_HINT}`}
+                    aria-label="Collapse the agent pane"
+                    onClick={closeChat}
+                  >
+                    <l-icon name="angle-left" aria-hidden="true" />
+                  </button>
+                  <button
+                    className="define-back"
+                    type="button"
+                    disabled={!canGoBack || browseAsks}
+                    onClick={goBack}
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    className="define-skip"
+                    type="button"
+                    disabled={browseAsks}
+                    onClick={() => answerActive([], true)}
+                  >
+                    Skip →
+                  </button>
+                  <button
+                    className="define-tool"
+                    type="button"
+                    title="Reset your agent"
+                    aria-label="Reset your agent"
+                    onClick={reset}
+                  >
+                    <l-icon name="arrow-rotate-left" aria-hidden="true" />
+                  </button>
+                  <button
+                    className="define-tool"
+                    type="button"
+                    title={browseAsks ? "Expand questions" : "All questions"}
+                    aria-label={browseAsks ? "Expand questions" : "All questions"}
+                    aria-pressed={browseAsks}
+                    onClick={() => setBrowseAsks((open) => !open)}
+                  >
+                    <l-icon name="list-ul" />
+                  </button>
                 </div>
               </div>
             )}
           </div>
         </section>
 
-        {/* The divider hides with the agent pane; the rail is always up. */}
-        <div
-          className="app-divider"
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Resize panels"
-          hidden={!agentOpen}
-          data-dragging={dragging || undefined}
-          onPointerDown={startDrag}
-          onPointerMove={onDrag}
-          onPointerUp={endDrag}
-          onPointerCancel={endDrag}
-        />
-
-        {/* Right: supplier results */}
+        {/* Center + right: supplier results and the engage rail */}
         <section className="pane" aria-label="Supplier results">
           <SupplierResults
             answers={answers}
@@ -967,19 +894,12 @@ export function SourcingExperience() {
             onRemoveAnswer={removeAnswer}
             onApplyFilterAnswer={applyFilterAnswer}
             onClearMappedAnswers={() => removeAnswers(syncableQuestionIds())}
+            onRailCountChange={setRailCount}
+            onRefine={openDefine}
           />
         </section>
 
-        {agentOpen ? (
-          <button
-            type="button"
-            className="exit-agent"
-            title={OPT_OUT_HINT}
-            onClick={closeChat}
-          >
-            Exit Agent <l-icon name="circle-info" />
-          </button>
-        ) : (
+        {!agentOpen && (
           <button
             type="button"
             className="agent-tab"

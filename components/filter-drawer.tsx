@@ -21,6 +21,9 @@ const PLACEHOLDER_GROUPS = [
 type FilterDrawerProps = {
   open: boolean;
   onClose: () => void;
+  /** Questionnaire answers applied to the results, shown as removable pills. */
+  applied: { id: string; title: string; value: string }[];
+  onRemoveApplied: (questionId: string) => void;
   groups: FilterGroup[];
   /** Selected options per group id. */
   picked: Record<string, string[]>;
@@ -39,6 +42,8 @@ type FilterDrawerProps = {
 export function FilterDrawer({
   open,
   onClose,
+  applied,
+  onRemoveApplied,
   groups,
   picked,
   onTogglePicked,
@@ -93,6 +98,24 @@ export function FilterDrawer({
             Save Search
           </button>
         </div>
+
+        {applied.length > 0 && (
+          <div className="answer-pill-row drawer-applied">
+            {applied.map((facet) => (
+              <span className="answer-pill" key={facet.id}>
+                {facet.value}
+                <button
+                  type="button"
+                  className="answer-pill-remove"
+                  aria-label={`Remove ${facet.title}: ${facet.value}`}
+                  onClick={() => onRemoveApplied(facet.id)}
+                >
+                  <l-icon name="xmark" aria-hidden="true" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="drawer-body">
           <section className="drawer-section">

@@ -80,6 +80,93 @@ alwaysApply: false
   dialog preloaded with the top 10 ranked suppliers (`QUICK_CONTACT_COUNT`),
   bypassing the 5-supplier manual selection.
 
+- 2026-08-27 (William Johnson): This `right-rail-*` clone adds a "Select
+  Suppliers" rail (`select-suppliers-rail.tsx`) to the right of the results
+  list: the top 3 ranked suppliers by name, an "Add to shortlist" secondary
+  CTA (saves them), and a "Send RFI to Suppliers" primary CTA (opens the
+  contact modal addressed to those 3). Hidden at ≤1024px.
+- 2026-08-27 (William Johnson): Supplier cards are separated rounded panels —
+  1px border, 8px radius, 12px gap and padding (was flush cards on a
+  hairline-gap gray backdrop).
+- 2026-08-27 (William Johnson): Cards dropped the "Contact Supplier" and
+  "Select" actions; only Save and Visit Website remain. Contact flows now run
+  through the rail RFI, the selection footer, and Auto Contact.
+
+- 2026-08-27 (William Johnson): The rail is titled "Shortlist or Contact
+  Suppliers" (was "Select Suppliers"). Cards swapped the Save bookmark for a
+  "+ Add" secondary CTA left of Visit Website that toggles the supplier on/off
+  the rail list ("✓ Added" when on). The rail auto-seeds with the top 3, which
+  are also deselectable — dismissals are tracked so they stay off; re-adding
+  restores them. Manual additions append in click order.
+- 2026-08-27 (William Johnson): The capability pills row on cards became a
+  requirements summary: green circle-check + "All X requirements met" (exact
+  matches), "Y of X requirements met" (near matches, one answer relaxed), or
+  "Matches your search" before any answers. `CapabilityRow` still exists for
+  the unmounted tile variant.
+
+- 2026-08-27 (William Johnson, reference HTML "Supplier Search 2a — responsive
+  standalone" provided): Full layout rework to the reference's three-stage
+  design, keeping Tailoft tokens/icons and the Canela display font.
+  - Stage bar under the search header: 1 DEFINE ("N of M" questions) /
+    2 EVALUATE ("X of 2,482 match") / 3 ENGAGE ("N selected"), columns sized
+    to the panes below (280 / flex / 320).
+  - Fixed-width define pane (280px desktop, 240px ≤1100px) — the drag divider
+    and resizable split were removed. Pane restyled flat: 30px badge + serif
+    15px header, hairline-separated question sections, single-column radio
+    options, settled answers as tinted "✓ answer / Edit" pills, footer toolbar
+    « / ← Back / Skip → / ↺ / ≡. The mobile bottom-sheet + swipe grip were
+    removed.
+  - Center column: title row carries a 230px location field (wired to the loc
+    answer) + All Filters; answer chips are compact single pills with the
+    label inside (PROCESS Progressive Die ✕). Cards are flat rows separated
+    by hairlines (supersedes the rounded-panel look from earlier today):
+    46px bordered monogram, dot-joined facts line ("City, ST ZIP · N
+    employees · $rev · Est. year"), semibold types line, description with
+    more+, and the requirements summary as a bordered pill with a solid green
+    circle check. Card CTAs are 36px.
+  - Engage rail (320px): "Shortlist & contact suppliers" header with
+    paper-plane badge and subcopy, removable entries (28px monogram, name,
+    location, ✕), "+ Add to shortlist", "Send RFI to N Suppliers", and the
+    Auto Contact CTA moved in from the floating dock (dashed tinted button).
+    The floating Quick Contact pill and the dark selection footer were
+    removed; `SupplierResults` reports the rail count up via
+    `onRailCountChange` for the stage bar.
+  - Responsive per the reference: ≤1100px hides the rail and shows a fixed
+    bottom engage tray (avatar stack, "N suppliers to engage", Send RFI);
+    ≤699px hides the stage bar/nav links/location for mobile tabs
+    (1 Define / 2 Evaluate / 3 Engage · N) that swap the single column, a
+    ✦ Refine tray button jumping back to Define, and a compact card variant
+    (38px logo, +Add only, Visit Website as a foot-row link, media hidden).
+
+- 2026-08-27 (William Johnson, follow-ups): results header scoped to the
+  center column only (no longer runs over the engage rail — header + list now
+  wrapped in `.results-center` beside the rail); define pane header retitled
+  "Smart filter your search"; define option rows bumped to 13px text.
+
+- 2026-08-27 (William Johnson, later tweaks): type sizes — rail CTAs 15px,
+  define question titles 14px, option rows + settled answer pill 13px. Answer
+  chips moved out of the results header into the All Filters drawer (pinned
+  under the actions row), category labels dropped, pills ~8px thinner; the
+  results header now carries its own bottom hairline. Engage rail picks
+  restyled from hairline rows to compact tinted pills (22px monogram,
+  tight name/location stack, hairline-separated ✕).
+
+- 2026-08-27 (William Johnson, engage rail v2 + polish pass): rail redesigned
+  around a drafted RFI — header now counts "N suppliers saved", picks are
+  white grey-outlined name-only chips flowing left-to-right (no truncation),
+  then an "RFI drafted for you" card (green flag pill, headline synthesized
+  from material + process + part answers, "Written from your N logged
+  requirements · …", Preview RFI →), "Send to N Suppliers", and quiet
+  sub-CTAs "+ Add to shortlist" / "Visit Website(s)". Auto Contact and the
+  "+ Add" chip were dropped. Location question removed from the define flow
+  (header field / drawer only; the answer still filters). Card fact rows got
+  their icons back (location-dot/users/landmark/calendar/industry) in dark
+  text; requirements badge tinted green. Stage bar: define count dropped,
+  match note sits beside EVALUATE with the count blue. Results header sheds
+  the location field when the center column is narrow (container query).
+  Done-card CTAs stack full-width; assorted type-size tweaks. Deployed to
+  GitHub Pages via the repo workflow.
+
 ## Open threads
 
 - Contact form submissions go nowhere (prototype); wire up if/when a backend

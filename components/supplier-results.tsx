@@ -3,7 +3,8 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { ContactSupplierModal } from "@/components/contact-supplier-modal";
 import { FilterDrawer, type FilterGroup } from "@/components/filter-drawer";
-import { SupplierCard } from "@/components/supplier-card";
+import { SelectSuppliersRail } from "@/components/select-suppliers-rail";
+import { monogram, SupplierCard } from "@/components/supplier-card";
 import {
   capabilitiesForMaterials,
   certificationsForAnswers,
@@ -22,13 +23,11 @@ import {
   type LoggedAnswer,
 } from "@/lib/simulation";
 import { planScreening, scoreRecord } from "@/lib/screening";
-import { CATEGORY_SUPPLIER_COUNT, type Supplier } from "@/lib/suppliers";
+import { type Supplier } from "@/lib/suppliers";
 
 const PAGE_SIZE = 25;
-/** Suppliers one quote request can go out to. */
-const SELECTION_LIMIT = 5;
-/** Quick Contact addresses the highest-ranked suppliers without selecting. */
-const QUICK_CONTACT_COUNT = 10;
+/** The Select Suppliers rail pre-picks this many top-ranked suppliers. */
+const RAIL_SUPPLIER_COUNT = 3;
 
 /** Short uppercase label shown above each answer chip in the results header. */
 const FACET_LABELS: Record<string, string> = {
@@ -56,6 +55,10 @@ type SupplierResultsProps = {
   onApplyFilterAnswer: (questionId: string, values: string[] | null) => void;
   /** Clears every questionnaire-backed drawer facet in one shot. */
   onClearMappedAnswers: () => void;
+  /** Reports how many suppliers sit on the engage rail, for the stage bar. */
+  onRailCountChange: (count: number) => void;
+  /** Engage tray's Refine control: reopens the define pane. */
+  onRefine: () => void;
 };
 
 /**
@@ -69,10 +72,13 @@ export function SupplierResults({
   onRemoveAnswer,
   onApplyFilterAnswer,
   onClearMappedAnswers,
+  onRailCountChange,
+  onRefine,
 }: SupplierResultsProps) {
   const [page, setPage] = useState(1);
-  const [saved, setSaved] = useState<Set<string>>(new Set());
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  /** Shortlisted supplier ids; nothing renders it since the card Save button
+      left, but the rail's "Add to shortlist" still records the picks. */
+  const [, setSaved] = useState<Set<string>>(new Set());
   /** Draft for the drawer location field while typing; commits into answers. */
   const [locationDraft, setLocationDraft] = useState("");
   /** Classic facet rail, opened from "All Filters". */
@@ -81,13 +87,13 @@ export function SupplierResults({
   const [partnerOnly, setPartnerOnly] = useState(false);
   /** Local-only facets (no questionnaire twin) — e.g. company type. */
   const [localFacetPicks, setLocalFacetPicks] = useState<Record<string, string[]>>({});
-  /** Contact dialog recipients — the clicked card's supplier plus everyone
-      selected; null card means the selection bar opened it. */
-  const [contactFor, setContactFor] = useState<Supplier | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
-  /** Quick Contact floods the dialog with the top-ranked suppliers instead
-      of the manual selection. */
-  const [quickContact, setQuickContact] = useState(false);
+  /** The rail's RFI goes to its pre-picked top suppliers, not the selection. */
+  const [railRfi, setRailRfi] = useState(false);
+  /** Suppliers the buyer added to the rail from card "+ Add" CTAs, in order. */
+  const [railAdded, setRailAdded] = useState<string[]>([]);
+  /** Auto-picked top suppliers the buyer explicitly took back off the rail. */
+  const [railRemoved, setRailRemoved] = useState<Set<string>>(new Set());
   /** Soft shadow under the sticky header once the results list has scrolled. */
   const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -295,51 +301,103 @@ export function SupplierResults({
     value: facet.value,
   }));
 
-  const atSelectionLimit = selected.size >= SELECTION_LIMIT;
+  /** The rail's list: the best-ranked few pre-picked (minus any the buyer
+      dismissed), plus card additions. */
+  const railTop = results.slice(0, RAIL_SUPPLIER_COUNT);
+  const railTopIds = new Set(railTop.map((supplier) => supplier.id));
+  const railBase = railTop.filter((supplier) => !railRemoved.has(supplier.id));
+  const railSuppliers = [
+    ...railBase,
+    ...railAdded
+      .filter((id) => !railTopIds.has(id))
+      .map((id) => results.find((supplier) => supplier.id === id))
+      .filter((supplier): supplier is Supplier => supplier != null),
+  ];
+  const railIds = new Set(railSuppliers.map((supplier) => supplier.id));
 
-  const toggleIn = (set: Set<string>, id: string): Set<string> => {
-    const next = new Set(set);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    return next;
+  /** Card "+ Add" CTA: put the supplier on the rail list (or take it back off).
+      Auto-picked top suppliers come off via the dismissed set, so they don't
+      reappear on the next render; re-adding just clears the dismissal. */
+  const toggleRailAdd = (supplier: Supplier) => {
+    if (railIds.has(supplier.id)) {
+      if (railTopIds.has(supplier.id)) {
+        setRailRemoved((current) => new Set(current).add(supplier.id));
+      }
+      setRailAdded((current) => current.filter((id) => id !== supplier.id));
+      return;
+    }
+    if (railTopIds.has(supplier.id)) {
+      setRailRemoved((current) => {
+        const next = new Set(current);
+        next.delete(supplier.id);
+        return next;
+      });
+      return;
+    }
+    setRailAdded((current) => [...current, supplier.id]);
   };
 
-  const selectedSuppliers = results.filter((supplier) => selected.has(supplier.id));
+  // The engage rail's RFI goes to its own list.
+  const contactRecipients = railRfi ? railSuppliers : [];
 
-  // A card's contact button messages that supplier plus everyone selected, so
-  // the dialog always lists the full recipient set. Quick Contact skips the
-  // manual selection entirely and takes the best-ranked suppliers.
-  const contactRecipients = quickContact
-    ? results.slice(0, QUICK_CONTACT_COUNT)
-    : contactFor && !selected.has(contactFor.id)
-      ? [contactFor, ...selectedSuppliers]
-      : selectedSuppliers;
+  // The stage bar and mobile tabs live above this component; keep their
+  // "N selected" note in step with the rail.
+  useEffect(() => {
+    onRailCountChange(railSuppliers.length);
+  }, [railSuppliers.length, onRailCountChange]);
 
-  const openContact = (supplier: Supplier | null) => {
-    setQuickContact(false);
-    setContactFor(supplier);
+  /** Rail primary CTA: RFI addressed to the pre-picked top suppliers. */
+  const openRailRfi = () => {
+    setRailRfi(true);
     setContactOpen(true);
   };
 
-  const openQuickContact = () => {
-    setQuickContact(true);
-    setContactFor(null);
-    setContactOpen(true);
+  /** Drafted RFI headline: material + process + part type, e.g. "Metal
+      Progressive Die Brackets", falling back to the search query. */
+  const answerValue = (questionId: string) =>
+    logged.find((answer) => answer.questionId === questionId)?.values[0];
+  const draftPieces = [answerValue("material"), answerValue("process")].filter(
+    (value): value is string => value != null,
+  );
+  const draftTitle =
+    draftPieces.length > 0
+      ? [...draftPieces, answerValue("part") ?? "Parts"].join(" ")
+      : query;
+
+  /** A couple of logged requirement values echoed on the draft card. */
+  const requirementPreview = logged
+    .filter((answer) => answer.questionId !== "material" && answer.questionId !== "process")
+    .slice(0, 2)
+    .map((answer) => answer.values[0].toLowerCase());
+
+  /** Rail secondary CTA: save the pre-picked top suppliers. */
+  const shortlistRailSuppliers = () => {
+    setSaved((set) => {
+      const next = new Set(set);
+      for (const supplier of railSuppliers) next.add(supplier.id);
+      return next;
+    });
   };
 
   return (
     <>
+      <div className="results-body">
+      <div className="results-center">
       <div className="results-header" data-scrolled={scrolled || undefined}>
         <div className="results-meta">
           <div className="results-headline">
             <h3 className="mar-0">Suppliers that match your spec</h3>
-            <p className="mar-0 txt-smaller txt-darkblue-75">
-              <span className="txt-blue-100 font-semi">{matchTotal.toLocaleString()}</span> suppliers
-              of {CATEGORY_SUPPLIER_COUNT.toLocaleString()} verified suppliers match your query.
-            </p>
           </div>
-          {/* Location left the header: it's asked as question 3 in the agent
-              flow now, and remains available in the All Filters drawer. */}
+          <label className="location-search results-location">
+            <l-icon name="location-dot" aria-hidden="true" />
+            <input
+              type="text"
+              value={locationDraft}
+              aria-label="Location by State, City, or Zip"
+              placeholder="Location by State, City, or Zip"
+              onChange={(event) => onLocation(event.target.value)}
+            />
+          </label>
           <button
             type="button"
             className="all-filters"
@@ -351,29 +409,9 @@ export function SupplierResults({
             {filterCount > 0 && <span className="all-filters-count">{filterCount}</span>}
           </button>
         </div>
-        {facets.length > 0 && (
-          <div className="answer-pill-row">
-            {facets.map((facet) => (
-              <div className="answer-pill-stack" key={facet.id}>
-                <span className="answer-pill-label">{facet.label}</span>
-                <span className="answer-pill">
-                  {facet.value}
-                  <button
-                    type="button"
-                    className="answer-pill-remove"
-                    aria-label={`Remove ${facet.title}: ${facet.value}`}
-                    onClick={() => onRemoveAnswer(facet.id)}
-                  >
-                    <l-icon name="xmark" aria-hidden="true" />
-                  </button>
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
-      <div className="pane-scroll" ref={scrollRef}>
+        <div className="pane-scroll" ref={scrollRef}>
         <div className="results-list">
           {results.slice(pageStart, pageStart + PAGE_SIZE).map((supplier, index) => (
             <Fragment key={supplier.id}>
@@ -395,12 +433,13 @@ export function SupplierResults({
               )}
               <SupplierCard
                 supplier={supplier}
-                saved={saved.has(supplier.id)}
-                selected={selected.has(supplier.id)}
-                selectDisabled={atSelectionLimit && !selected.has(supplier.id)}
-                onToggleSave={() => setSaved((set) => toggleIn(set, supplier.id))}
-                onToggleSelect={() => setSelected((set) => toggleIn(set, supplier.id))}
-                onContact={() => openContact(supplier)}
+                added={railIds.has(supplier.id)}
+                onToggleAdd={() => toggleRailAdd(supplier)}
+                requirementsMet={
+                  // Near matches were padded in by relaxing one answer.
+                  pageStart + index < exact.length ? logged.length : Math.max(0, logged.length - 1)
+                }
+                requirementsTotal={logged.length}
               />
             </Fragment>
           ))}
@@ -445,53 +484,52 @@ export function SupplierResults({
             </nav>
           )}
         </div>
-        {results.length > 0 && (
-          <div className="quick-contact-dock">
-            <button type="button" className="quick-contact" onClick={openQuickContact}>
-              <l-icon name="sparkles" fill aria-hidden="true" /> Auto Contact Top Suppliers
-            </button>
-          </div>
-        )}
+        </div>
       </div>
 
-      {selected.size > 0 && (
-        <div className="results-footer">
-          <span className="selected-count">
-            <l-icon name="check" aria-hidden="true" />
-            {selected.size}/{SELECTION_LIMIT} Suppliers Selected
+        <SelectSuppliersRail
+          suppliers={railSuppliers}
+          onRemove={toggleRailAdd}
+          onAddToShortlist={shortlistRailSuppliers}
+          onSendRfi={openRailRfi}
+          draftTitle={draftTitle}
+          requirementCount={logged.length}
+          requirementPreview={requirementPreview}
+        />
+      </div>
+
+      {/* Tablet and phone: the engage rail collapses into a fixed bottom tray. */}
+      <div className="engage-tray">
+        <button type="button" className="engage-tray-refine" onClick={onRefine}>
+          <l-icon name="sparkles" fill aria-hidden="true" /> Refine
+        </button>
+        {railSuppliers.length > 0 && (
+          <span className="engage-tray-avatars" aria-hidden="true">
+            {railSuppliers.slice(0, 3).map((supplier) => (
+              <span key={supplier.id}>{monogram(supplier.name)}</span>
+            ))}
           </span>
-          <div className="selected-names">
-            {results
-              .filter((supplier) => selected.has(supplier.id))
-              .map((supplier) => (
-                <button
-                  key={supplier.id}
-                  type="button"
-                  className="name-pill"
-                  aria-label={`Deselect ${supplier.name}`}
-                  onClick={() => setSelected((set) => toggleIn(set, supplier.id))}
-                >
-                  {supplier.name} <l-icon name="xmark" />
-                </button>
-              ))}
-          </div>
-          <div className="footer-actions">
-            <button kind="primary" scale="small" onClick={() => openContact(null)}>
-              Request Quote
-            </button>
-            <button type="button" className="footer-ghost">
-              Shortlist
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+        <span className="engage-tray-note">
+          {railSuppliers.length} supplier{railSuppliers.length === 1 ? "" : "s"} to engage
+        </span>
+        <button
+          kind="primary"
+          scale="small"
+          type="button"
+          disabled={railSuppliers.length === 0}
+          onClick={openRailRfi}
+        >
+          Send RFI
+        </button>
+      </div>
 
       <ContactSupplierModal
         suppliers={contactRecipients}
         open={contactOpen}
         onClose={() => {
           setContactOpen(false);
-          setQuickContact(false);
+          setRailRfi(false);
         }}
         requirements={requirements}
       />
@@ -499,6 +537,8 @@ export function SupplierResults({
       <FilterDrawer
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
+        applied={facets}
+        onRemoveApplied={onRemoveAnswer}
         groups={filterGroups}
         picked={facetPicks}
         onTogglePicked={toggleFacet}

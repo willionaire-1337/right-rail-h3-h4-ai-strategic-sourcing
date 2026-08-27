@@ -7,15 +7,13 @@ import type { Supplier } from "@/lib/suppliers";
 
 type SupplierCardProps = {
   supplier: Supplier;
-  saved: boolean;
-  selected: boolean;
-  /** Set once the quote request is full, so only deselection stays open. */
-  selectDisabled?: boolean;
-  onToggleSave: () => void;
-  onToggleSelect: () => void;
-  /** Opens the contact dialog; the results list owns it so every selected
-      supplier can be addressed at once. */
-  onContact: () => void;
+  /** Whether the supplier is on the Select Suppliers rail list. */
+  added: boolean;
+  onToggleAdd: () => void;
+  /** How many of the buyer's logged requirements this supplier meets. */
+  requirementsMet: number;
+  /** How many requirements the buyer has logged so far. */
+  requirementsTotal: number;
 };
 
 export function monogram(name: string): string {
@@ -111,12 +109,10 @@ export function CapabilityRow({ capabilities }: { capabilities: string[] }) {
 /** One supplier result, matching the reference SRP card content and UX. */
 export function SupplierCard({
   supplier,
-  saved,
-  selected,
-  selectDisabled,
-  onToggleSave,
-  onToggleSelect,
-  onContact,
+  added,
+  onToggleAdd,
+  requirementsMet,
+  requirementsTotal,
 }: SupplierCardProps) {
   const [expanded, setExpanded] = useState(false);
   const clampable = supplier.description.length > 180;
@@ -150,31 +146,14 @@ export function SupplierCard({
         </div>
         <div className="card-actions flex align-items-center gap-2 flex-shrink-0">
           <button
-            kind="neutral-text"
+            kind="primary-outline"
             scale="small"
-            className="card-save"
-            aria-pressed={saved}
-            aria-label={saved ? "Saved" : "Save"}
-            onClick={onToggleSave}
+            className="card-add"
+            aria-pressed={added}
+            aria-label={added ? `${supplier.name} added to selected suppliers` : `Add ${supplier.name} to selected suppliers`}
+            onClick={onToggleAdd}
           >
-            <l-icon name="bookmark" fill={saved || undefined} />{" "}
-            <span className="card-action-label">{saved ? "Saved" : "Save"}</span>
-          </button>
-          <button
-            kind="neutral-text"
-            scale="small"
-            className="card-select"
-            aria-pressed={selected}
-            aria-label={selected ? "Selected" : "Select"}
-            disabled={selectDisabled}
-            title={selectDisabled ? "Quote requests go to at most 5 suppliers" : undefined}
-            onClick={onToggleSelect}
-          >
-            <l-icon name={selected ? "circle-check" : "circle-plus"} />{" "}
-            <span className="card-action-label">{selected ? "Selected" : "Select"}</span>
-          </button>
-          <button kind="neutral" scale="small" className="card-contact" onClick={onContact}>
-            <l-icon name="envelope" fill /> Contact Supplier
+            <l-icon name={added ? "check" : "plus"} /> {added ? "Added" : "Add"}
           </button>
           <button kind="primary" scale="small" className="card-cta" onClick={noop}>
             Visit Website <l-icon name="arrow-up-right-from-square" />
@@ -182,38 +161,37 @@ export function SupplierCard({
         </div>
       </div>
 
-      {/* Fact row — line icons, 14px */}
+      {/* Fact row — quiet dot-joined line, per the reference card */}
       <div className="supplier-facts">
         <span>
-          <l-icon name="location-dot" />
+          <l-icon name="location-dot" aria-hidden="true" />
           <a href="#" onClick={noop}>
             {supplier.city}, {supplier.state} {supplier.zip}
           </a>
         </span>
         {supplier.employees && (
           <span>
-            <l-icon name="users" />
-            {supplier.employees}
+            <l-icon name="users" aria-hidden="true" />
+            {supplier.employees} employees
           </span>
         )}
         {supplier.revenue && (
           <span>
-            <l-icon name="landmark" />
+            <l-icon name="landmark" aria-hidden="true" />
             {supplier.revenue}
           </span>
         )}
         {supplier.founded && (
           <span>
-            <l-icon name="calendar" />
-            {supplier.founded}
+            <l-icon name="calendar" aria-hidden="true" />
+            Est. {supplier.founded}
           </span>
         )}
       </div>
 
       {supplier.companyTypes.length > 0 && (
-        <div className="flex align-items-center gap-2 font-semi">
-          <l-icon name="industry" />
-          {supplier.companyTypes.join(" · ")}
+        <div className="card-types">
+          <l-icon name="industry" aria-hidden="true" /> {supplier.companyTypes.join(" · ")}
         </div>
       )}
 
@@ -237,8 +215,23 @@ export function SupplierCard({
         )}
       </div>
 
-      {/* Capability pills — one line, overflow collapsed into a +X circle */}
-      {supplier.capabilities.length > 0 && <CapabilityRow capabilities={supplier.capabilities} />}
+      {/* Foot row: the requirements badge, with the website link taking the
+          primary button's place in the compact phone variant. */}
+      <div className="card-foot">
+        <span className="req-met">
+          <span className="req-met-check" aria-hidden="true">
+            <l-icon name="check" />
+          </span>
+          {requirementsTotal === 0
+            ? "Matches your search"
+            : requirementsMet >= requirementsTotal
+              ? `All ${requirementsTotal} requirement${requirementsTotal === 1 ? "" : "s"} met`
+              : `${requirementsMet} of ${requirementsTotal} requirements met`}
+        </span>
+        <a href="#" className="card-foot-website" onClick={noop}>
+          Visit Website <l-icon name="arrow-up-right-from-square" />
+        </a>
+      </div>
 
       {/* Media */}
       {media && <MediaTile kind={media} label={`${supplier.name} media`} />}

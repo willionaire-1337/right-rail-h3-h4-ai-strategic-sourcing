@@ -7,6 +7,8 @@
   /* Tailoft's greens bottom out at green-125, which is still light for body
      copy; this is the ink used on answered options and settled answers. */
   --app-color-green-ink: #0a6b4b;
+  /* Fixed define-column width; narrows on tablet. */
+  --define-width: 280px;
 }
 
 html,
@@ -573,51 +575,116 @@ p,
   background: var(--l-color-blue-125, var(--l-color-darkblue-100));
 }
 
+/* Stage bar: the run's three phases, each column sized to the pane below it. */
+.stage-bar {
+  display: flex;
+  align-items: stretch;
+  background: #fbfcfe;
+  border-bottom: 1px solid var(--l-color-border);
+}
+
+.stage-cell {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-2);
+  padding: 10px var(--l-space-5);
+  border-right: 1px solid var(--l-color-border);
+}
+
+.stage-define {
+  width: var(--define-width, 280px);
+  flex-shrink: 0;
+}
+
+.stage-evaluate {
+  flex: 1;
+  min-width: 0;
+}
+
+.stage-engage {
+  width: 320px;
+  flex-shrink: 0;
+  border-right: none;
+}
+
+.stage-num {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--l-radius-full);
+  background: var(--l-color-darkblue-100);
+  color: #fff;
+  font-size: 9px;
+  font-weight: var(--l-font-weight-semibold);
+}
+
+.stage-label {
+  font-size: 10.5px;
+  font-weight: var(--l-font-weight-bold);
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--l-color-darkblue-75);
+}
+
+.stage-note {
+  font-size: 11px;
+  color: var(--l-color-darkblue-50);
+  white-space: nowrap;
+}
+
+.stage-note strong {
+  color: var(--l-color-blue-100);
+  font-weight: var(--l-font-weight-semibold);
+}
+
+/* Phone: the stage bar becomes the tab strip that swaps the single column. */
+.mobile-tabs {
+  display: none;
+  background: #fff;
+  border-bottom: 1px solid var(--l-color-border);
+}
+
+.mobile-tabs button {
+  flex: 1;
+  padding: 9px 0 8px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-75);
+  cursor: pointer;
+}
+
+.mobile-tabs button[aria-selected="true"] {
+  color: var(--l-color-blue-100);
+  font-weight: var(--l-font-weight-bold);
+  border-bottom-color: var(--l-color-blue-100);
+}
+
 .app-main {
   position: relative;
   flex: 1;
   min-height: 0;
-  display: grid;
-  /* Column sizes are set inline from the resizable split state. */
-  grid-template-columns: 45% auto 1fr;
-  width: 100%;
-}
-
-/* Left pane: light blue wash. No outer padding — the footer goes edge to edge. */
-.pane-left {
-  background: var(--l-color-blue-5, #f2f7fd);
-  padding: 0;
-  overflow: hidden;
-}
-
-.app-divider {
-  /* Hairline only — no empty gutter between the left scrollbar and results. */
-  width: 2px;
-  cursor: col-resize;
   display: flex;
   align-items: stretch;
-  justify-content: stretch;
-  position: relative;
-  touch-action: none;
-  background: var(--l-color-border);
-  transition: background 0.12s, width 0.12s;
+  width: 100%;
+  background: #fff;
 }
 
-/* Widen the drag target without adding visible space. */
-.app-divider::before {
-  content: "";
-  position: absolute;
-  inset: 0 -5px;
-}
-
-.app-divider:hover,
-.app-divider[data-dragging] {
-  background: var(--l-color-blue-100);
-}
-
-.app-main[data-dragging] {
-  user-select: none;
-  cursor: col-resize;
+/* Left pane: the fixed-width define column. */
+.pane-left {
+  width: var(--define-width, 280px);
+  flex-shrink: 0;
+  background: #fff;
+  padding: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--l-color-border);
 }
 
 .pane {
@@ -625,23 +692,27 @@ p,
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
 }
 
-/* `hidden` must beat the display rules above when the rail is collapsed. */
-.pane[hidden],
-.app-divider[hidden] {
+.pane:not(.pane-left) {
+  flex: 1;
+}
+
+/* `hidden` must beat the display rules above when the pane is collapsed. */
+.pane[hidden] {
   display: none;
 }
 
-/* Results header — full-bleed white bar connected to the top of the panel. */
+/* Results header — white bar over the top of the center column. */
 .results-header {
   position: sticky;
   top: 0;
   z-index: 4;
   background: #fff;
+  padding: var(--l-space-4) var(--l-space-5);
   border-bottom: 1px solid var(--l-color-border);
-  padding: var(--l-space-5) var(--l-space-5) var(--l-space-3);
   transition: box-shadow 0.15s ease;
 }
 
@@ -655,6 +726,7 @@ p,
 .results-meta {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--l-space-2);
 }
 
@@ -667,8 +739,8 @@ p,
   margin-top: 2px;
 }
 
-/* Location typeahead in the results header: pin sits inside the field, which
-   carries the border so the icon and text read as one control. */
+/* Location typeahead: pin sits inside the field, which carries the border so
+   the icon and text read as one control. */
 .location-search {
   display: flex;
   align-items: center;
@@ -680,6 +752,19 @@ p,
   border: 1px solid var(--l-color-border);
   border-radius: var(--l-radius-1);
   color: var(--l-color-darkblue-100);
+}
+
+/* The header's own location field: fixed reference width, 8px corners. */
+.results-location {
+  width: 230px;
+  height: 38px;
+  border-radius: 8px;
+  margin-left: auto;
+}
+
+.results-location l-icon {
+  color: var(--l-color-darkblue-100);
+  font-size: 13px;
 }
 
 .location-search:focus-within {
@@ -707,7 +792,7 @@ p,
   align-items: center;
   gap: var(--l-space-2);
   flex-shrink: 0;
-  height: 44px;
+  height: 38px;
   padding: 0 var(--l-space-4);
   background: #fff;
   border: 1px solid var(--l-color-border);
@@ -1008,50 +1093,32 @@ p,
   font-size: 18px;
 }
 
-/* Logged answer in the results header: category label over a dismissible chip.
-   The row never wraps — extra answers scroll sideways on one line. */
+/* Logged answers shown in the All Filters drawer: compact removable chips. */
 .answer-pill-row {
   display: flex;
-  flex-wrap: nowrap;
-  gap: var(--l-space-2);
-  margin-top: var(--l-space-3);
-  padding-top: var(--l-space-3);
-  border-top: 1px solid var(--l-color-border);
-  overflow-x: auto;
-  scrollbar-width: none;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.answer-pill-row::-webkit-scrollbar {
-  display: none;
-}
-
-.answer-pill-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+/* Pill row pinned between the drawer's action row and its scrolling body. */
+.drawer-applied {
   flex-shrink: 0;
-}
-
-.answer-pill-label {
-  font-size: 10px;
-  font-weight: var(--l-font-weight-semibold);
-  letter-spacing: 0.04em;
-  line-height: 1.2;
-  text-transform: uppercase;
-  color: var(--l-color-darkblue-75);
+  padding: 0 var(--l-space-5) var(--l-space-4);
+  border-bottom: 1px solid var(--l-color-border);
+  margin-bottom: var(--l-space-4);
 }
 
 .answer-pill {
   display: inline-flex;
   align-items: center;
-  gap: var(--l-space-2);
+  gap: 6px;
   white-space: nowrap;
-  padding: 3px 8px;
-  border-radius: var(--l-radius-1);
+  padding: 0 8px;
+  border: 1px solid var(--l-color-blue-25, var(--l-color-blue-50, #c6d8f5));
+  border-radius: 6px;
   background: var(--l-color-blue-10);
   color: var(--l-color-blue-100);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: var(--l-font-weight-semibold);
 }
 
@@ -1063,7 +1130,8 @@ p,
   border: none;
   border-left: 1px solid var(--l-color-blue-25);
   border-radius: 0;
-  padding: 2px 0 2px var(--l-space-2);
+  padding: 0 0 0 var(--l-space-2);
+  align-self: stretch;
   margin: -2px 0;
   background: none;
   color: inherit;
@@ -1089,94 +1157,6 @@ p,
 
 .icon-button:hover {
   color: var(--l-color-darkblue-100);
-}
-
-/* Persistent action footer pinned to the bottom of the results rail. */
-/* Selection bar pinned to the foot of the results pane once suppliers are
-   picked: running count, the picks themselves, and the actions they unlock. */
-.results-footer {
-  display: flex;
-  align-items: center;
-  gap: var(--l-space-3);
-  background: var(--l-color-darkblue-100);
-  color: #fff;
-  padding: var(--l-space-2) var(--l-space-4);
-}
-
-.selected-count {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--l-space-2);
-  flex-shrink: 0;
-  font-size: var(--l-font-size-smaller);
-  font-weight: var(--l-font-weight-semibold);
-  white-space: nowrap;
-}
-
-.selected-count l-icon {
-  color: var(--l-color-green-100);
-}
-
-.selected-names {
-  display: flex;
-  align-items: center;
-  gap: var(--l-space-2);
-  flex: 1;
-  min-width: 0;
-  overflow-x: auto;
-}
-
-/* Deselectable pill listing a chosen supplier. */
-.name-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--l-space-2);
-  flex-shrink: 0;
-  padding: 4px 10px;
-  border: 1px solid rgb(255 255 255 / 0.25);
-  border-radius: var(--l-radius-1);
-  background: rgb(255 255 255 / 0.12);
-  color: #fff;
-  font-family: inherit;
-  font-size: var(--l-font-size-smallest);
-  font-weight: var(--l-font-weight-semibold);
-  cursor: pointer;
-}
-
-.name-pill:hover {
-  background: rgb(255 255 255 / 0.22);
-}
-
-.name-pill l-icon {
-  font-size: var(--l-font-size-smallest);
-}
-
-/* Actions the selection unlocks: quote request plus a white secondary. */
-.footer-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--l-space-2);
-  flex-shrink: 0;
-}
-
-.footer-actions button {
-  height: 36px;
-  font-size: var(--l-font-size-smaller);
-}
-
-.footer-ghost {
-  padding: 0 var(--l-space-4);
-  border: 1px solid #fff;
-  border-radius: var(--l-radius-1);
-  background: #fff;
-  color: var(--l-color-darkblue-100);
-  font-family: inherit;
-  font-weight: var(--l-font-weight-semibold);
-  cursor: pointer;
-}
-
-.footer-ghost:hover {
-  background: var(--l-color-blue-10);
 }
 
 /* Pill reopen control — same 40px height as the footer collapse control. */
@@ -1212,47 +1192,332 @@ p,
   color: var(--l-color-blue-100);
 }
 
-.app-main:has(.results-footer) .agent-tab {
-  bottom: calc(var(--l-space-4) + 60px);
-}
-
-/* Floating white CTA that dismisses the agent pane, anchored to the bottom
-   right of the split so it clears both panes' own footers. */
-.exit-agent {
-  position: absolute;
-  right: var(--l-space-4);
-  bottom: var(--l-space-4);
-  z-index: 6;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--l-space-2);
-  padding: 10px 18px;
-  background: #fff;
-  border: 1px solid var(--l-color-border);
-  border-radius: var(--l-radius-full);
-  box-shadow: 0 4px 16px rgb(9 44 71 / 0.14);
-  color: var(--l-color-darkblue-100);
-  font-family: inherit;
-  font-size: var(--l-font-size-smaller);
-  font-weight: var(--l-font-weight-semibold);
-  cursor: pointer;
-}
-
-/* Step over the selection bar when it appears, so the two never stack. */
-.app-main:has(.results-footer) .exit-agent {
-  bottom: calc(var(--l-space-4) + 60px);
-}
-
-.exit-agent:hover {
-  background: var(--l-color-blue-5, #f2f8fd);
-  border-color: var(--l-color-blue-100);
-  color: var(--l-color-blue-100);
-}
-
 .pane-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+}
+
+/* Results split: the scrolling list on the left, the Select Suppliers rail
+   pinned beside it on the right. */
+.results-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* Header + scrolling list stack — keeps the results header from running
+   across the engage rail. Sized as a container so the header can shed the
+   location field when the column runs narrow. */
+.results-center {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  container-type: inline-size;
+}
+
+/* Too narrow for headline + location + All Filters on one line: drop the
+   location field (it still lives inside the All Filters drawer). */
+@container (max-width: 719px) {
+  .results-location {
+    display: none;
+  }
+}
+
+.results-body .pane-scroll {
+  min-width: 0;
+}
+
+/* Engage column: 320px, header + removable shortlist rows + stacked CTAs. */
+.select-rail {
+  box-sizing: border-box;
+  width: 320px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--l-color-border);
+  background: #fff;
+  padding: var(--l-space-4) var(--l-space-5);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.rail-header {
+  display: flex;
+  gap: var(--l-space-3);
+  padding-bottom: var(--l-space-3);
+  border-bottom: 1px solid var(--l-color-border);
+}
+
+.rail-badge {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--l-color-blue-10, #eaf2fd);
+  color: var(--l-color-blue-100);
+  font-size: 12px;
+}
+
+.rail-header h4 {
+  font-family: var(--app-font-display);
+  font-size: 15px;
+  font-weight: var(--l-font-weight-semibold);
+  line-height: 1.3;
+}
+
+.rail-header p {
+  margin-top: 2px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--l-color-darkblue-75);
+}
+
+.select-rail-list {
+  margin: 0;
+  padding: var(--l-space-3) 0 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Each pick reads as a compact name-only chip; rows pack left to right and
+   wrap as needed, full names shown. */
+.select-rail-list li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 9px 4px 4px;
+  border: 1px solid var(--l-color-border);
+  border-radius: var(--l-radius-full, 999px);
+  background: #fff;
+}
+
+.rail-logo {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--l-color-border);
+  border-radius: var(--l-radius-full, 999px);
+  color: var(--l-color-blue-100);
+  font-size: 9px;
+  font-weight: var(--l-font-weight-bold);
+}
+
+.rail-entry-name {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: var(--l-font-weight-semibold);
+  line-height: 1.25;
+  color: var(--l-color-darkblue-100);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-remove {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0 2px;
+  color: var(--l-color-darkblue-50);
+  font-size: 11px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.rail-remove:hover {
+  color: var(--l-color-darkblue-100);
+}
+
+.rail-empty {
+  font-size: var(--l-font-size-smaller);
+  color: var(--l-color-darkblue-50);
+}
+
+/* Drafted RFI card: tinted panel between the picks and the send CTA. */
+.rail-rfi-card {
+  margin-top: var(--l-space-4);
+  padding: var(--l-space-4);
+  border-radius: 12px;
+  background: var(--l-color-blue-5, #f2f6fd);
+}
+
+.rail-rfi-flag {
+  display: inline-block;
+  padding: 1px 8px;
+  line-height: 1.5;
+  border-radius: var(--l-radius-full, 999px);
+  background: var(--l-color-green-10, #e0f2e4);
+  color: var(--l-color-green-125, #1d7a35);
+  font-size: 10px;
+  font-weight: var(--l-font-weight-bold);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.rail-rfi-title {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  font-weight: var(--l-font-weight-bold);
+  color: var(--l-color-darkblue-100);
+}
+
+.rail-rfi-note {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--l-color-darkblue-75);
+}
+
+.rail-rfi-preview {
+  margin-top: var(--l-space-2);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--l-color-blue-100);
+  font-size: 12.5px;
+  font-weight: var(--l-font-weight-semibold);
+  cursor: pointer;
+}
+
+.rail-rfi-preview:hover {
+  text-decoration: underline;
+}
+
+.select-rail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--l-space-2);
+  padding-top: var(--l-space-3);
+}
+
+.select-rail-actions button {
+  width: 100%;
+  font-size: 15px;
+}
+
+/* Quiet sub-actions under the send CTA, side by side. */
+.rail-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--l-space-4);
+}
+
+.rail-sub-row .rail-sub {
+  width: auto;
+}
+
+.rail-sub {
+  border: none;
+  background: none;
+  padding: 6px 0;
+  color: var(--l-color-blue-100);
+  font-weight: var(--l-font-weight-semibold);
+  cursor: pointer;
+}
+
+.rail-sub:hover {
+  text-decoration: underline;
+}
+
+.rail-or {
+  text-align: center;
+  font-size: 12px;
+  color: var(--l-color-darkblue-50);
+}
+
+/* Auto Contact: tinted dashed tertiary, per the reference. */
+.rail-auto {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--l-space-2);
+  padding: 9px;
+  background: var(--l-color-blue-5, #f2f7fe);
+  border: 1px dashed var(--l-color-blue-50, #c6d8f5);
+  border-radius: 8px;
+  color: var(--l-color-blue-100);
+  font-family: inherit;
+  font-size: var(--l-font-size-smallest);
+  font-weight: var(--l-font-weight-semibold);
+  cursor: pointer;
+}
+
+.rail-auto:hover {
+  background: var(--l-color-blue-10, #eaf2fd);
+}
+
+/* Fixed bottom tray that stands in for the engage column on tablet/phone. */
+.engage-tray {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  align-items: center;
+  gap: var(--l-space-3);
+  padding: 10px var(--l-space-4);
+  background: #fff;
+  border-top: 1px solid var(--l-color-border);
+  box-shadow: 0 -4px 16px rgb(16 38 58 / 0.06);
+}
+
+.engage-tray-refine {
+  display: none;
+  align-items: center;
+  gap: var(--l-space-2);
+  flex-shrink: 0;
+  padding: 9px 13px;
+  background: #fff;
+  border: 1px solid var(--l-color-blue-50, #c6d8f5);
+  border-radius: 8px;
+  color: var(--l-color-blue-100);
+  font-family: inherit;
+  font-size: var(--l-font-size-smallest);
+  font-weight: var(--l-font-weight-semibold);
+  cursor: pointer;
+}
+
+.engage-tray-avatars {
+  display: flex;
+}
+
+.engage-tray-avatars span {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--l-radius-full);
+  background: var(--l-color-blue-10, #eaf2fd);
+  border: 2px solid #fff;
+  color: var(--l-color-blue-100);
+  font-size: 9.5px;
+  font-weight: var(--l-font-weight-bold);
+}
+
+.engage-tray-avatars span + span {
+  margin-left: -8px;
+}
+
+.engage-tray-note {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--l-font-size-smallest);
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-100);
 }
 
 /* Left rail shell: no outer card — the header floats above the transcript. */
@@ -1273,46 +1538,46 @@ p,
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  /* Equal side inset so header + question cards sit centered in the wash. */
-  padding: var(--l-space-2) var(--l-space-4) var(--l-space-5);
+  padding: 0 var(--l-space-5) var(--l-space-5);
   background: transparent;
   border-radius: 0;
 }
 
-/* Header card — same width as the question cards below; scrolls with them. */
+/* Header row — flat, split from the questions by a hairline. */
 .agent-header {
   position: relative;
   z-index: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--l-space-3);
   flex-shrink: 0;
-  margin: 0 0 var(--l-space-3);
-  padding: var(--l-space-4) var(--l-space-5);
-  background: #fff;
-  border: 1px solid var(--l-color-border);
-  border-radius: 16px;
+  margin: 0;
+  padding: var(--l-space-4) 0 13px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--l-color-border);
+  border-radius: 0;
   box-shadow: none;
 }
 
 .agent-header h4 {
   font-family: var(--app-font-display);
-  font-size: 20px;
-  line-height: 1.25;
+  font-size: 15px;
+  line-height: 1.3;
 }
 
 .agent-header-copy {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
 }
 
 /* Supporting line under the agent header title. */
 .agent-searching {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 11.5px;
+  line-height: 1.45;
   color: var(--l-color-darkblue-75);
 }
 
@@ -1375,22 +1640,22 @@ p,
 
 .agent-badge {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--l-radius-1);
+  border-radius: 8px;
   background: var(--l-color-blue-10);
   color: var(--l-color-blue-100);
-  font-size: 15px;
+  font-size: 13px;
 }
 
-/* Chat transcript — all conversation text at 14px. */
+/* Chat transcript — flat question sections split by hairlines. */
 .transcript {
   display: flex;
   flex-direction: column;
-  gap: var(--l-space-4);
+  gap: var(--l-space-3);
   padding: 0;
   font-size: var(--l-font-size-smaller);
 }
@@ -1400,14 +1665,15 @@ p,
   gap: var(--l-space-2);
 }
 
-/* Completion and ask cards sit on the tinted agent body. */
+/* Completion panels run flat, like the question sections around them. */
 .transcript l-panel {
   display: block;
   background: #fff;
-  border: 1px solid var(--l-color-border);
-  border-radius: 16px;
+  border: none;
+  border-bottom: 1px solid var(--l-color-border);
+  border-radius: 0;
   box-shadow: none;
-  padding: var(--l-space-5);
+  padding: 13px 0;
 }
 
 /* Tailoft styles `p` directly, so inheritance alone doesn't reach 14px. */
@@ -1429,16 +1695,17 @@ p,
   align-self: stretch;
 }
 
-/* One question in the run: white card on the tinted body. */
+/* One question in the run: a flat section closed by a hairline. */
 .ask-block {
   display: flex;
   flex-direction: column;
-  gap: var(--l-space-3);
-  padding: var(--l-space-5);
+  gap: var(--l-space-2);
+  padding: 13px 0;
   background: #fff;
-  border: 1px solid var(--l-color-border);
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgb(9 44 71 / 0.06);
+  border: none;
+  border-bottom: 1px solid var(--l-color-border);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .ask-block[aria-disabled="true"] {
@@ -1452,17 +1719,16 @@ p,
   justify-content: space-between;
   gap: var(--l-space-3);
   width: 100%;
-  padding: var(--l-space-3) var(--l-space-4);
+  padding: 10px 0;
   text-align: left;
   cursor: pointer;
   font-family: inherit;
   color: inherit;
-  transition: border-color 0.1s, box-shadow 0.1s;
+  transition: background 0.1s;
 }
 
-.ask-collapsed:hover {
-  border-color: var(--l-color-blue-100);
-  box-shadow: 0 2px 10px rgb(9 44 71 / 0.08);
+.ask-collapsed:hover .ask-collapsed-ask {
+  color: var(--l-color-blue-100);
 }
 
 .ask-collapsed-ask {
@@ -1504,64 +1770,54 @@ p,
 }
 
 .ask-question {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.4;
   color: var(--l-color-darkblue-100);
 }
 
 .ask-block .ask-help {
-  margin-top: calc(var(--l-space-3) * -1 + 4px);
   color: var(--l-color-darkblue-75);
-  font-size: 13px;
+  font-size: 11.5px;
   line-height: 1.45;
 }
 
-/* A settled question carries a quiet way back into it, parked on the right. */
+/* A settled question reads as a compact tinted summary with a way back in. */
 .ask-settled {
   position: relative;
 }
 
 .ask-edit {
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
+  margin-left: auto;
+  flex-shrink: 0;
   border: none;
-  border-radius: var(--l-radius-full);
   background: none;
-  color: inherit;
-  font-size: 12px;
-  opacity: 0.65;
+  padding: 0;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-blue-100);
   cursor: pointer;
-  transition: opacity 0.1s, background 0.1s;
 }
 
 .ask-edit:hover,
 .ask-edit:focus-visible {
-  opacity: 1;
-  background: #fff;
+  color: var(--l-color-blue-125, var(--l-color-darkblue-100));
+  text-decoration: underline;
 }
 
-/* The settled answer, called out across the width of its question card. */
-.ask-answer {
+/* The settled answer: tinted pill, answer left and Edit right. The extra
+   class outranks `.transcript p`'s font-size. */
+.ask-block .ask-answer {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: var(--l-space-2);
-  /* Grows for answers that wrap to a second line. */
-  min-height: 36px;
-  /* Symmetrical room for the edit control, so the answer stays centred. */
-  padding: 6px 44px;
+  padding: 3px 12px;
   border: 1px solid var(--l-color-blue-25, var(--l-color-blue-50, #b7d0f5));
   border-radius: 8px;
   background: var(--l-color-blue-5, #f6f9ff);
   color: var(--l-color-blue-100);
+  font-size: 13px;
   font-weight: var(--l-font-weight-semibold);
   box-sizing: border-box;
 }
@@ -1570,32 +1826,24 @@ p,
 .ask-skipped {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: var(--l-space-2);
-  height: 36px;
-  padding: 0 44px;
+  padding: 3px 12px;
   border: 1px solid var(--l-color-border);
   border-radius: 8px;
   background: var(--l-color-gray-6, #f2f2f2);
   color: var(--l-color-darkblue-75);
+  font-size: 12.5px;
   font-style: italic;
   font-weight: 500;
   box-sizing: border-box;
 }
 
-/* Two equal columns of options, collapsing to one when the pane gets
-   narrow. Track min is half the row (so a third never fits); once half a
-   row drops below the readable minimum, only one track fits. Keyed off the
-   pane's own width rather than the viewport, since the split is resizable. */
+/* Single column of options, per the reference define pane. */
 .option-rows {
-  /* Sized for the 500px default pane — two even columns with card padding. */
-  --option-min-width: min(100%, 160px);
   display: grid;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(max(var(--option-min-width), (100% - var(--l-space-2)) / 2), 1fr)
-  );
-  gap: var(--l-space-2);
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 /* The "+N more options" affordance always spans the full row. */
@@ -1614,17 +1862,15 @@ p,
 .option-row {
   display: flex;
   align-items: center;
-  gap: var(--l-space-3);
+  gap: 9px;
   width: 100%;
-  min-height: 36px;
   text-align: left;
   background: #fff;
   border: 1px solid var(--l-color-border);
-  border-radius: 8px;
-  /* Same inset as a centered single line in a 36px row — used for 2+ lines too. */
-  padding: 8px 14px;
+  border-radius: 9px;
+  padding: 8px 11px;
   font-family: inherit;
-  font-size: var(--l-font-size-smaller);
+  font-size: 13px;
   font-weight: 500;
   line-height: 1.35;
   color: var(--l-color-darkblue-100);
@@ -1656,22 +1902,20 @@ p,
 
 .row-indicator {
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--l-color-darkblue-25, var(--l-color-border));
+  border: 1.5px solid var(--l-color-darkblue-25, var(--l-color-border));
   border-radius: 4px;
   background: #fff;
   color: #fff;
-  font-size: 10px;
+  font-size: 9px;
 }
 
 /* Single-answer questions read as radios, multi-answer ones as checkboxes. */
 .row-indicator[data-single] {
-  width: 18px;
-  height: 18px;
   border-radius: var(--l-radius-full);
 }
 
@@ -1778,8 +2022,7 @@ p,
   flex-direction: column;
   align-items: center;
   gap: var(--l-space-2);
-  /* Full-bleed bar: flush to pane edges; 16px vertical only for the controls. */
-  padding: 16px var(--l-space-5);
+  padding: 12px var(--l-space-5) 16px;
   margin: 0;
   background: #fff;
   border-top: 1px solid var(--l-color-border);
@@ -1789,34 +2032,12 @@ p,
   width: 100%;
 }
 
+/* Footer toolbar: collapse, Back, Skip, undo, all-questions in one row. */
 .answer-actions {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
   width: 100%;
   gap: var(--l-space-2);
-}
-
-.answer-actions-start {
-  display: flex;
-  align-items: center;
-  gap: var(--l-space-2);
-  justify-self: start;
-}
-
-.answer-actions-nav {
-  display: flex;
-  align-items: center;
-  gap: var(--l-space-2);
-  grid-column: 2;
-}
-
-.answer-actions-end {
-  display: flex;
-  align-items: center;
-  gap: var(--l-space-2);
-  justify-self: end;
-  grid-column: 3;
 }
 
 .panel-collapse-icon {
@@ -1824,45 +2045,86 @@ p,
   flex-shrink: 0;
 }
 
-/* Icon-only tools parked on the far left. */
+/* Icon-only collapse control parked on the far left. */
 .answer-actions .answer-tool {
-  width: 40px;
-  padding: 0;
+  width: auto;
+  padding: 6px 2px;
+  flex-shrink: 0;
   justify-content: center;
+  border: none;
+  background: none;
+  color: var(--l-color-darkblue-50);
+  font-size: 13px;
 }
 
-.answer-actions .answer-tool[aria-pressed="true"] {
-  border-color: var(--l-color-blue-100);
-  background: var(--l-color-blue-10);
+.answer-actions .answer-tool:hover:not(:disabled) {
+  color: var(--l-color-darkblue-100);
+}
+
+.define-back,
+.define-skip {
+  flex: 1;
+  min-width: 56px;
+  padding: 10px 2px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: var(--l-font-weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.define-back {
+  background: #fff;
+  border: 1px solid var(--l-color-blue-50, #c6d8f5);
   color: var(--l-color-blue-100);
 }
 
-/* Footer controls sit on white — no floating shadow. */
-.answer-actions .ghost-button {
-  height: 40px;
-  padding: 0 var(--l-space-4);
-  border-radius: var(--l-radius-full);
-  border-color: var(--l-color-border);
-  background: #fff;
-  box-shadow: none;
-  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
-}
-
-.answer-actions .ghost-button:hover:not(:disabled) {
-  border-color: var(--l-color-blue-100);
+.define-back:hover:not(:disabled) {
   background: var(--l-color-blue-5, #f6f9ff);
-  color: var(--l-color-blue-100);
 }
 
-.answer-actions .ghost-button:disabled {
+.define-back:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.define-skip {
+  background: var(--l-color-blue-100);
+  border: 1px solid var(--l-color-blue-100);
+  color: #fff;
+}
+
+.define-skip:hover:not(:disabled) {
+  background: var(--l-color-blue-125, var(--l-color-darkblue-100));
+}
+
+.define-skip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Square icon tools: undo and the all-questions accordion. */
+.define-tool {
+  flex-shrink: 0;
+  width: 34px;
+  height: 38px;
   background: #fff;
-  box-shadow: none;
+  border: 1px solid var(--l-color-blue-50, #c6d8f5);
+  border-radius: 8px;
+  color: var(--l-color-blue-100);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
 }
 
-.answer-actions .answer-tool[aria-pressed="true"]:hover:not(:disabled) {
-  border-color: var(--l-color-blue-100);
+.define-tool:hover {
+  background: var(--l-color-blue-5, #f6f9ff);
+}
+
+.define-tool[aria-pressed="true"] {
   background: var(--l-color-blue-10);
-  color: var(--l-color-blue-100);
+  border-color: var(--l-color-blue-100);
 }
 
 /* Quiet tertiary: a step backwards shouldn't compete with the way forward. */
@@ -1891,18 +2153,13 @@ p,
   cursor: default;
 }
 
-/* Full-bleed results list: cards run edge to edge, separated by a 2px stroke
-   gap. The list background is the stroke colour, so the gap draws itself and
-   the cards need no divider border of their own. */
+/* Flat results list: cards run edge to edge inside the center column's
+   padding, separated by hairline rules per the reference. */
 .results-list {
   display: grid;
   grid-template-columns: 1fr;
-  background: var(--l-color-border);
-  gap: 2px;
-}
-
-.results-list[data-layout="grid"] {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  padding: 0 var(--l-space-5);
 }
 
 /* Rows that read across the full width whatever the card layout. */
@@ -1913,43 +2170,6 @@ p,
 /* Rows that aren't cards (empty state, show-more) still read as white. */
 .results-list > div {
   background: #fff;
-}
-
-/* Quick Contact floats over the bottom-right corner of the results list.
-   The dock is a zero-height sticky strip so it overlays the cards instead
-   of adding a band under them. */
-.quick-contact-dock {
-  position: sticky;
-  bottom: var(--l-space-5);
-  height: 0;
-  display: flex;
-  /* Centered under the list, clear of the Exit Agent pill on the right. */
-  justify-content: center;
-  pointer-events: none;
-  z-index: 5;
-}
-
-.quick-contact {
-  pointer-events: auto;
-  transform: translateY(-100%);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--l-space-2);
-  height: 40px;
-  padding: 0 var(--l-space-4);
-  border: 1px solid var(--l-color-blue-100);
-  border-radius: var(--l-radius-1);
-  background: #fff;
-  color: var(--l-color-blue-100);
-  font-family: inherit;
-  font-size: var(--l-font-size-small);
-  font-weight: var(--l-font-weight-semibold);
-  box-shadow: 0 6px 16px rgba(9, 44, 71, 0.18);
-  cursor: pointer;
-}
-
-.quick-contact:hover {
-  background: var(--l-color-blue-5);
 }
 
 /* Pagination at the foot of the supplier list. */
@@ -2022,37 +2242,92 @@ p,
   flex-shrink: 0;
 }
 
-/* Supplier card — content and type scale follow the SRP reference card:
-   16px blue title, 14px everything else including CTAs. */
+/* Supplier card — flat row in the results list, closed by a hairline rule,
+   content per the reference: 16px title, dot-joined facts, requirement badge. */
 .supplier-card {
   display: flex;
   flex-direction: column;
-  gap: var(--l-space-3);
+  gap: 11px;
+  padding: 18px 0;
   font-size: var(--l-font-size-smaller);
   border: none;
+  border-bottom: 1px solid var(--l-color-border);
   border-radius: 0;
   box-shadow: none;
 }
 
 .supplier-card .card-title {
   font-size: var(--l-font-size-small);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--l-color-darkblue-100);
 }
 
 .supplier-card .card-profile-link {
-  color: var(--l-color-darkblue-75);
+  font-size: 12.5px;
+  color: var(--l-color-blue-100);
 }
 
 .supplier-card button[scale="small"] {
-  font-size: var(--l-font-size-smaller);
+  font-size: 12.5px;
 }
 
-/* Main CTA on the card, and the contact secondary sitting to its left. */
+/* Main CTA on the card, and the Add secondary sitting to its left. */
 .supplier-card button[kind="primary"],
-.supplier-card .card-contact {
-  height: 44px;
-  padding: 0 var(--l-space-5);
+.supplier-card .card-add {
+  height: 36px;
+  padding: 0 14px;
+}
+
+/* Company-type line: matches the fact row's dark text. */
+.card-types {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-2);
+  font-size: 12.5px;
+  font-weight: var(--l-font-weight-regular);
+  color: var(--l-color-darkblue-100);
+}
+
+/* Foot row: requirement badge on the left; on phones the website link
+   replaces the header's primary button on the right. */
+.card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--l-space-3);
+}
+
+.card-foot-website {
+  display: none;
+  font-size: 11.5px;
+  font-weight: var(--l-font-weight-semibold);
+}
+
+/* Requirements-met badge: bordered pill with a solid green circle check. */
+.req-met {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 7px;
+  border: 1px solid var(--l-color-green-50, #a9dcc2);
+  border-radius: var(--l-radius-full);
+  background: var(--l-color-green-5, #eef9f2);
+  font-size: 12.5px;
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--app-color-green-ink, #178a50);
+}
+
+.req-met-check {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--l-radius-full);
+  background: var(--l-color-green-100);
+  color: #fff;
+  font-size: 8.5px;
 }
 
 /* Tailoft's icon map carries no envelope; the Font Awesome face it ships
@@ -2235,26 +2510,29 @@ l-icon[name="envelope"]::before {
 }
 
 .supplier-logo {
-  width: 56px;
-  height: 56px;
+  width: 46px;
+  height: 46px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--l-color-border);
-  border-radius: var(--l-radius-1);
+  border-radius: 8px;
   background: #fff;
   font-weight: var(--l-font-weight-bold);
-  font-size: var(--l-font-size-medium);
+  font-size: 15px;
   color: var(--l-color-blue-100);
 }
 
+/* Dot-joined fact line: location · employees · revenue · Est. year. */
 .supplier-facts {
   display: flex;
   flex-wrap: wrap;
-  column-gap: var(--l-space-5);
+  column-gap: var(--l-space-2);
   row-gap: var(--l-space-1);
   align-items: center;
+  font-size: 12.5px;
+  color: var(--l-color-darkblue-100);
 }
 
 .supplier-facts > span {
@@ -2263,8 +2541,16 @@ l-icon[name="envelope"]::before {
   gap: var(--l-space-2);
 }
 
+.supplier-facts > span + span::before {
+  content: "·";
+  margin-right: var(--l-space-2);
+  color: var(--l-color-darkblue-50);
+}
+
 .supplier-facts a {
   color: var(--l-color-darkblue-100);
+  font-weight: var(--l-font-weight-regular);
+  font-size: inherit;
 }
 
 .clamp-2 {
@@ -2276,9 +2562,9 @@ l-icon[name="envelope"]::before {
 
 .media-tile {
   position: relative;
-  width: 148px;
-  height: 92px;
-  border-radius: var(--l-radius-1);
+  width: 136px;
+  height: 90px;
+  border-radius: 6px;
   background: linear-gradient(135deg, var(--l-color-darkblue-100), var(--l-color-darkblue-75));
   color: #fff;
   display: flex;
@@ -2380,15 +2666,20 @@ l-icon[name="envelope"]::before {
   font-size: 9px;
 }
 
+/* The narrow define pane can't fit both side by side, so they stack. */
 .done-actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-self: stretch;
   gap: var(--l-space-2);
 }
 
 .done-card button {
-  height: 44px;
+  height: 34px;
+  width: 100%;
+  justify-content: center;
   padding: 0 var(--l-space-5);
+  white-space: nowrap;
 }
 
 /* Waiting on the next question: a calm card where that question lands. */
@@ -2564,163 +2855,45 @@ l-icon[name="envelope"]::before {
   }
 }
 
-/* Swipe-to-dismiss handle for the mobile agent sheet; phones only. */
-.sheet-grip {
-  display: none;
-}
-
-/* Live match count above Back/Skip. Phones only — the sheet covers the
-   results header where this sentence normally lives. */
-.footer-match-note {
-  display: none;
-}
-
 /* ---- Responsive layers: declared last so they win the cascade over the
    component styles above. ---- */
 
-/* Tablet: keep the two panes side by side on a thin agent rail instead of
-   stacking. The rail width is fixed (drag is disabled by the override), and
-   the rail's type, cards, and controls tighten up to fit. */
-@media (max-width: 1024px) and (min-width: 641px) {
-  .app-main:not([data-agent-closed]) {
-    grid-template-columns: 340px auto 1fr !important;
+/* Tablet and down: the engage column collapses into the fixed bottom tray,
+   and the define column narrows, per the reference breakpoints. */
+@media (max-width: 1100px) {
+  :root {
+    --define-width: 240px;
   }
 
-  /* The rail width is fixed here, so the divider is just a hairline. */
-  .app-divider {
-    cursor: default;
-    pointer-events: none;
-  }
-
-  .agent-header {
-    gap: var(--l-space-2);
-    padding: var(--l-space-3) var(--l-space-4);
-  }
-
-  .agent-header h4 {
-    font-size: 17px;
-  }
-
-  .agent-badge {
-    width: 32px;
-    height: 32px;
-    font-size: 13px;
-  }
-
-  .agent-body {
-    padding: var(--l-space-2) var(--l-space-3) var(--l-space-5);
-  }
-
-  .ask-block {
-    padding: var(--l-space-4);
-  }
-
-  /* One option per row — two columns don't fit a 340px rail. */
-  .option-rows {
-    --option-min-width: 220px;
-  }
-
-  .agent-footer {
-    padding: 12px var(--l-space-3);
-  }
-
-  .answer-actions {
-    gap: var(--l-space-1);
-  }
-
-  .answer-actions-start,
-  .answer-actions-nav,
-  .answer-actions-end {
-    gap: var(--l-space-1);
-  }
-
-  .answer-actions .ghost-button {
-    height: 36px;
-    padding: 0 var(--l-space-3);
-  }
-
-  .answer-actions .answer-tool {
-    width: 36px;
-    padding: 0;
-  }
-
-  /* Results pane is narrower too: keep the tile layout to one column. */
-  .results-list[data-layout="grid"] {
-    grid-template-columns: 1fr;
-  }
-
-  .results-header {
-    padding: var(--l-space-4) var(--l-space-4) var(--l-space-3);
-  }
-}
-
-/* Stacked supplier card for tablet and phone, per the reference mobile card:
-   logo on top with icon-only save/select at the right, the name and profile
-   link on their own rows, then a full-width Visit Website CTA. */
-@media (max-width: 1024px) {
-  .supplier-card .card-head {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    grid-template-areas:
-      "logo save select"
-      "identity identity identity"
-      "contact contact contact"
-      "cta cta cta";
-    row-gap: var(--l-space-3);
-    column-gap: var(--l-space-1);
-    align-items: center;
-  }
-
-  .supplier-card .card-head .supplier-logo {
-    grid-area: logo;
-    justify-self: start;
-  }
-
-  .supplier-card .card-head .card-identity {
-    grid-area: identity;
-  }
-
-  .supplier-card .card-title {
-    font-size: 18px;
-  }
-
-  /* Flatten the actions wrapper so each button can take its own grid area. */
-  .supplier-card .card-head .card-actions {
-    display: contents;
-  }
-
-  .supplier-card .card-head .card-save {
-    grid-area: save;
-  }
-
-  .supplier-card .card-head .card-select {
-    grid-area: select;
-  }
-
-  .supplier-card .card-head .card-contact {
-    grid-area: contact;
-    width: 100%;
-    height: 44px;
-  }
-
-  .supplier-card .card-head .card-cta {
-    grid-area: cta;
-    width: 100%;
-    height: 44px;
-  }
-
-  /* Save/select read as icon buttons here; the label stays for screen
-     readers via aria-label on the buttons. */
-  .supplier-card .card-head .card-action-label {
+  .select-rail {
     display: none;
   }
+
+  .stage-engage {
+    display: none;
+  }
+
+  .stage-evaluate {
+    border-right: none;
+  }
+
+  .engage-tray {
+    display: flex;
+  }
+
+  /* Room at the foot of both panes so the tray never covers their controls. */
+  .app-main {
+    padding-bottom: 58px;
+  }
+
+  .agent-tab {
+    bottom: calc(var(--l-space-4) + 58px);
+  }
 }
 
-/* Phone: results own the screen; the agent opens as a bottom sheet from a
-   full-width tab docked to the bottom edge. */
-@media (max-width: 640px) {
-  /* The desktop nav links don't fit a phone and were forcing the whole page
-     to zoom out; the logo and search carry the header. */
+/* Phone: the stage bar becomes tabs and one column shows at a time. */
+@media (max-width: 699px) {
+  /* The desktop nav links don't fit a phone; logo and search carry the header. */
   .site-nav-links {
     display: none;
   }
@@ -2729,100 +2902,68 @@ l-icon[name="envelope"]::before {
     height: 56px;
   }
 
-  .app-main {
-    grid-template-columns: 1fr !important;
-  }
-
-  .app-divider {
+  .stage-bar {
     display: none;
   }
 
-  /* Open agent pane reads as a bottom sheet floating over the results. */
-  .pane-left:not([hidden]) {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 88dvh;
-    z-index: 30;
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 -12px 40px rgb(9 44 71 / 0.28);
-    animation: sheet-up 0.25s ease;
-  }
-
-  /* Grab handle pinned to the sheet's top edge; swiping it down dismisses
-     the sheet. touch-action keeps the browser from scrolling instead. */
-  .sheet-grip {
+  .mobile-tabs {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    height: 22px;
-    touch-action: none;
-    cursor: grab;
   }
 
-  .sheet-grip-bar {
-    width: 44px;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--l-color-blue-25, #c3d9f0);
+  .engage-tray-refine {
+    display: inline-flex;
   }
 
-  /* One option per row inside the sheet. */
-  .option-rows {
-    --option-min-width: 220px;
+  /* Which column shows follows the active tab. */
+  .app-main:not([data-mobile-tab="define"]) .pane-left {
+    display: none;
   }
 
-  /* Home-indicator clearance for the sheet's own controls. */
+  .app-main[data-mobile-tab="define"] .pane:not(.pane-left) {
+    display: none;
+  }
+
+  .app-main[data-mobile-tab="define"] .pane-left:not([hidden]) {
+    width: 100%;
+    border-right: none;
+  }
+
+  .app-main[data-mobile-tab="engage"] .results-center {
+    display: none;
+  }
+
+  .app-main[data-mobile-tab="engage"] .select-rail {
+    display: flex;
+    width: 100%;
+    border-left: none;
+  }
+
+  /* The tabs own pane switching; the collapse control and reopen tab go. */
+  .answer-actions .answer-tool,
+  .agent-tab {
+    display: none;
+  }
+
+  /* Home-indicator clearance for the define pane's own controls. */
   .agent-footer {
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
   }
 
-  .footer-match-note {
-    display: block;
-    text-align: center;
-    font-size: 12px;
-    line-height: 1.3;
-    color: var(--l-color-darkblue-75);
-    margin-bottom: var(--l-space-2);
-  }
-
-  /* The sheet footer already carries the close control. */
-  .exit-agent {
-    display: none;
-  }
-
-  /* Closed state: the reopen pill becomes the full-width bottom tab. */
-  .agent-tab {
-    position: fixed;
-    top: auto;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: calc(52px + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
-    z-index: 20;
-    justify-content: center;
-    border: none;
-    border-top: 1px solid var(--l-color-border);
-    border-radius: 0;
-    box-shadow: 0 -4px 16px rgb(9 44 71 / 0.12);
-  }
-
-  /* Sit on top of the dark compare footer when suppliers are selected. */
-  .app-main:has(.results-footer) .agent-tab {
-    bottom: 56px;
-  }
-
-  /* Let the list scroll out from under the docked tab. */
-  .app-main[data-agent-closed] .pane-scroll {
-    padding-bottom: calc(52px + env(safe-area-inset-bottom));
-  }
-
   .results-header {
-    padding: var(--l-space-4) var(--l-space-4) var(--l-space-3);
+    padding: 12px var(--l-space-4) 0;
+  }
+
+  .results-header h3 {
+    font-size: 17px;
+  }
+
+  .results-list {
+    padding: 0 var(--l-space-4);
+  }
+
+  /* The location field leaves the header on phones. */
+  .results-location {
+    display: none;
   }
 
   /* All Filters collapses to the icon (plus its count badge). */
@@ -2834,26 +2975,39 @@ l-icon[name="envelope"]::before {
     display: none;
   }
 
-  /* The one-line scroll comes from the base styles; here the row just runs
-     edge to edge under the phone header's tighter padding. */
-  .answer-pill-row {
-    margin: var(--l-space-3) calc(var(--l-space-4) * -1) 0;
-    padding: var(--l-space-3) var(--l-space-4) 0;
+  /* Compact card, per the reference mobile variant: smaller logo, +Add only
+     in the head, the website link on the foot row, no media tile. */
+  .supplier-card {
+    padding: 13px 0;
+    gap: var(--l-space-2);
   }
 
-  .results-list[data-layout="grid"] {
-    grid-template-columns: 1fr;
+  .supplier-card .supplier-logo {
+    width: 38px;
+    height: 38px;
+    font-size: 13px;
   }
-}
 
-@keyframes sheet-up {
-  from {
-    transform: translateY(32px);
-    opacity: 0.5;
+  .supplier-card .card-title {
+    font-size: 14px;
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+
+  .supplier-card .card-head .card-cta {
+    display: none;
+  }
+
+  .card-foot-website {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .supplier-card .media-tile {
+    display: none;
+  }
+
+  .card-types {
+    display: none;
   }
 }
 

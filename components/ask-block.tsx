@@ -181,7 +181,7 @@ export function AskBlock({
       aria-label={`Change your answer to ${question.title}`}
       onClick={onEdit}
     >
-      <l-icon name="pen" />
+      Edit
     </button>
   ) : null;
 

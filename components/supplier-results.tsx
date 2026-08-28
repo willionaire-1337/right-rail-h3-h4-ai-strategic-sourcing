@@ -302,8 +302,10 @@ export function SupplierResults({
   }));
 
   /** The rail's list: the best-ranked few pre-picked (minus any the buyer
-      dismissed), plus card additions. */
-  const railTop = results.slice(0, RAIL_SUPPLIER_COUNT);
+      dismissed), plus card additions. Auto-picks only ever come from the
+      exact matches — suppliers meeting every logged requirement — so an RFI
+      never goes to a near match the buyer didn't add themselves. */
+  const railTop = exact.slice(0, RAIL_SUPPLIER_COUNT);
   const railTopIds = new Set(railTop.map((supplier) => supplier.id));
   const railBase = railTop.filter((supplier) => !railRemoved.has(supplier.id));
   const railSuppliers = [
@@ -489,7 +491,6 @@ export function SupplierResults({
 
         <SelectSuppliersRail
           suppliers={railSuppliers}
-          onRemove={toggleRailAdd}
           onAddToShortlist={shortlistRailSuppliers}
           onSendRfi={openRailRfi}
           draftTitle={draftTitle}

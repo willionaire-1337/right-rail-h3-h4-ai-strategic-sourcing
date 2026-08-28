@@ -215,19 +215,20 @@ export function SupplierCard({
         )}
       </div>
 
-      {/* Foot row: the requirements badge, with the website link taking the
-          primary button's place in the compact phone variant. */}
+      {/* Foot row: the all-requirements badge (near matches carry no badge —
+          the list divider already names what was relaxed), with the website
+          link taking the primary button's place in the compact phone variant. */}
       <div className="card-foot">
-        <span className="req-met">
-          <span className="req-met-check" aria-hidden="true">
-            <l-icon name="check" />
+        {requirementsMet >= requirementsTotal && (
+          <span className="req-met">
+            <span className="req-met-check" aria-hidden="true">
+              <l-icon name="check" />
+            </span>
+            {requirementsTotal === 0
+              ? "Matches your search"
+              : `All ${requirementsTotal} requirement${requirementsTotal === 1 ? "" : "s"} met`}
           </span>
-          {requirementsTotal === 0
-            ? "Matches your search"
-            : requirementsMet >= requirementsTotal
-              ? `All ${requirementsTotal} requirement${requirementsTotal === 1 ? "" : "s"} met`
-              : `${requirementsMet} of ${requirementsTotal} requirements met`}
-        </span>
+        )}
         <a href="#" className="card-foot-website" onClick={noop}>
           Visit Website <l-icon name="arrow-up-right-from-square" />
         </a>

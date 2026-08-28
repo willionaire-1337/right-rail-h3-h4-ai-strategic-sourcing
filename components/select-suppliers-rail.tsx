@@ -4,10 +4,9 @@ import { monogram } from "@/components/supplier-card";
 import type { Supplier } from "@/lib/suppliers";
 
 type SelectSuppliersRailProps = {
-  /** Suppliers queued for engagement — top-ranked picks plus card additions. */
+  /** Suppliers queued for engagement — top-ranked picks plus card additions.
+      Managed from the cards' Add/Added toggle; the chips just reflect it. */
   suppliers: Supplier[];
-  /** Takes one supplier back off the rail (the chip's ✕). */
-  onRemove: (supplier: Supplier) => void;
   onAddToShortlist: () => void;
   onSendRfi: () => void;
   /** Drafted RFI headline, synthesized from the logged answers. */
@@ -24,7 +23,6 @@ type SelectSuppliersRailProps = {
  */
 export function SelectSuppliersRail({
   suppliers,
-  onRemove,
   onAddToShortlist,
   onSendRfi,
   draftTitle,
@@ -56,14 +54,6 @@ export function SelectSuppliersRail({
             <span className="rail-entry-name" title={supplier.name}>
               {supplier.name}
             </span>
-            <button
-              type="button"
-              className="rail-remove"
-              aria-label={`Remove ${supplier.name} from selected suppliers`}
-              onClick={() => onRemove(supplier)}
-            >
-              <l-icon name="xmark" aria-hidden="true" />
-            </button>
           </li>
         ))}
       </ul>
@@ -92,14 +82,9 @@ export function SelectSuppliersRail({
         >
           Send to {suppliers.length} Supplier{suppliers.length === 1 ? "" : "s"}
         </button>
-        <div className="rail-sub-row">
-          <button type="button" className="rail-sub" onClick={onAddToShortlist}>
-            + Add to shortlist
-          </button>
-          <button type="button" className="rail-sub">
-            Visit Website(s) <l-icon name="arrow-up-right-from-square" aria-hidden="true" />
-          </button>
-        </div>
+        <button type="button" className="rail-sub" onClick={onAddToShortlist}>
+          + Add to shortlist
+        </button>
       </div>
     </aside>
   );

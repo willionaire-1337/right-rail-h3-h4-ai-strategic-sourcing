@@ -167,7 +167,27 @@ alwaysApply: false
   Done-card CTAs stack full-width; assorted type-size tweaks. Deployed to
   GitHub Pages via the repo workflow.
 
+- 2026-08-28 (boss feedback round, via William Johnson): desktop stage bar
+  (1 DEFINE / 2 EVALUATE / 3 ENGAGE) removed — the columns speak for
+  themselves; the phone tab strip stays since it's real navigation. The
+  "N of M requirements met" pill read as probabilistic scoring, so cards now
+  only badge "All N requirements met" (exact matches); near matches carry no
+  badge — the list divider naming the relaxed answer is the only callout —
+  and rail auto-picks now draw exclusively from exact matches so an RFI
+  never pre-targets a near match. "Visit Website(s)" sub-CTA dropped (it did
+  nothing). Cards compacted (12px vertical padding, 8px gaps, 40px logo,
+  32px CTAs, 112×72 media) so multiple results show above the fold. Rail
+  chips lost their ✕ — the card's Add/Added toggle is the single
+  select/deselect control; chips just reflect it.
+
 ## Open threads
+
+- Analytics ask from the boss (2026-08-28): instrument how many buyers edit
+  the drafted RFI before sending (draft-changed vs sent-as-is). Prototype has
+  no analytics layer; belongs in the production spec.
+- Lead-form "additional questions" (beyond the logged requirements echoed on
+  the RFI) are out of H4 scope per the boss's own read; nothing to build here
+  yet.
 
 - Contact form submissions go nowhere (prototype); wire up if/when a backend
   exists.

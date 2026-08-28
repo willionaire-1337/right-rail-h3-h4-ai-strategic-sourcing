@@ -27,7 +27,7 @@ import {
   type NextAsk,
 } from "@/lib/simulation";
 import { syncableQuestionIds } from "@/lib/filter-sync";
-import { CATEGORY_LABEL, CATEGORY_SUPPLIER_COUNT } from "@/lib/suppliers";
+import { CATEGORY_LABEL } from "@/lib/suppliers";
 
 const OPT_OUT_HINT =
   "Opt out of the Thomas Agent experience and go back to Thomas Classic sourcing";
@@ -565,12 +565,11 @@ export function SourcingExperience() {
     answerActive(picked, false);
   };
 
-  /* Stage bar counts: questions settled, suppliers matching, rail picks. */
+  /* Mobile tab notes: questions settled, rail picks. */
   const stageQuestionIds = browseableQuestionIds();
   const answeredCount = stageQuestionIds.filter((id) =>
     answers.some((answer) => answer.questionId === id),
   ).length;
-  const matchCount = simulatedMatchCount(answers);
 
   /** Full questionnaire for browse mode — answered, skipped, active, or not yet asked. */
   const browseItems: BrowseItem[] = [];
@@ -626,27 +625,6 @@ export function SourcingExperience() {
           }
         }}
       />
-
-      {/* Stage bar: the three phases of the run, sized to the panes below. */}
-      <div className="stage-bar" aria-label="Sourcing stages">
-        <div className="stage-cell stage-define">
-          <span className="stage-num" aria-hidden="true">1</span>
-          <span className="stage-label">Define</span>
-        </div>
-        <div className="stage-cell stage-evaluate">
-          <span className="stage-num" aria-hidden="true">2</span>
-          <span className="stage-label">Evaluate</span>
-          <span className="stage-note">
-            <strong>{matchCount.toLocaleString()}</strong> of{" "}
-            {CATEGORY_SUPPLIER_COUNT.toLocaleString()} match
-          </span>
-        </div>
-        <div className="stage-cell stage-engage">
-          <span className="stage-num" aria-hidden="true">3</span>
-          <span className="stage-label">Engage</span>
-          <span className="stage-note">{railCount} selected</span>
-        </div>
-      </div>
 
       {/* Phone: the stages become tabs that swap the single column. */}
       <div className="mobile-tabs" role="tablist" aria-label="Sourcing stages">

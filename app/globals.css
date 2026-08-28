@@ -575,73 +575,7 @@ p,
   background: var(--l-color-blue-125, var(--l-color-darkblue-100));
 }
 
-/* Stage bar: the run's three phases, each column sized to the pane below it. */
-.stage-bar {
-  display: flex;
-  align-items: stretch;
-  background: #fbfcfe;
-  border-bottom: 1px solid var(--l-color-border);
-}
-
-.stage-cell {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: var(--l-space-2);
-  padding: 10px var(--l-space-5);
-  border-right: 1px solid var(--l-color-border);
-}
-
-.stage-define {
-  width: var(--define-width, 280px);
-  flex-shrink: 0;
-}
-
-.stage-evaluate {
-  flex: 1;
-  min-width: 0;
-}
-
-.stage-engage {
-  width: 320px;
-  flex-shrink: 0;
-  border-right: none;
-}
-
-.stage-num {
-  width: 17px;
-  height: 17px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--l-radius-full);
-  background: var(--l-color-darkblue-100);
-  color: #fff;
-  font-size: 9px;
-  font-weight: var(--l-font-weight-semibold);
-}
-
-.stage-label {
-  font-size: 10.5px;
-  font-weight: var(--l-font-weight-bold);
-  letter-spacing: 1.3px;
-  text-transform: uppercase;
-  color: var(--l-color-darkblue-75);
-}
-
-.stage-note {
-  font-size: 11px;
-  color: var(--l-color-darkblue-50);
-  white-space: nowrap;
-}
-
-.stage-note strong {
-  color: var(--l-color-blue-100);
-  font-weight: var(--l-font-weight-semibold);
-}
-
-/* Phone: the stage bar becomes the tab strip that swaps the single column. */
+/* Phone: a tab strip swaps the single column between the three panes. */
 .mobile-tabs {
   display: none;
   background: #fff;
@@ -1324,21 +1258,6 @@ p,
   white-space: nowrap;
 }
 
-.rail-remove {
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  padding: 0 2px;
-  color: var(--l-color-darkblue-50);
-  font-size: 11px;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.rail-remove:hover {
-  color: var(--l-color-darkblue-100);
-}
-
 .rail-empty {
   font-size: var(--l-font-size-smaller);
   color: var(--l-color-darkblue-50);
@@ -1406,18 +1325,7 @@ p,
   font-size: 15px;
 }
 
-/* Quiet sub-actions under the send CTA, side by side. */
-.rail-sub-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--l-space-4);
-}
-
-.rail-sub-row .rail-sub {
-  width: auto;
-}
-
+/* Shortlist rides under the send CTA as a quiet sub-action. */
 .rail-sub {
   border: none;
   background: none;
@@ -2247,8 +2155,8 @@ p,
 .supplier-card {
   display: flex;
   flex-direction: column;
-  gap: 11px;
-  padding: 18px 0;
+  gap: 8px;
+  padding: 12px 0;
   font-size: var(--l-font-size-smaller);
   border: none;
   border-bottom: 1px solid var(--l-color-border);
@@ -2274,8 +2182,8 @@ p,
 /* Main CTA on the card, and the Add secondary sitting to its left. */
 .supplier-card button[kind="primary"],
 .supplier-card .card-add {
-  height: 36px;
-  padding: 0 14px;
+  height: 32px;
+  padding: 0 12px;
 }
 
 /* Company-type line: matches the fact row's dark text. */
@@ -2308,7 +2216,7 @@ p,
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 5px 12px 5px 7px;
+  padding: 3px 11px 3px 6px;
   border: 1px solid var(--l-color-green-50, #a9dcc2);
   border-radius: var(--l-radius-full);
   background: var(--l-color-green-5, #eef9f2);
@@ -2510,8 +2418,8 @@ l-icon[name="envelope"]::before {
 }
 
 .supplier-logo {
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -2562,8 +2470,8 @@ l-icon[name="envelope"]::before {
 
 .media-tile {
   position: relative;
-  width: 136px;
-  height: 90px;
+  width: 112px;
+  height: 72px;
   border-radius: 6px;
   background: linear-gradient(135deg, var(--l-color-darkblue-100), var(--l-color-darkblue-75));
   color: #fff;
@@ -2869,14 +2777,6 @@ l-icon[name="envelope"]::before {
     display: none;
   }
 
-  .stage-engage {
-    display: none;
-  }
-
-  .stage-evaluate {
-    border-right: none;
-  }
-
   .engage-tray {
     display: flex;
   }
@@ -2891,7 +2791,7 @@ l-icon[name="envelope"]::before {
   }
 }
 
-/* Phone: the stage bar becomes tabs and one column shows at a time. */
+/* Phone: tabs swap in and one column shows at a time. */
 @media (max-width: 699px) {
   /* The desktop nav links don't fit a phone; logo and search carry the header. */
   .site-nav-links {
@@ -2900,10 +2800,6 @@ l-icon[name="envelope"]::before {
 
   .site-nav-row {
     height: 56px;
-  }
-
-  .stage-bar {
-    display: none;
   }
 
   .mobile-tabs {

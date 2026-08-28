@@ -19,6 +19,8 @@ type AskBlockProps = {
   onSelect: (value: string) => void;
   /** Settles a multi-select question with everything picked so far. */
   onSubmit?: () => void;
+  /** Skips the question — always offered below the options, like "I don't know". */
+  onSkip?: () => void;
   /** Reopens a settled question so the buyer can change what they picked. */
   onEdit?: () => void;
   /**
@@ -127,6 +129,7 @@ export function AskBlock({
   picked,
   onSelect,
   onSubmit,
+  onSkip,
   onEdit,
   collapsed = false,
   onOpen,
@@ -331,6 +334,13 @@ export function AskBlock({
         ) : (
           <small className="txt-darkblue-50">Free-form answer — skip to move on.</small>
         ))}
+
+      {/* Skip rides below the options — always on offer, like "I don't know". */}
+      {active && onSkip && (
+        <button type="button" className="ask-skip-row" onClick={onSkip}>
+          Skip →
+        </button>
+      )}
 
       {/* Multi-select questions settle from an explicit log button — picking
           rows only toggles them, so the buyer can choose more than one. */}

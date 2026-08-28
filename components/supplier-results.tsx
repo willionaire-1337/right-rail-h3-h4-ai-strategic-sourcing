@@ -26,8 +26,6 @@ import { planScreening, scoreRecord } from "@/lib/screening";
 import { type Supplier } from "@/lib/suppliers";
 
 const PAGE_SIZE = 25;
-/** The Select Suppliers rail pre-picks this many top-ranked suppliers. */
-const RAIL_SUPPLIER_COUNT = 3;
 
 /** Short uppercase label shown above each answer chip in the results header. */
 const FACET_LABELS: Record<string, string> = {
@@ -92,8 +90,6 @@ export function SupplierResults({
   const [railRfi, setRailRfi] = useState(false);
   /** Suppliers the buyer added to the rail from card "+ Add" CTAs, in order. */
   const [railAdded, setRailAdded] = useState<string[]>([]);
-  /** Auto-picked top suppliers the buyer explicitly took back off the rail. */
-  const [railRemoved, setRailRemoved] = useState<Set<string>>(new Set());
   /** Soft shadow under the sticky header once the results list has scrolled. */
   const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -301,42 +297,20 @@ export function SupplierResults({
     value: facet.value,
   }));
 
-  /** The rail's list: the best-ranked few pre-picked (minus any the buyer
-      dismissed), plus card additions. Auto-picks only ever come from the
-      exact matches — suppliers meeting every logged requirement — so an RFI
-      never goes to a near match the buyer didn't add themselves. */
-  const railTop = exact.slice(0, RAIL_SUPPLIER_COUNT);
-  const railTopIds = new Set(railTop.map((supplier) => supplier.id));
-  const railBase = railTop.filter((supplier) => !railRemoved.has(supplier.id));
-  const railSuppliers = [
-    ...railBase,
-    ...railAdded
-      .filter((id) => !railTopIds.has(id))
-      .map((id) => results.find((supplier) => supplier.id === id))
-      .filter((supplier): supplier is Supplier => supplier != null),
-  ];
+  /** The rail's list: exactly what the buyer added from the cards — nothing
+      is pre-picked. */
+  const railSuppliers = railAdded
+    .map((id) => results.find((supplier) => supplier.id === id))
+    .filter((supplier): supplier is Supplier => supplier != null);
   const railIds = new Set(railSuppliers.map((supplier) => supplier.id));
 
-  /** Card "+ Add" CTA: put the supplier on the rail list (or take it back off).
-      Auto-picked top suppliers come off via the dismissed set, so they don't
-      reappear on the next render; re-adding just clears the dismissal. */
+  /** Card "+ Add" CTA: put the supplier on the rail list (or take it back off). */
   const toggleRailAdd = (supplier: Supplier) => {
-    if (railIds.has(supplier.id)) {
-      if (railTopIds.has(supplier.id)) {
-        setRailRemoved((current) => new Set(current).add(supplier.id));
-      }
-      setRailAdded((current) => current.filter((id) => id !== supplier.id));
-      return;
-    }
-    if (railTopIds.has(supplier.id)) {
-      setRailRemoved((current) => {
-        const next = new Set(current);
-        next.delete(supplier.id);
-        return next;
-      });
-      return;
-    }
-    setRailAdded((current) => [...current, supplier.id]);
+    setRailAdded((current) =>
+      current.includes(supplier.id)
+        ? current.filter((id) => id !== supplier.id)
+        : [...current, supplier.id],
+    );
   };
 
   // The engage rail's RFI goes to its own list.

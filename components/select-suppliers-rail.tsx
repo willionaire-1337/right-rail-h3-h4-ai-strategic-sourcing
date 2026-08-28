@@ -45,18 +45,27 @@ export function SelectSuppliersRail({
         </div>
       </div>
 
-      <ul className="select-rail-list">
-        {suppliers.map((supplier) => (
-          <li key={supplier.id}>
-            <span className="rail-logo" aria-hidden="true">
-              {monogram(supplier.name)}
+      {suppliers.length === 0 ? (
+        <div className="rail-placeholder">
+            <span className="rail-placeholder-icon" aria-hidden="true">
+              <l-icon name="industry" />
             </span>
-            <span className="rail-entry-name" title={supplier.name}>
-              {supplier.name}
-            </span>
-          </li>
-        ))}
-      </ul>
+          <p className="mar-0">Add suppliers to contact or shortlist</p>
+        </div>
+      ) : (
+        <ul className="select-rail-list">
+          {suppliers.map((supplier) => (
+            <li key={supplier.id}>
+              <span className="rail-logo" aria-hidden="true">
+                {monogram(supplier.name)}
+              </span>
+              <span className="rail-entry-name" title={supplier.name}>
+                {supplier.name}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <div className="rail-rfi-card">
         <span className="rail-rfi-flag">RFI drafted for you</span>

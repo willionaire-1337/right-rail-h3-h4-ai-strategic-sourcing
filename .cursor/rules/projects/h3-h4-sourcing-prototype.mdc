@@ -180,6 +180,22 @@ alwaysApply: false
   chips lost their ✕ — the card's Add/Added toggle is the single
   select/deselect control; chips just reflect it.
 
+- 2026-08-28 (William Johnson): rail no longer auto-seeds — it starts empty
+  with a placeholder (circle-plus icon, "Add suppliers to contact or
+  shortlist"); the card Add/Added toggle is the only way suppliers get on.
+  **Superseded 2026-08-28: the placeholder icon is now the factory/supplier
+  glyph (`l-icon name="industry"`, same as card company-type rows), not
+  circle-plus.** The RFI card + send/shortlist CTAs are pinned to the rail's
+  foot (`margin-top: auto`); the placeholder centers in the leftover space
+  above, and saved chips flow from the top with a minimum gap to the card.
+- 2026-08-28 (William Johnson): the contact modal's "Sending to" list
+  collapses to the first 2 recipient chips plus a tinted "+X" chip
+  (`RECIPIENT_PREVIEW` in `contact-supplier-modal.tsx`); clicking +X unfolds
+  the full list. Collapse state resets each time the dialog opens.
+  Skip moved from the footer toolbar into every question card: a quiet
+  always-visible "Skip →" row below the options (sibling to "I don't know");
+  the footer slot became a "Done" button that closes the define pane.
+
 ## Open threads
 
 - Analytics ask from the boss (2026-08-28): instrument how many buyers edit

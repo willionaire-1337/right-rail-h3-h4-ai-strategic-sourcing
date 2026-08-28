@@ -8,6 +8,9 @@ import type { Supplier } from "@/lib/suppliers";
 /** Drawing and spec formats suppliers expect with an RFQ. */
 const QUOTE_FILE_TYPES = ".pdf, .step, .iges, .dxf, .dwg, .zip";
 
+/** Recipient chips shown before the list collapses behind a "+X" toggle. */
+const RECIPIENT_PREVIEW = 2;
+
 /** What the buyer is making — fixed for this prototype's bracket use case,
     unless they logged a Part type answer in the left rail. */
 const DEFAULT_PART = "brackets";
@@ -170,6 +173,8 @@ export function ContactSupplierModal({
   /** Flips the dialog to the sent confirmation once the email page opens. */
   const [sent, setSent] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  /** Whether the "Sending to" list shows everyone or just the first few. */
+  const [recipientsOpen, setRecipientsOpen] = useState(false);
 
   // Fresh form each time the dialog opens (state adjusted during render, per
   // react.dev "adjusting state when a prop changes").
@@ -179,6 +184,7 @@ export function ContactSupplierModal({
     if (open) {
       setSent(false);
       setFiles([]);
+      setRecipientsOpen(false);
     }
   }
 
@@ -377,14 +383,27 @@ export function ContactSupplierModal({
                   >
                     <span className="contact-reqs-title">Sending to</span>
                     <div className="contact-reqs-list">
-                      {suppliers.map((recipient) => (
-                        <span className="contact-recipient-pill" key={recipient.id}>
-                          <span className="contact-recipient-logo" aria-hidden="true">
-                            {monogram(recipient.name)}
+                      {(recipientsOpen ? suppliers : suppliers.slice(0, RECIPIENT_PREVIEW)).map(
+                        (recipient) => (
+                          <span className="contact-recipient-pill" key={recipient.id}>
+                            <span className="contact-recipient-logo" aria-hidden="true">
+                              {monogram(recipient.name)}
+                            </span>
+                            {recipient.name}
                           </span>
-                          {recipient.name}
-                        </span>
-                      ))}
+                        ),
+                      )}
+                      {!recipientsOpen && suppliers.length > RECIPIENT_PREVIEW && (
+                        <button
+                          type="button"
+                          className="contact-recipient-more"
+                          aria-expanded={false}
+                          aria-label={`Show all ${suppliers.length} suppliers`}
+                          onClick={() => setRecipientsOpen(true)}
+                        >
+                          +{suppliers.length - RECIPIENT_PREVIEW}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}

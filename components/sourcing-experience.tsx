@@ -773,6 +773,7 @@ export function SourcingExperience() {
                     picked={picked}
                     onSelect={selectOption}
                     onSubmit={submitPicked}
+                    onSkip={() => answerActive([], true)}
                     onEdit={entry.status === "active" ? undefined : () => reopenAsk(entry.id)}
                   />
                 );
@@ -834,10 +835,10 @@ export function SourcingExperience() {
                   <button
                     className="define-skip"
                     type="button"
-                    disabled={browseAsks}
-                    onClick={() => answerActive([], true)}
+                    title="Done answering — back to the results"
+                    onClick={closeChat}
                   >
-                    Skip →
+                    Done
                   </button>
                   <button
                     className="define-tool"

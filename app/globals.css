@@ -179,6 +179,25 @@ p,
   color: var(--l-color-darkblue-90);
 }
 
+/* "+X" tail chip: click to unfold the rest of the recipient list. */
+.contact-recipient-more {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border: 1px solid var(--l-color-border);
+  border-radius: var(--l-radius-1);
+  background: var(--l-color-blue-5);
+  font-family: inherit;
+  font-size: var(--l-font-size-smallest);
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-blue-100);
+  cursor: pointer;
+}
+
+.contact-recipient-more:hover {
+  background: var(--l-color-blue-10);
+}
+
 .contact-recipient-logo {
   width: 22px;
   height: 22px;
@@ -1212,7 +1231,7 @@ p,
 }
 
 .select-rail-list {
-  margin: 0;
+  margin: 0 0 var(--l-space-4);
   padding: var(--l-space-3) 0 0;
   list-style: none;
   display: flex;
@@ -1258,14 +1277,33 @@ p,
   white-space: nowrap;
 }
 
-.rail-empty {
+/* Empty rail: quiet centered prompt where the picked chips will appear. */
+.rail-placeholder {
+  /* Fills the space above the pinned RFI card, centering the prompt in it. */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--l-space-2);
+  padding: var(--l-space-5) var(--l-space-4);
+  text-align: center;
+}
+
+.rail-placeholder-icon {
+  font-size: 22px;
+  color: var(--l-color-darkblue-50);
+}
+
+.rail-placeholder p {
   font-size: var(--l-font-size-smaller);
   color: var(--l-color-darkblue-50);
 }
 
-/* Drafted RFI card: tinted panel between the picks and the send CTA. */
+/* Drafted RFI card: pinned to the foot of the rail with the CTAs below it;
+   whatever sits above (placeholder or chips) gets the leftover height. */
 .rail-rfi-card {
-  margin-top: var(--l-space-4);
+  margin-top: auto;
   padding: var(--l-space-4);
   border-radius: 12px;
   background: var(--l-color-blue-5, #f2f6fd);
@@ -1831,6 +1869,28 @@ p,
 .row-indicator[data-checked] {
   background: var(--l-color-blue-100);
   border-color: var(--l-color-blue-100);
+}
+
+/* Skip: a quiet always-there row under the options, sibling to "I don't know". */
+.ask-skip-row {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px 11px;
+  border: none;
+  border-radius: 9px;
+  background: none;
+  text-align: center;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--l-color-darkblue-50);
+  cursor: pointer;
+}
+
+.ask-skip-row:hover {
+  color: var(--l-color-blue-100);
+  background: var(--l-color-blue-5, #f6f9ff);
 }
 
 .option-row.row-more {

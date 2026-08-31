@@ -13,8 +13,12 @@ type SelectSuppliersRailProps = {
   draftTitle: string;
   /** How many requirements the draft was written from. */
   requirementCount: number;
-  /** A couple of requirement values echoed on the draft card. */
-  requirementPreview: string[];
+  /** The logged spec, one "Label: Value" line per answer, stacked on the
+      draft card. */
+  requirementPreview: { label: string; value: string }[];
+  /** True until the buyer engages (adds a supplier or logs a smart-filter
+      answer); the desktop rail stays hidden while dormant. */
+  dormant: boolean;
 };
 
 /**
@@ -28,9 +32,13 @@ export function SelectSuppliersRail({
   draftTitle,
   requirementCount,
   requirementPreview,
+  dormant,
 }: SelectSuppliersRailProps) {
   return (
-    <aside className="select-rail" aria-label="Shortlist and contact suppliers">
+    <aside
+      className={`select-rail${dormant ? " select-rail-dormant" : ""}`}
+      aria-label="Shortlist and contact suppliers"
+    >
       <div className="rail-header">
         <span className="rail-badge" aria-hidden="true">
           <l-icon name="paper-plane" />
@@ -67,29 +75,49 @@ export function SelectSuppliersRail({
         </ul>
       )}
 
-      <div className="rail-rfi-card">
-        <span className="rail-rfi-flag">RFI drafted for you</span>
-        <h5 className="rail-rfi-title">{draftTitle}</h5>
-        <p className="rail-rfi-note mar-0">
-          {requirementCount === 0
-            ? "Written from your search"
-            : `Written from your ${requirementCount} logged requirement${
-                requirementCount === 1 ? "" : "s"
-              }${requirementPreview.map((entry) => ` · ${entry}`).join("")}`}
-        </p>
-        <button type="button" className="rail-rfi-preview" onClick={onSendRfi}>
-          Preview RFI →
-        </button>
-      </div>
+      {requirementCount === 0 ? (
+        // Placeholder until smart-filter answers exist to draft an RFI from.
+        <div className="rail-rfi-card">
+          <span className="rail-rfi-flag rail-rfi-flag-empty">No RFI drafted yet</span>
+          <p className="rail-rfi-note mar-0">
+            Answer the smart filter questions and we&apos;ll draft an RFI from
+            your requirements.
+          </p>
+        </div>
+      ) : (
+        <div className="rail-rfi-card">
+          <span className="rail-rfi-flag">RFI drafted for you</span>
+          <h5 className="rail-rfi-title">{draftTitle}</h5>
+          <ul className="rail-rfi-spec">
+            {requirementPreview.map((entry) => (
+              <li key={entry.label}>
+                {entry.label}: <strong>{entry.value}</strong>
+              </li>
+            ))}
+          </ul>
+          <button type="button" className="rail-rfi-preview" onClick={onSendRfi}>
+            Preview RFI →
+          </button>
+        </div>
+      )}
 
-      <div className="select-rail-actions">
+      {/* Response-guarantee card wrapping the primary actions; the shield
+          badge sits astride the card's top border. */}
+      <div className="rail-guarantee">
+        <span className="rail-guarantee-badge" aria-hidden="true">
+          <l-icon name="shield-check" />
+        </span>
+        <h5 className="rail-guarantee-title mar-0">Supplier Response Guaranteed</h5>
+        <p className="rail-guarantee-note mar-0">
+          Get a response within 2 days or we&apos;ll make it right.
+        </p>
         <button
           type="button"
           kind="primary"
           disabled={suppliers.length === 0}
           onClick={onSendRfi}
         >
-          Send to {suppliers.length} Supplier{suppliers.length === 1 ? "" : "s"}
+          Contact {suppliers.length} Supplier{suppliers.length === 1 ? "" : "s"}
         </button>
         <button type="button" className="rail-sub" onClick={onAddToShortlist}>
           + Add to shortlist

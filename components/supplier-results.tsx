@@ -16,16 +16,33 @@ import {
   questionById,
   candidatesFor,
   LOCATION_QUESTION_ID,
-  MATCH_FLOOR,
   matchSetFor,
   railTarget,
   simulatedMatchCount,
   type LoggedAnswer,
 } from "@/lib/simulation";
 import { planScreening, scoreRecord } from "@/lib/screening";
-import { type Supplier } from "@/lib/suppliers";
+import { CATEGORY_LABEL, type Supplier } from "@/lib/suppliers";
 
 const PAGE_SIZE = 25;
+
+/** Short spec labels for the RFI draft card's bulleted requirement lines —
+    the questionnaire titles are too long to read as "Label: Value". */
+const RFI_SPEC_LABELS: Record<string, string> = {
+  part: "Product",
+  process: "Process",
+  material: "Material",
+  stock: "Stock",
+  qty: "Quantity",
+  size: "Size",
+  tooling: "Tooling",
+  tol: "Tolerance",
+  loc: "Location",
+  features: "Features",
+  app: "Application",
+  cert: "Certifications",
+  diverse: "Diversity",
+};
 
 /** Short uppercase label shown above each answer chip in the results header. */
 const FACET_LABELS: Record<string, string> = {
@@ -128,7 +145,7 @@ export function SupplierResults({
 
   // Exact matches rank above any near matches the rail was padded with, so a
   // relaxed answer never pushes a supplier that meets everything down the list.
-  const { exact, near, backfilled, relaxed } = useMemo(() => {
+  const { exact, near } = useMemo(() => {
     const set = matchSetFor(answers, railTarget(matchTotal));
     const plan = planScreening(
       `${query} ${logged.map((answer) => answer.values.join(" ")).join(" ")}`,
@@ -151,8 +168,6 @@ export function SupplierResults({
     return {
       exact: rank(set.matches),
       near: rank(set.near),
-      backfilled: set.backfilled,
-      relaxed: set.relaxed,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answers, matchTotal, query, verifiedOnly, localFacetPicks]);
@@ -297,6 +312,10 @@ export function SupplierResults({
     value: facet.value,
   }));
 
+  // What the requirements pill's hover popover lists: the searched category
+  // first, then every logged answer.
+  const requirementDetails = [{ label: "Service", value: CATEGORY_LABEL }, ...requirements];
+
   /** The rail's list: exactly what the buyer added from the cards — nothing
       is pre-picked. */
   const railSuppliers = railAdded
@@ -340,11 +359,14 @@ export function SupplierResults({
       ? [...draftPieces, answerValue("part") ?? "Parts"].join(" ")
       : query;
 
-  /** A couple of logged requirement values echoed on the draft card. */
-  const requirementPreview = logged
-    .filter((answer) => answer.questionId !== "material" && answer.questionId !== "process")
-    .slice(0, 2)
-    .map((answer) => answer.values[0].toLowerCase());
+  /** The logged spec, stacked on the draft card as "Label: Value" lines. */
+  const requirementPreview = logged.map((answer) => ({
+    label:
+      RFI_SPEC_LABELS[answer.questionId] ??
+      questionById(answer.questionId)?.title ??
+      answer.questionId,
+    value: answer.values.join(", "),
+  }));
 
   /** Rail secondary CTA: save the pre-picked top suppliers. */
   const shortlistRailSuppliers = () => {
@@ -391,22 +413,6 @@ export function SupplierResults({
         <div className="results-list">
           {results.slice(pageStart, pageStart + PAGE_SIZE).map((supplier, index) => (
             <Fragment key={supplier.id}>
-              {/* The floor rule's divider. Backfill also pads the rail when the
-                  104-profile slice runs dry while the modeled category count is
-                  still healthy; that padding stands in for real matches the
-                  slice doesn't hold, so only a genuine floor-rule backfill —
-                  the set itself under the floor — is called out, labeled with
-                  the answer that was relaxed to refill it. */}
-              {backfilled && matchTotal < MATCH_FLOOR && pageStart + index === exact.length && (
-                <div className="results-row-full near-match-note">
-                  <l-icon name="circle-info" aria-hidden="true" />
-                  <p className="mar-0">
-                    {relaxed.length > 0
-                      ? `Closest matches — these meet everything you've asked for except ${relaxed[0]}.`
-                      : "Closest matches — these meet most of your requirements, but not all."}
-                  </p>
-                </div>
-              )}
               <SupplierCard
                 supplier={supplier}
                 added={railIds.has(supplier.id)}
@@ -416,6 +422,7 @@ export function SupplierResults({
                   pageStart + index < exact.length ? logged.length : Math.max(0, logged.length - 1)
                 }
                 requirementsTotal={logged.length}
+                requirementDetails={requirementDetails}
               />
             </Fragment>
           ))}
@@ -470,6 +477,7 @@ export function SupplierResults({
           draftTitle={draftTitle}
           requirementCount={logged.length}
           requirementPreview={requirementPreview}
+          dormant={railSuppliers.length === 0 && logged.length === 0}
         />
       </div>
 

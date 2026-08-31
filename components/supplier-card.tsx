@@ -14,6 +14,9 @@ type SupplierCardProps = {
   requirementsMet: number;
   /** How many requirements the buyer has logged so far. */
   requirementsTotal: number;
+  /** What matched, shown on hover of the requirements pill — the searched
+      category first, then each logged answer. */
+  requirementDetails: { label: string; value: string }[];
 };
 
 export function monogram(name: string): string {
@@ -113,6 +116,7 @@ export function SupplierCard({
   onToggleAdd,
   requirementsMet,
   requirementsTotal,
+  requirementDetails,
 }: SupplierCardProps) {
   const [expanded, setExpanded] = useState(false);
   const clampable = supplier.description.length > 180;
@@ -153,7 +157,7 @@ export function SupplierCard({
             aria-label={added ? `${supplier.name} added to selected suppliers` : `Add ${supplier.name} to selected suppliers`}
             onClick={onToggleAdd}
           >
-            <l-icon name={added ? "check" : "plus"} /> {added ? "Added" : "Add"}
+            <l-icon name={added ? "check" : "plus"} /> {added ? "Added to List" : "Add to List"}
           </button>
           <button kind="primary" scale="small" className="card-cta" onClick={noop}>
             Visit Website <l-icon name="arrow-up-right-from-square" />
@@ -215,20 +219,35 @@ export function SupplierCard({
         )}
       </div>
 
-      {/* Foot row: the all-requirements badge (near matches carry no badge —
-          the list divider already names what was relaxed), with the website
-          link taking the primary button's place in the compact phone variant. */}
+      {/* Foot row: the requirements badge (every card carries it for now),
+          with the website link taking the primary button's place in the
+          compact phone variant. */}
       <div className="card-foot">
-        {requirementsMet >= requirementsTotal && (
-          <span className="req-met">
+        <span className="req-met" tabIndex={0}>
             <span className="req-met-check" aria-hidden="true">
               <l-icon name="check" />
             </span>
             {requirementsTotal === 0
               ? "Matches your search"
-              : `All ${requirementsTotal} requirement${requirementsTotal === 1 ? "" : "s"} met`}
-          </span>
-        )}
+              : requirementsTotal === 1
+                ? "Requirement met"
+                : `All ${requirementsTotal} requirements met`}
+            {/* Hover / focus popover spelling out exactly what matched. */}
+            <span className="req-pop" role="tooltip">
+              <span className="req-pop-title">Matching your search</span>
+              {requirementDetails.map((detail) => (
+                <span className="req-pop-row" key={`${detail.label}-${detail.value}`}>
+                  <span className="req-pop-check" aria-hidden="true">
+                    <l-icon name="check" />
+                  </span>
+                  <span>
+                    <span className="req-pop-label">{detail.label}</span>
+                    {detail.value}
+                  </span>
+                </span>
+              ))}
+            </span>
+        </span>
         <a href="#" className="card-foot-website" onClick={noop}>
           Visit Website <l-icon name="arrow-up-right-from-square" />
         </a>

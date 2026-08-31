@@ -641,12 +641,67 @@
     "id": "part",
     "rank": "Q11",
     "importance": 45,
-    "title": "Part type",
+    "title": "Product",
     "tier": "adaptive",
     "multi": false,
-    "ask": "What is the part, in plain terms?",
-    "hint": "End caps, connectors, brackets, filters, and similar part types.",
+    "search": true,
+    "ask": "What product are you trying to make?",
+    "hint": "Search stamped products — brackets, washers, end caps, and more.",
     "options": [
+      {
+        "value": "Brackets"
+      },
+      {
+        "value": "Washers"
+      },
+      {
+        "value": "Clips"
+      },
+      {
+        "value": "Springs"
+      },
+      {
+        "value": "Terminals"
+      },
+      {
+        "value": "Contacts"
+      },
+      {
+        "value": "Shims"
+      },
+      {
+        "value": "Gaskets"
+      },
+      {
+        "value": "Retaining Rings"
+      },
+      {
+        "value": "Busbars"
+      },
+      {
+        "value": "Enclosures"
+      },
+      {
+        "value": "Housings"
+      },
+      {
+        "value": "Shields"
+      },
+      {
+        "value": "Eyelets"
+      },
+      {
+        "value": "Ferrules"
+      },
+      {
+        "value": "Grounding Straps"
+      },
+      {
+        "value": "Battery Tabs"
+      },
+      {
+        "value": "Lids & Covers"
+      },
       {
         "value": "End Caps",
         "note": "908971 · 1 suppliers",

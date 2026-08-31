@@ -95,14 +95,18 @@ alwaysApply: false
 - 2026-08-27 (William Johnson): The rail is titled "Shortlist or Contact
   Suppliers" (was "Select Suppliers"). Cards swapped the Save bookmark for a
   "+ Add" secondary CTA left of Visit Website that toggles the supplier on/off
-  the rail list ("✓ Added" when on). The rail auto-seeds with the top 3, which
+  the rail list ("✓ Added" when on). **Superseded 2026-08-31: the toggle now
+  reads "+ Add to List" / "✓ Added to List".** The rail auto-seeds with the top 3, which
   are also deselectable — dismissals are tracked so they stay off; re-adding
   restores them. Manual additions append in click order.
 - 2026-08-27 (William Johnson): The capability pills row on cards became a
   requirements summary: green circle-check + "All X requirements met" (exact
   matches), "Y of X requirements met" (near matches, one answer relaxed), or
   "Matches your search" before any answers. `CapabilityRow` still exists for
-  the unmounted tile variant.
+  the unmounted tile variant. **Superseded 2026-08-31: current wording is
+  "All X requirements met" (2+), "Requirement met" (exactly 1), "Matches your
+  search" (0), shown on every card including near matches — see the 08-28
+  boss-feedback entry below for the intermediate exact-only state.**
 
 - 2026-08-27 (William Johnson, reference HTML "Supplier Search 2a — responsive
   standalone" provided): Full layout rework to the reference's three-stage
@@ -156,7 +160,8 @@ alwaysApply: false
   white grey-outlined name-only chips flowing left-to-right (no truncation),
   then an "RFI drafted for you" card (green flag pill, headline synthesized
   from material + process + part answers, "Written from your N logged
-  requirements · …", Preview RFI →), "Send to N Suppliers", and quiet
+  requirements · …", Preview RFI →), "Contact N Suppliers" (**superseded
+  2026-08-28: was "Send to N Suppliers"**), and quiet
   sub-CTAs "+ Add to shortlist" / "Visit Website(s)". Auto Contact and the
   "+ Add" chip were dropped. Location question removed from the define flow
   (header field / drawer only; the answer still filters). Card fact rows got
@@ -173,6 +178,11 @@ alwaysApply: false
   "N of M requirements met" pill read as probabilistic scoring, so cards now
   only badge "All N requirements met" (exact matches); near matches carry no
   badge — the list divider naming the relaxed answer is the only callout —
+  **Superseded 2026-08-31: every card badges again ("for now", William) —
+  "All N requirements met" for 2+, "Requirement met" for exactly 1,
+  "Matches your search" for 0; near matches included. Later the same day the
+  near-match "Closest matches — … except X" divider was removed too (William),
+  so near matches now appear with no callout at all.** —
   and rail auto-picks now draw exclusively from exact matches so an RFI
   never pre-targets a near match. "Visit Website(s)" sub-CTA dropped (it did
   nothing). Cards compacted (12px vertical padding, 8px gaps, 40px logo,
@@ -183,11 +193,21 @@ alwaysApply: false
 - 2026-08-28 (William Johnson): rail no longer auto-seeds — it starts empty
   with a placeholder (circle-plus icon, "Add suppliers to contact or
   shortlist"); the card Add/Added toggle is the only way suppliers get on.
+  **Superseded 2026-08-31: the desktop rail no longer starts visible at all —
+  it stays hidden until the buyer adds a supplier or logs a smart-filter
+  answer (see the 2026-08-31 dormant-rail entry). The placeholder still
+  shows once the rail reveals via a smart-filter answer with no adds yet.**
   **Superseded 2026-08-28: the placeholder icon is now the factory/supplier
   glyph (`l-icon name="industry"`, same as card company-type rows), not
   circle-plus.** The RFI card + send/shortlist CTAs are pinned to the rail's
   foot (`margin-top: auto`); the placeholder centers in the leftover space
   above, and saved chips flow from the top with a minimum gap to the card.
+- 2026-08-28 (William Johnson): the "All N requirements met" pill is
+  hoverable/focusable — a CSS popover ("Matching your search") lists what
+  matched with green checks: the searched category (Service · Stamping
+  Services) first, then each logged answer with its label. Data threaded as
+  `requirementDetails` from `supplier-results.tsx` into `supplier-card.tsx`;
+  the category is not counted in the pill's N.
 - 2026-08-28 (William Johnson): the contact modal's "Sending to" list
   collapses to the first 2 recipient chips plus a tinted "+X" chip
   (`RECIPIENT_PREVIEW` in `contact-supplier-modal.tsx`); clicking +X unfolds
@@ -195,6 +215,86 @@ alwaysApply: false
   Skip moved from the footer toolbar into every question card: a quiet
   always-visible "Skip →" row below the options (sibling to "I don't know");
   the footer slot became a "Done" button that closes the define pane.
+
+- 2026-08-28 (William Johnson): the engage-rail primary CTA reads "Contact N
+  Suppliers" (was "Send to N Suppliers"). **Supersedes the 2026-08-27 rail v2
+  wording "Send to N Suppliers".** The mobile tray still says "Send RFI".
+
+- 2026-08-28 (William Johnson): the rail's RFI card gets a placeholder state
+  when zero smart-filter answers are logged: gray "No RFI drafted yet" flag
+  (`.rail-rfi-flag-empty`) plus one line — "Answer the smart filter questions
+  and we'll draft an RFI from your requirements." — no title, no Preview RFI
+  link. The old zero-answer copy ("RFI drafted for you" / search query /
+  "Written from your search") is gone; the drafted card now only appears once
+  ≥1 answer is logged. The Contact button still opens the modal regardless.
+
+- 2026-08-31 (William Johnson): the desktop engage rail is dormant (hidden,
+  results full-width) until the buyer clicks a card's "+ Add" or logs a
+  smart-filter answer — `dormant` prop on `SelectSuppliersRail` adds
+  `.select-rail-dormant` (`display: none`) when both `railSuppliers` and
+  `logged` are empty. CSS class, not unmount, so the ≤699px engage-tab rule
+  (higher specificity) still shows the rail on the phone tab; the ≤1100px
+  bottom engage tray is untouched.
+
+- 2026-08-31 (William Johnson): card CTA reads "+ Add to List" / "Added to
+  List" (was "+ Add" / "Added"). The rail-hiding trigger wording above
+  ("clicks a card's + Add") refers to this same button.
+
+- 2026-08-31 (William Johnson): the smart filter now opens with "What product
+  are you trying to make?" — the `part` question (Q11) was promoted to the
+  head of `ASK_SEQUENCE`, retitled "Product", and flagged `search: true` in
+  `questionnaire.json`. Search questions render a typeahead combobox in
+  `AskBlock` (same markup/CSS as the location entry, magnifying-glass icon,
+  "Set product" submit; since later that day the submit sits full-width
+  under the field, compact and styled like the footer Done button — applies
+  to the location entry too) over their full option catalog — never pruned by
+  `planField` and exempt from the earns-its-place narrowing check, same as
+  the location question. Catalog gained buyer-language stamped products
+  (Brackets, Washers, Clips, Springs, Terminals, Contacts, Shims, Gaskets,
+  Retaining Rings, Busbars, Enclosures, Housings, Shields, Eyelets, Ferrules,
+  Grounding Straps, Battery Tabs, Lids & Covers) ahead of the taxonomy rows;
+  typed free-text answers are also accepted. Process is now the second
+  question.
+
+- 2026-08-31 (William Johnson): the define pane's open/close affordances say
+  "Smart Filters", not "agent": the floating pill reads "Open Smart Filters",
+  the footer collapse chevron and the done-card primary button read "Close
+  Smart Filters" (was "Open Agent" / "Collapse the agent pane" /
+  "Close agent").
+
+- 2026-08-31 (William Johnson): every result card badges its requirements
+  ("All N requirements met" / "Requirement met" for one / "Matches your
+  search" for none), and the near-match "Closest matches — … except X"
+  divider was removed — near matches are visually indistinguishable for now.
+  See the superseded 08-27/08-28 badge entries above for the history.
+
+- 2026-08-31 (William Johnson): the rail's action footer became a
+  "Supplier Response Guaranteed" card (`.rail-guarantee`): bordered white
+  card, centered, with a green shield-check badge breaking the top border
+  (white box-shadow ring masks the border behind it), "Get a response within
+  2 days or we'll make it right." copy, then the full-width Contact CTA and
+  "+ Add to shortlist" link inside the card. Replaces the bare
+  `.select-rail-actions` stack (CSS block removed).
+
+- 2026-08-31 (William Johnson): the drafted RFI card's subtext is the logged
+  spec as stacked plain lines (no bullets) — one "Label: Value" per answer,
+  11.5px, label in body color, value semibold dark (`.rail-rfi-spec`;
+  `requirementPreview` is now `{label, value}[]` threaded from
+  `supplier-results.tsx` using the `RFI_SPEC_LABELS` short-label map).
+  Replaces the earlier same-day single-sentence "Written from your N logged
+  requirements · …" preview and the brief bulleted-list version.
+
+- 2026-08-31 (William Johnson): the product typeahead opens downward
+  (`.location-suggest-down` flips the shared `.location-suggest` from
+  `bottom: 100%` to `top: 100%`) — the part question sits at the top of the
+  define pane, so upward suggestions were clipped. The location question
+  still opens upward since it renders at the transcript foot.
+
+- 2026-08-31 (layout fix): the rail's middle section (`.select-rail-list`
+  chips / `.rail-placeholder`) is now the flexible, internally-scrolling
+  piece (`flex: 1 1 auto; min-height: 0; overflow-y: auto`), so the RFI and
+  guarantee cards at the foot are never pushed below the viewport — they
+  were getting clipped on shorter windows.
 
 ## Open threads
 

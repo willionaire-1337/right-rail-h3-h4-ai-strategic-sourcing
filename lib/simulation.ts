@@ -412,7 +412,9 @@ export function askForQuestion(questionId: string, _answers: LoggedAnswer[] = []
   if (NON_FILTERING_QUESTIONS.has(questionId)) return null
   const question = questionById(questionId)
   if (!question) return null
-  if (question.location) {
+  // Typed-entry questions (location, product search) offer their catalog
+  // whole — the buyer searches it rather than reading pruned rows.
+  if (question.location || question.search) {
     return { question, options: withDontKnow(question.options.map((option) => option.value)) }
   }
   const plan = planField(
@@ -440,6 +442,10 @@ export function askForQuestion(questionId: string, _answers: LoggedAnswer[] = []
  * set (see {@link NON_FILTERING_QUESTIONS}).
  */
 export const ASK_SEQUENCE = [
+  // "part" jumped the rank order 2026-08-31 — naming the product is the most
+  // natural place for a buyer to start, so it opens the run as a searchable
+  // catalog rather than waiting at its Q11 slot.
+  "part", // Q11
   "process", // Q1
   "material", // Q2
   "stock", // Q3
@@ -451,7 +457,6 @@ export const ASK_SEQUENCE = [
   // "loc" left the define flow 2026-08-27 — location is set from the results
   // header field or the All Filters drawer instead; the answer still filters.
   "features", // Q10
-  "part", // Q11
   "app", // Q12
   "cert", // Q13
   "diverse", // Q14
@@ -486,10 +491,10 @@ export function nextAsk(answers: LoggedAnswer[]): NextAsk | null {
     if (NON_FILTERING_QUESTIONS.has(questionId)) continue
     const question = questionById(questionId)
     if (!question) continue
-    // The location question takes a typed place, not an option row, so the
-    // option-narrowing checks below don't apply — any real place narrows the
-    // set, and "National" is the explicit opt-out.
-    if (question.location) {
+    // Typed-entry questions (location, product search) don't go through the
+    // option-narrowing checks below — the buyer types or searches an answer,
+    // so the full catalog is offered and the question always earns its turn.
+    if (question.location || question.search) {
       return {
         question,
         options: withDontKnow(question.options.map((option) => option.value)),

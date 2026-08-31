@@ -2,7 +2,10 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 import { locationSuggestions } from "@/lib/locations";
-import { DONT_KNOW_OPTION, type NextAsk } from "@/lib/simulation";
+import { DONT_KNOW_OPTION, isDontKnowOption, type NextAsk } from "@/lib/simulation";
+
+/** Most rows the search question's dropdown shows at once. */
+const MAX_SEARCH_SUGGESTIONS = 8;
 
 /** Most rows of options to offer, however tall the window gets. */
 const MAX_OPTION_ROWS = 6;
@@ -136,17 +139,31 @@ export function AskBlock({
 }: AskBlockProps) {
   const { question, options } = ask;
   const [expanded, setExpanded] = useState(false);
-  /** Typed place for the location question — ZIP code, city, or state. */
+  /** Typed entry for the location and search questions. */
   const [place, setPlace] = useState("");
   /** Whether the autocomplete above the input is showing. */
   const [suggestOpen, setSuggestOpen] = useState(false);
   /** Row the arrow keys have landed on. */
   const [highlighted, setHighlighted] = useState(0);
 
-  const suggestions = question.location && status === "active" ? locationSuggestions(place) : [];
+  // Both typed-entry questions share the combobox: the location question
+  // suggests places, the search question suggests its own option catalog —
+  // whole while the field is empty, filtered as the buyer types.
+  const suggestions: { label: string; value: string; kind?: string }[] =
+    status !== "active"
+      ? []
+      : question.location
+        ? locationSuggestions(place)
+        : question.search
+          ? options
+              .filter((option) => !isDontKnowOption(option))
+              .filter((option) => option.toLowerCase().includes(place.trim().toLowerCase()))
+              .slice(0, MAX_SEARCH_SUGGESTIONS)
+              .map((option) => ({ label: option, value: option }))
+          : [];
   const suggesting = suggestOpen && suggestions.length > 0;
 
-  /** Settles the location question with a typed or suggested place. */
+  /** Settles a typed-entry question with a typed or suggested answer. */
   const submitPlace = (value: string) => {
     const text = value.trim();
     if (!text) return;
@@ -235,7 +252,7 @@ export function AskBlock({
         </p>
       )}
 
-      {active && question.location && (
+      {active && (question.location || question.search) && (
         <form
           className="location-entry"
           onSubmit={(event) => {
@@ -247,7 +264,11 @@ export function AskBlock({
             {/* The dropdown sits above the input — the question card lives at
                 the foot of the transcript, so upward is where the room is. */}
             {suggesting && (
-              <ul className="location-suggest" role="listbox" aria-label="Location suggestions">
+              <ul
+                className={`location-suggest${question.search ? " location-suggest-down" : ""}`}
+                role="listbox"
+                aria-label={question.search ? "Product suggestions" : "Location suggestions"}
+              >
                 {suggestions.map((suggestion, index) => (
                   <li key={suggestion.label}>
                     <button
@@ -264,21 +285,37 @@ export function AskBlock({
                       }}
                       onMouseEnter={() => setHighlighted(index)}
                     >
-                      <l-icon name="location-dot" aria-hidden="true" />
+                      <l-icon
+                        name={question.location ? "location-dot" : "magnifying-glass"}
+                        aria-hidden="true"
+                      />
                       {suggestion.label}
-                      <span className="location-suggest-kind">{suggestion.kind}</span>
+                      {suggestion.kind && (
+                        <span className="location-suggest-kind">{suggestion.kind}</span>
+                      )}
                     </button>
                   </li>
                 ))}
               </ul>
             )}
             <label className="location-search">
-              <l-icon name="location-dot" aria-hidden="true" />
+              <l-icon
+                name={question.location ? "location-dot" : "magnifying-glass"}
+                aria-hidden="true"
+              />
               <input
                 type="text"
                 value={place}
-                aria-label="ZIP code, city, or state"
-                placeholder="ZIP code, city, or state"
+                aria-label={
+                  question.location
+                    ? "ZIP code, city, or state"
+                    : "Search products"
+                }
+                placeholder={
+                  question.location
+                    ? "ZIP code, city, or state"
+                    : "Search products — brackets, washers…"
+                }
                 role="combobox"
                 aria-expanded={suggesting}
                 aria-autocomplete="list"
@@ -308,12 +345,14 @@ export function AskBlock({
             </label>
           </div>
           <button kind="primary" type="submit" disabled={!place.trim()}>
-            Set location
+            {question.location ? "Set location" : "Set product"}
           </button>
         </form>
       )}
 
+      {/* The search question's catalog lives in the dropdown, not in rows. */}
       {active &&
+        !question.search &&
         (options.length > 0 ? (
           <div className="option-rows" role="group" aria-label={question.title} ref={gridRef}>
             {visible.map((option) => (

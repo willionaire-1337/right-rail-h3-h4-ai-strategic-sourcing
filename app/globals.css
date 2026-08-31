@@ -1183,6 +1183,13 @@ p,
   min-width: 0;
 }
 
+/* Until the buyer adds a supplier or logs a smart-filter answer, the rail
+   stays out of the way and the results take the full width. The ≤699px
+   engage-tab rule outranks this, so the phone Engage tab still shows it. */
+.select-rail.select-rail-dormant {
+  display: none;
+}
+
 /* Engage column: 320px, header + removable shortlist rows + stacked CTAs. */
 .select-rail {
   box-sizing: border-box;
@@ -1237,6 +1244,12 @@ p,
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  /* The chip area soaks up leftover height and scrolls internally, so the
+     RFI draft and guarantee cards below it are never pushed out of view. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  align-content: flex-start;
 }
 
 /* Each pick reads as a compact name-only chip; rows pack left to right and
@@ -1279,8 +1292,11 @@ p,
 
 /* Empty rail: quiet centered prompt where the picked chips will appear. */
 .rail-placeholder {
-  /* Fills the space above the pinned RFI card, centering the prompt in it. */
+  /* Fills the space above the pinned RFI card, centering the prompt in it,
+     and shrinks first when the rail runs short so the cards stay visible. */
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1322,6 +1338,12 @@ p,
   text-transform: uppercase;
 }
 
+/* Pre-draft placeholder: neutral flag while the smart filter has no answers. */
+.rail-rfi-flag-empty {
+  background: var(--l-color-gray-6, #f2f2f2);
+  color: var(--l-color-darkblue-75);
+}
+
 .rail-rfi-title {
   margin: 6px 0 0;
   font-size: 13.5px;
@@ -1334,6 +1356,22 @@ p,
   font-size: 12px;
   line-height: 1.5;
   color: var(--l-color-darkblue-75);
+}
+
+/* Logged spec on the draft card: plain stacked "Label: Value" lines, values
+   emphasized. */
+.rail-rfi-spec {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--l-color-darkblue-75);
+}
+
+.rail-rfi-spec strong {
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-100);
 }
 
 .rail-rfi-preview {
@@ -1351,16 +1389,56 @@ p,
   text-decoration: underline;
 }
 
-.select-rail-actions {
+/* Response-guarantee card around the rail's primary actions: bordered white
+   card, centered copy, with the shield badge breaking the top border. */
+.rail-guarantee {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--l-space-2);
-  padding-top: var(--l-space-3);
+  margin-top: var(--l-space-4);
+  padding: var(--l-space-5) var(--l-space-3) var(--l-space-3);
+  border: 1px solid var(--l-color-gray-5);
+  border-radius: 12px;
+  background: #fff;
+  text-align: center;
 }
 
-.select-rail-actions button {
-  width: 100%;
+.rail-guarantee-badge {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--l-color-green-10, #e0f2e4);
+  color: var(--app-color-green-ink, #178a50);
+  /* Mask the card border passing behind the badge. */
+  box-shadow: 0 0 0 4px #fff;
   font-size: 15px;
+}
+
+.rail-guarantee-title {
+  font-size: var(--l-font-size-smaller);
+  font-weight: var(--l-font-weight-bold);
+  color: var(--l-color-darkblue-100);
+}
+
+.rail-guarantee-note {
+  font-size: 12px;
+  color: var(--l-color-darkblue-75);
+}
+
+/* Same default-CTA geometry as the supplier cards' "Visit Website". */
+.rail-guarantee button[kind="primary"] {
+  width: 100%;
+  margin-top: var(--l-space-1);
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12.5px;
 }
 
 /* Shortlist rides under the send CTA as a quiet sub-action. */
@@ -1900,11 +1978,14 @@ p,
   border-style: dashed;
 }
 
-/* The location question's typed entry — ZIP, city, or state — beside its
-   submit; the National opt-out renders as an ordinary option row below. */
+/* Typed-entry questions (location, product search): the field on its own
+   row with the submit CTA stacked underneath — the pane is too narrow for
+   them side by side. The National opt-out still renders as an ordinary
+   option row below. */
 .location-entry {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--l-space-2);
 }
 
@@ -1920,11 +2001,14 @@ p,
   background: #fff;
 }
 
+/* Full-width compact submit, same default-CTA geometry as the footer's
+   Done button and the supplier cards' "Visit Website". */
 .location-entry button[kind="primary"] {
-  height: 44px;
-  flex-shrink: 0;
-  /* Tailoft's default kind button is 1rem (16px); match the field at 14px. */
-  font-size: var(--l-font-size-smaller);
+  width: 100%;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  font-weight: var(--l-font-weight-semibold);
   line-height: var(--l-font-lineheight-3, 1.25);
 }
 
@@ -1945,6 +2029,14 @@ p,
   box-shadow: 0 -8px 24px rgb(9 44 71 / 0.16);
   max-height: 268px;
   overflow-y: auto;
+}
+
+/* The product search opens downward instead — it's the first question, at
+   the top of the pane, so that's where the room is. */
+.location-suggest-down {
+  bottom: auto;
+  top: calc(100% + 6px);
+  box-shadow: 0 8px 24px rgb(9 44 71 / 0.16);
 }
 
 .location-suggest-row {
@@ -2029,14 +2121,17 @@ p,
   color: var(--l-color-darkblue-100);
 }
 
+/* Sized like the supplier-card CTAs ("Visit Website"), the app's default
+   CTA geometry: 32px tall, 3px radius, 12.5px semibold. */
 .define-back,
 .define-skip {
   flex: 1;
   min-width: 56px;
-  padding: 10px 2px;
-  border-radius: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--l-radius-1, 3px);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: var(--l-font-weight-semibold);
   white-space: nowrap;
   cursor: pointer;
@@ -2273,6 +2368,7 @@ p,
 
 /* Requirements-met badge: bordered pill with a solid green circle check. */
 .req-met {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -2283,6 +2379,70 @@ p,
   font-size: 12.5px;
   font-weight: var(--l-font-weight-semibold);
   color: var(--app-color-green-ink, #178a50);
+  cursor: default;
+}
+
+/* Hover / focus popover: spells out what the badge is counting. */
+.req-pop {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  width: max-content;
+  max-width: 280px;
+  padding: var(--l-space-3) var(--l-space-4);
+  border: 1px solid var(--l-color-border);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(19, 41, 63, 0.14);
+}
+
+.req-met:hover .req-pop,
+.req-met:focus-visible .req-pop {
+  display: flex;
+}
+
+.req-pop-title {
+  font-size: 10.5px;
+  font-weight: var(--l-font-weight-bold);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--l-color-darkblue-50);
+}
+
+.req-pop-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: var(--l-font-weight-regular);
+  color: var(--l-color-darkblue-100);
+}
+
+.req-pop-check {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  border-radius: var(--l-radius-full);
+  background: var(--l-color-green-100);
+  color: #fff;
+  font-size: 7.5px;
+}
+
+.req-pop-label {
+  display: block;
+  font-size: 10px;
+  font-weight: var(--l-font-weight-bold);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--l-color-darkblue-50);
 }
 
 .req-met-check {

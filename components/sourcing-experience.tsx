@@ -757,7 +757,7 @@ export function SourcingExperience() {
                             <l-icon name="arrow-rotate-left" /> Restart search
                           </button>
                           <button kind="primary" onClick={() => setAgentOpen(false)}>
-                            Close agent
+                            Close Smart Filters
                           </button>
                         </div>
                       </div>
@@ -818,8 +818,8 @@ export function SourcingExperience() {
                   <button
                     className="ghost-button answer-tool"
                     type="button"
-                    title={`Collapse to left edge — ${OPT_OUT_HINT}`}
-                    aria-label="Collapse the agent pane"
+                    title={`Close Smart Filters — ${OPT_OUT_HINT}`}
+                    aria-label="Close Smart Filters"
                     onClick={closeChat}
                   >
                     <l-icon name="angle-left" aria-hidden="true" />
@@ -882,8 +882,8 @@ export function SourcingExperience() {
           <button
             type="button"
             className="agent-tab"
-            title="Open Agent"
-            aria-label="Open Agent"
+            title="Open Smart Filters"
+            aria-label="Open Smart Filters"
             onClick={() => setAgentOpen(true)}
           >
             <svg
@@ -919,7 +919,7 @@ export function SourcingExperience() {
                 strokeLinejoin="round"
               />
             </svg>
-            Open Agent
+            Open Smart Filters
           </button>
         )}
       </main>

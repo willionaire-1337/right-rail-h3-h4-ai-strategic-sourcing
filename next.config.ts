@@ -8,7 +8,8 @@ const nextConfig: NextConfig = {
   // Static export — the prototype has no server-side behavior, and GitHub
   // Pages can only host static assets.
   output: "export",
-  // Emit /supplier-email/index.html so Pages serves the route as a directory.
+  // Emit /supplier-email/index.html (and the buyer-email routes) so Pages
+  // serves each preview as a directory.
   trailingSlash: true,
   basePath,
   // The default next/image loader needs a server; serve files as-is.

@@ -477,7 +477,6 @@ export function SupplierResults({
           draftTitle={draftTitle}
           requirementCount={logged.length}
           requirementPreview={requirementPreview}
-          dormant={railSuppliers.length === 0 && logged.length === 0}
         />
       </div>
 

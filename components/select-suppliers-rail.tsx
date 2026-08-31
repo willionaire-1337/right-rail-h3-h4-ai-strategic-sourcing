@@ -16,9 +16,6 @@ type SelectSuppliersRailProps = {
   /** The logged spec, one "Label: Value" line per answer, stacked on the
       draft card. */
   requirementPreview: { label: string; value: string }[];
-  /** True until the buyer engages (adds a supplier or logs a smart-filter
-      answer); the desktop rail stays hidden while dormant. */
-  dormant: boolean;
 };
 
 /**
@@ -32,11 +29,10 @@ export function SelectSuppliersRail({
   draftTitle,
   requirementCount,
   requirementPreview,
-  dormant,
 }: SelectSuppliersRailProps) {
   return (
     <aside
-      className={`select-rail${dormant ? " select-rail-dormant" : ""}`}
+      className="select-rail"
       aria-label="Shortlist and contact suppliers"
     >
       <div className="rail-header">
@@ -47,7 +43,7 @@ export function SelectSuppliersRail({
           <h4 className="mar-0">Shortlist &amp; contact suppliers</h4>
           <p className="mar-0">
             {suppliers.length === 0
-              ? "No suppliers saved yet"
+              ? "No suppliers selected yet"
               : `${suppliers.length} supplier${suppliers.length === 1 ? "" : "s"} saved`}
           </p>
         </div>
@@ -75,42 +71,45 @@ export function SelectSuppliersRail({
         </ul>
       )}
 
-      {requirementCount === 0 ? (
-        // Placeholder until smart-filter answers exist to draft an RFI from.
-        <div className="rail-rfi-card">
-          <span className="rail-rfi-flag rail-rfi-flag-empty">No RFI drafted yet</span>
-          <p className="rail-rfi-note mar-0">
-            Answer the smart filter questions and we&apos;ll draft an RFI from
-            your requirements.
-          </p>
+      {/* Draft-status module: the top bar tints with how defined the RFI is —
+          white/grey with no answers, blue from the first answer, green at 5+. */}
+      <div
+        className={`rail-rfi-card ${
+          requirementCount === 0
+            ? "rail-rfi-empty"
+            : requirementCount >= 5
+              ? "rail-rfi-defined"
+              : "rail-rfi-drafted"
+        }`}
+      >
+        <div className="rail-rfi-bar">
+          {requirementCount === 0 ? "No RFI drafted yet" : "RFI drafted for you"}
         </div>
-      ) : (
-        <div className="rail-rfi-card">
-          <span className="rail-rfi-flag">RFI drafted for you</span>
-          <h5 className="rail-rfi-title">{draftTitle}</h5>
-          <ul className="rail-rfi-spec">
-            {requirementPreview.map((entry) => (
-              <li key={entry.label}>
-                {entry.label}: <strong>{entry.value}</strong>
-              </li>
-            ))}
-          </ul>
-          <button type="button" className="rail-rfi-preview" onClick={onSendRfi}>
-            Preview RFI →
-          </button>
+        <div className="rail-rfi-body">
+          {requirementCount === 0 ? (
+            <p className="rail-rfi-note mar-0">
+              Answer the smart filter questions and we&apos;ll draft an RFI from
+              your requirements.
+            </p>
+          ) : (
+            <>
+              <h5 className="rail-rfi-title mar-0">{draftTitle}</h5>
+              <ul className="rail-rfi-spec">
+                {requirementPreview.map((entry) => (
+                  <li key={entry.label}>
+                    {entry.label}: <strong>{entry.value}</strong>
+                  </li>
+                ))}
+              </ul>
+              <button type="button" className="rail-rfi-preview" onClick={onSendRfi}>
+                Preview RFI →
+              </button>
+            </>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Response-guarantee card wrapping the primary actions; the shield
-          badge sits astride the card's top border. */}
-      <div className="rail-guarantee">
-        <span className="rail-guarantee-badge" aria-hidden="true">
-          <l-icon name="shield-check" />
-        </span>
-        <h5 className="rail-guarantee-title mar-0">Supplier Response Guaranteed</h5>
-        <p className="rail-guarantee-note mar-0">
-          Get a response within 2 days or we&apos;ll make it right.
-        </p>
+      <div className="select-rail-actions">
         <button
           type="button"
           kind="primary"

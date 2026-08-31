@@ -830,7 +830,7 @@ export function SourcingExperience() {
                     disabled={!canGoBack || browseAsks}
                     onClick={goBack}
                   >
-                    ← Back
+                    Back
                   </button>
                   <button
                     className="define-skip"

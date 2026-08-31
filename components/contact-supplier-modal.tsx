@@ -31,6 +31,10 @@ export const QUOTE_EMAIL_STORAGE_KEY = "supplier-email-preview";
 /** Everything the supplier-inbox page needs to render the received email. */
 export type QuoteEmailPayload = {
   supplierName: string;
+  /** Optional on older stashed payloads from before this field existed. */
+  supplierId?: string;
+  /** Everyone this send went to — declined-supplier suggestions skip these. */
+  contactedIds?: string[];
   supplierCount: number;
   projectName: string;
   description: string;
@@ -220,6 +224,8 @@ export function ContactSupplierModal({
     const field = (name: string) => (data.get(name) ?? "").toString().trim();
     const payload: QuoteEmailPayload = {
       supplierName: previewSupplier.name,
+      supplierId: previewSupplier.id,
+      contactedIds: suppliers.map((supplier) => supplier.id),
       supplierCount: suppliers.length,
       projectName: field("projectName"),
       description: field("description"),
@@ -262,15 +268,37 @@ export function ContactSupplierModal({
                 </p>
               </div>
             </div>
-            <div className="contact-sent-actions">
+            <p className="mar-0 txt-smaller txt-darkblue-75">
+              If they don&apos;t reply, Thomas sends a reminder the next day, then a final
+              notice before the RFI is offered to other suppliers.
+            </p>
+            <div className="contact-sent-followups">
               <a
                 className="contact-sent-link"
-                href={`${BASE_PATH}/supplier-email`}
+                href={`${BASE_PATH}/supplier-email/`}
                 target="_blank"
                 rel="noreferrer"
               >
-                <l-icon name="envelope" fill aria-hidden="true" /> View supplier email
+                <l-icon name="envelope" fill aria-hidden="true" /> Original request
               </a>
+              <a
+                className="contact-sent-link"
+                href={`${BASE_PATH}/supplier-email/reminder/`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <l-icon name="clock" fill aria-hidden="true" /> Reminder
+              </a>
+              <a
+                className="contact-sent-link"
+                href={`${BASE_PATH}/supplier-email/final-notice/`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <l-icon name="paper-plane" fill aria-hidden="true" /> Final notice
+              </a>
+            </div>
+            <div className="contact-sent-actions">
               <button kind="primary" onClick={onClose}>
                 Done
               </button>

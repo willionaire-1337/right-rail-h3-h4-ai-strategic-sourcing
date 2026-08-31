@@ -400,7 +400,14 @@ p,
   color: var(--l-color-green-100, #1a7f37);
 }
 
-/* Confirmation footer: link to the supplier's inbox tab, then Done. */
+/* Original / reminder / final-notice previews stacked above Done. */
+.contact-sent-followups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--l-space-2);
+}
+
+/* Confirmation footer: Done sits after the follow-up links. */
 .contact-sent-actions {
   display: flex;
   align-items: center;
@@ -426,6 +433,10 @@ p,
   text-decoration: none;
 }
 
+.contact-sent-followups .contact-sent-link {
+  justify-content: flex-start;
+}
+
 .contact-sent-link:hover {
   background: var(--l-color-blue-5, #f2f7fd);
 }
@@ -438,6 +449,15 @@ p,
   border-left: 3px solid var(--l-color-blue-100);
   background: var(--l-color-blue-5, #f2f7fd);
   border-radius: 0 var(--l-radius-1) var(--l-radius-1) 0;
+}
+
+/* Final-notice warning — same quote treatment, heavier type. */
+.contact-email-alert {
+  padding: var(--l-space-2) var(--l-space-3);
+  border-left: 3px solid var(--l-color-darkblue-100);
+  background: var(--l-color-blue-5, #f2f7fd);
+  border-radius: 0 var(--l-radius-1) var(--l-radius-1) 0;
+  font-weight: var(--l-font-weight-semibold);
 }
 
 .contact-email-reqs {
@@ -478,6 +498,15 @@ p,
   color: var(--l-color-darkblue-100);
 }
 
+a.contact-email-cta-ghost,
+a.contact-email-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
 /* The reply-directly promise — the email's key affordance, so it gets an
    envelope and semibold weight rather than footnote styling. */
 .contact-email-reply {
@@ -498,6 +527,108 @@ p,
   background: var(--l-color-blue-5, #f2f7fd);
   font-size: var(--l-font-size-smallest);
   color: var(--l-color-blue-100);
+}
+
+/* After the supplier clicks Not interested — confirmation + preview links. */
+.contact-email-declined {
+  display: flex;
+  flex-direction: column;
+  gap: var(--l-space-2);
+  padding: var(--l-space-3);
+  border: 1px solid var(--l-color-border);
+  border-radius: var(--l-radius-1);
+  background: var(--l-color-blue-5, #f2f7fd);
+}
+
+.contact-email-declined .contact-email-ctas {
+  padding-top: 0;
+}
+
+/* Suggested suppliers on the buyer decline email. */
+.contact-email-alts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--l-space-3);
+  padding-top: var(--l-space-1);
+}
+
+.contact-email-alts-title {
+  font-weight: var(--l-font-weight-semibold);
+}
+
+.contact-email-alt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--l-color-border);
+  border-radius: var(--l-radius-1);
+  overflow: hidden;
+}
+
+.contact-email-alt {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-3);
+  padding: var(--l-space-3);
+  border-bottom: 1px solid var(--l-color-border);
+}
+
+.contact-email-alt:last-child {
+  border-bottom: none;
+}
+
+.contact-email-alt-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--l-radius-1);
+  border: 1px solid var(--l-color-border);
+  background: #fff;
+  color: var(--l-color-darkblue-100);
+  font-size: 11px;
+  font-weight: var(--l-font-weight-bold);
+}
+
+.contact-email-alt-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contact-email-alt-name {
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-100);
+}
+
+.contact-email-alt-facts {
+  font-size: var(--l-font-size-smallest);
+  color: var(--l-color-darkblue-75);
+}
+
+.contact-email-alt-cta {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 var(--l-space-4);
+  border: none;
+  border-radius: var(--l-radius-1);
+  background: var(--l-color-blue-100);
+  color: #fff;
+  font-family: inherit;
+  font-size: var(--l-font-size-smallest);
+  font-weight: var(--l-font-weight-semibold);
+  cursor: pointer;
+}
+
+.contact-email-alts-note {
+  font-size: var(--l-font-size-smallest);
+  color: var(--l-color-darkblue-75);
 }
 
 /* Top navigation + category search, after the Thomas SRP header. */
@@ -1183,13 +1314,6 @@ p,
   min-width: 0;
 }
 
-/* Until the buyer adds a supplier or logs a smart-filter answer, the rail
-   stays out of the way and the results take the full width. The ≤699px
-   engage-tab rule outranks this, so the phone Engage tab still shows it. */
-.select-rail.select-rail-dormant {
-  display: none;
-}
-
 /* Engage column: 320px, header + removable shortlist rows + stacked CTAs. */
 .select-rail {
   box-sizing: border-box;
@@ -1316,36 +1440,53 @@ p,
   color: var(--l-color-darkblue-50);
 }
 
-/* Drafted RFI card: pinned to the foot of the rail with the CTAs below it;
-   whatever sits above (placeholder or chips) gets the leftover height. */
+/* Drafted RFI module: pinned to the foot of the rail with the CTAs below it;
+   whatever sits above (placeholder or chips) gets the leftover height. A
+   full-width status bar tops the module, tinted by draft progress. */
 .rail-rfi-card {
   margin-top: auto;
-  padding: var(--l-space-4);
+  border: 1px solid var(--l-color-gray-5);
   border-radius: 12px;
-  background: var(--l-color-blue-5, #f2f6fd);
+  background: #fff;
+  overflow: hidden;
 }
 
-.rail-rfi-flag {
-  display: inline-block;
-  padding: 1px 8px;
-  line-height: 1.5;
-  border-radius: var(--l-radius-full, 999px);
-  background: var(--l-color-green-10, #e0f2e4);
-  color: var(--l-color-green-125, #1d7a35);
+.rail-rfi-bar {
+  padding: 4px var(--l-space-4);
+  border-bottom: 1px solid var(--l-color-gray-5);
   font-size: 10px;
   font-weight: var(--l-font-weight-bold);
   letter-spacing: 0.6px;
+  line-height: 1.3;
   text-transform: uppercase;
 }
 
-/* Pre-draft placeholder: neutral flag while the smart filter has no answers. */
-.rail-rfi-flag-empty {
-  background: var(--l-color-gray-6, #f2f2f2);
-  color: var(--l-color-darkblue-75);
+/* No answers yet: quiet white bar, grey text. */
+.rail-rfi-empty .rail-rfi-bar {
+  background: #fff;
+  color: var(--l-color-darkblue-50);
+}
+
+/* Drafting underway (1–4 answers): the former body blue, blue text. */
+.rail-rfi-drafted .rail-rfi-bar {
+  background: var(--l-color-blue-5, #f2f6fd);
+  border-bottom-color: var(--l-color-blue-5, #f2f6fd);
+  color: var(--l-color-blue-100);
+}
+
+/* Well defined (5+ answers): light green, green text. */
+.rail-rfi-defined .rail-rfi-bar {
+  background: var(--l-color-green-10, #e0f2e4);
+  border-bottom-color: var(--l-color-green-10, #e0f2e4);
+  color: var(--l-color-green-125, #1d7a35);
+}
+
+.rail-rfi-body {
+  padding: var(--l-space-3) var(--l-space-4) var(--l-space-4);
+  background: #fff;
 }
 
 .rail-rfi-title {
-  margin: 6px 0 0;
   font-size: 13.5px;
   font-weight: var(--l-font-weight-bold);
   color: var(--l-color-darkblue-100);
@@ -1389,53 +1530,18 @@ p,
   text-decoration: underline;
 }
 
-/* Response-guarantee card around the rail's primary actions: bordered white
-   card, centered copy, with the shield badge breaking the top border. */
-.rail-guarantee {
-  position: relative;
+/* Primary actions stacked at the rail's foot. */
+.select-rail-actions {
   display: flex;
   flex-direction: column;
-  gap: var(--l-space-2);
+  gap: var(--l-space-1);
   margin-top: var(--l-space-4);
-  padding: var(--l-space-5) var(--l-space-3) var(--l-space-3);
-  border: 1px solid var(--l-color-gray-5);
-  border-radius: 12px;
-  background: #fff;
   text-align: center;
 }
 
-.rail-guarantee-badge {
-  position: absolute;
-  top: -16px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--l-color-green-10, #e0f2e4);
-  color: var(--app-color-green-ink, #178a50);
-  /* Mask the card border passing behind the badge. */
-  box-shadow: 0 0 0 4px #fff;
-  font-size: 15px;
-}
-
-.rail-guarantee-title {
-  font-size: var(--l-font-size-smaller);
-  font-weight: var(--l-font-weight-bold);
-  color: var(--l-color-darkblue-100);
-}
-
-.rail-guarantee-note {
-  font-size: 12px;
-  color: var(--l-color-darkblue-75);
-}
-
 /* Same default-CTA geometry as the supplier cards' "Visit Website". */
-.rail-guarantee button[kind="primary"] {
+.select-rail-actions button[kind="primary"] {
   width: 100%;
-  margin-top: var(--l-space-1);
   height: 32px;
   padding: 0 12px;
   font-size: 12.5px;
@@ -3127,8 +3233,8 @@ l-icon[name="envelope"]::before {
   }
 }
 
-/* ---- /supplier-email: the supplier's Gmail-style inbox. Chrome only —
-   the email body reuses the .contact-email-* content styles above. ---- */
+/* ---- Gmail chrome for /supplier-email, /buyer-email, and
+   /buyer-email-matches. The email body reuses .contact-email-* above. ---- */
 
 .gm-shell {
   min-height: 100vh;
@@ -3198,7 +3304,7 @@ l-icon[name="envelope"]::before {
   background: rgb(32 33 36 / 0.08);
 }
 
-/* The signed-in supplier's avatar. */
+/* The signed-in mailbox owner's avatar (supplier or buyer). */
 .gm-account {
   display: inline-flex;
   align-items: center;

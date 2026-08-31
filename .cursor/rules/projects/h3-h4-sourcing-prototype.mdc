@@ -52,19 +52,33 @@ alwaysApply: false
   recipient set (clicked card's supplier + all selected). Multi-recipient view
   titles "Contact N Suppliers" with a "Sending to" chip list. The selection
   bar's Request Quote button opens the same dialog on the quote tab.
+- 2026-08-31 (William Johnson): Unanswered quote requests get two follow-up
+  emails, both Gmail pages sharing `SupplierQuoteEmail` with the original:
+  `/supplier-email/reminder` (next day — "we haven't heard back") and
+  `/supplier-email/final-notice` (day 2 — if they still don't reply, the
+  buyer's RFI is sent to other suppliers). Same recap, CTAs, and Not
+  interested → buyer-notification path as the original. The sent confirmation
+  lists all three previews. Inbox unread count is 1 / 2 / 3 across the
+  sequence.
 - 2026-08-20 (William Johnson): The supplier-facing email lives on its own
   Gmail-style page at `/supplier-email` (was an inline preview in the dialog).
   Submitting the quote form stashes a `QuoteEmailPayload` in localStorage
   (`supplier-email-preview`), opens the page in a new tab, and flips the
   dialog to a compact "Quote request sent" confirmation with a "View supplier
-  email" link. The page renders full Gmail chrome (topbar, search, compose,
+  email" link. **Superseded 2026-08-31: the confirmation now lists Original
+  request / Reminder / Final notice (see the 2026-08-31 follow-up-emails
+  entry).** The page renders full Gmail chrome (topbar, search, compose,
   rail, subject + Inbox chip, sender row from Thomas <quotes@thomasnet.com>,
   Reply/Forward). Email body: buyer persona (Sarah Mitchell, Meridian
   Dynamics), light-blue quoted project description, requirements list,
   full-width "Not interested" / "View contact details" CTAs, reply-directly
   note, and a light-blue blue-text "Sent via Thomas on behalf of…" footer.
   Body copy says "through Thomas" (was Xometry). For multi-supplier sends the
-  page shows the copy addressed to the first recipient.
+  page shows the copy addressed to the first recipient. Clicking "Not
+  interested" opens `/buyer-email` (buyer Gmail: that supplier declined) and
+  leaves in-page links to both `/buyer-email` (messaging only) and
+  `/buyer-email-matches` (same copy plus 5 other catalog suppliers, skipping
+  anyone already contacted). Shared Gmail chrome lives in `gmail-shell.tsx`.
 - 2026-08-20 (William Johnson): Request Quote form fields are Project name,
   Project description, a "Your requirements" chip list echoing logged
   left-rail answers (threaded from `SupplierResults` via the card), Estimated
@@ -197,6 +211,8 @@ alwaysApply: false
   it stays hidden until the buyer adds a supplier or logs a smart-filter
   answer (see the 2026-08-31 dormant-rail entry). The placeholder still
   shows once the rail reveals via a smart-filter answer with no adds yet.**
+  **Superseded 2026-08-31 (later): the rail is visible on load again — dormant
+  hiding was dropped (see the same-day "rail open by default" entry).**
   **Superseded 2026-08-28: the placeholder icon is now the factory/supplier
   glyph (`l-icon name="industry"`, same as card company-type rows), not
   circle-plus.** The RFI card + send/shortlist CTAs are pinned to the rail's
@@ -228,6 +244,10 @@ alwaysApply: false
   "Written from your search") is gone; the drafted card now only appears once
   ≥1 answer is logged. The Contact button still opens the modal regardless.
 
+- 2026-08-31 (William Johnson): the desktop engage rail is visible on load
+  again — empty placeholder until a supplier is added, empty RFI card until
+  an answer is logged. **Supersedes the same-day dormant hide (below).**
+
 - 2026-08-31 (William Johnson): the desktop engage rail is dormant (hidden,
   results full-width) until the buyer clicks a card's "+ Add" or logs a
   smart-filter answer — `dormant` prop on `SelectSuppliersRail` adds
@@ -235,10 +255,14 @@ alwaysApply: false
   `logged` are empty. CSS class, not unmount, so the ≤699px engage-tab rule
   (higher specificity) still shows the rail on the phone tab; the ≤1100px
   bottom engage tray is untouched.
+  **Superseded 2026-08-31: rail is visible by default; `dormant` and
+  `.select-rail-dormant` were removed. Phone hide-at-1100 / engage-tab
+  behavior is unchanged.**
 
 - 2026-08-31 (William Johnson): card CTA reads "+ Add to List" / "Added to
   List" (was "+ Add" / "Added"). The rail-hiding trigger wording above
-  ("clicks a card's + Add") refers to this same button.
+  ("clicks a card's + Add") refers to this same button. **Superseded
+  2026-08-31: the rail no longer hides, so that trigger is unused.**
 
 - 2026-08-31 (William Johnson): the smart filter now opens with "What product
   are you trying to make?" — the `part` question (Q11) was promoted to the
@@ -274,7 +298,11 @@ alwaysApply: false
   (white box-shadow ring masks the border behind it), "Get a response within
   2 days or we'll make it right." copy, then the full-width Contact CTA and
   "+ Add to shortlist" link inside the card. Replaces the bare
-  `.select-rail-actions` stack (CSS block removed).
+  `.select-rail-actions` stack (CSS block removed). **Superseded 2026-08-31
+  (same day, William): the guarantee concept was dropped entirely — the
+  footer is a plain `.select-rail-actions` stack again, just the full-width
+  "Contact N Suppliers" primary CTA and the "+ Add to shortlist" sub-link;
+  the `.rail-guarantee*` CSS was removed.**
 
 - 2026-08-31 (William Johnson): the drafted RFI card's subtext is the logged
   spec as stacked plain lines (no bullets) — one "Label: Value" per answer,
@@ -290,11 +318,58 @@ alwaysApply: false
   define pane, so upward suggestions were clipped. The location question
   still opens upward since it renders at the transcript foot.
 
+- 2026-08-31 (William Johnson): the RFI card is a module with a full-width
+  status bar across its top (`.rail-rfi-bar`, replaces the inline
+  `.rail-rfi-flag` pill) that tints with draft progress: white bar / grey
+  text + "No RFI drafted yet" at zero answers (`.rail-rfi-empty`), light
+  blue / blue text + "RFI drafted for you" from the first answer
+  (`.rail-rfi-drafted`), light green / green text at 5+ answers
+  (`.rail-rfi-defined`). Body content sits in `.rail-rfi-body` below the bar;
+  the module is bordered with the bar clipped by `overflow: hidden`.
+  **Superseded 2026-08-31: drafted bar uses the former body blue
+  (`blue-5`) and is shorter (`padding: 4px`); body is white. Empty bar
+  stays white; 5+ stays green.**
+
 - 2026-08-31 (layout fix): the rail's middle section (`.select-rail-list`
   chips / `.rail-placeholder`) is now the flexible, internally-scrolling
   piece (`flex: 1 1 auto; min-height: 0; overflow-y: auto`), so the RFI and
   guarantee cards at the foot are never pushed below the viewport — they
   were getting clipped on shorter windows.
+
+- 2026-08-31 (William Johnson): buyer decline emails. When a supplier clicks
+  "Not interested" on `/supplier-email`, Thomas notifies the buyer (Sarah
+  Mitchell) in the same Gmail chrome. Two versions: `/buyer-email` is only
+  the decline message; `/buyer-email-matches` appends 5 other suppliers from
+  the catalog (excluding anyone on that send) each with a Contact CTA.
+  Payload now stashes `supplierId` + `contactedIds` so suggestions don't
+  re-offer the declined or already-messaged shops. Gmail chrome extracted to
+  `gmail-shell.tsx` and shared across all three inbox pages. **Superseded
+  2026-08-31: five inbox pages share the chrome — original, reminder, final
+  notice, buyer decline, and buyer decline with matches.**
+
+- 2026-08-31 (William Johnson): buyer decline emails' blue info module
+  (`.contact-email-foot`) reads "We recommend contacting 3 or more suppliers
+  to get the best chance of receiving a fast response." **Supersedes the
+  same-day "Sent via Thomas. We'll keep looking out for suppliers who can
+  help with {project}." footer.** Same box on both `/buyer-email` and
+  `/buyer-email-matches`.
+
+- 2026-08-31 (William Johnson): buyer decline subject is "{Supplier} is not
+  able to complete your contact request" (e.g. Ronson Manufacturing).
+  **Supersedes the same-day "{Supplier} isn't interested in {project}"
+  subject.** Applies to both buyer-email versions.
+
+- 2026-08-31 (William Johnson): buyer decline body is constructive, not a
+  dead end: supplier "isn't able to take on your request… right now," then
+  "That's a normal part of sourcing — and it doesn't slow you down," plus a
+  full-width "Continue sourcing suppliers" CTA back to the prototype home.
+  Matches version intro is "…suppliers you can contact next." **Supersedes
+  the same-day "isn't interested in your quote request" / "can't take this
+  project on right now" body.**
+
+- 2026-08-31 (William Johnson): define-pane footer Back control is the word
+  "Back" only — the leading "←" was dropped. **Supersedes the 2026-08-27
+  toolbar notation "← Back".**
 
 ## Open threads
 

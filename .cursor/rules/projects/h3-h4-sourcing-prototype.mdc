@@ -133,6 +133,8 @@ alwaysApply: false
     to the panes below (280 / flex / 320).
     **Superseded 2026-08-31: the engage rail is 272px (15% narrower) —
     see the same-day rail-width entry.**
+    **Superseded 2026-08-31 (later): 288px so the title stays one line —
+    see the same-day rail-title-one-line entry.**
   - Fixed-width define pane (280px desktop, 240px ≤1100px) — the drag divider
     and resizable split were removed. Pane restyled flat: 30px badge + serif
     15px header, hairline-separated question sections, single-column radio
@@ -158,6 +160,8 @@ alwaysApply: false
     `onRailCountChange` for the stage bar.
     **Superseded 2026-08-31: rail width is 272px — see the same-day
     rail-width entry.**
+    **Superseded 2026-08-31 (later): 288px — see the same-day
+    rail-title-one-line entry.**
   - Responsive per the reference: ≤1100px hides the rail and shows a fixed
     bottom engage tray (avatar stack, "N suppliers to engage", Send RFI);
     ≤699px hides the stage bar/nav links/location for mobile tabs
@@ -404,9 +408,18 @@ alwaysApply: false
   `.rail-rfi-defined` was removed. Empty stays white. **Supersedes the
   same-day "5+ stays green" RFI-bar tint.**
 
+- 2026-08-31 (William Johnson): the desktop engage rail is 288px wide
+  so "Shortlist & contact suppliers" stays on one line (`white-space:
+  nowrap` on `.rail-header h4`). Still under the original 320px; the
+  same-day 15% cut to 272px wrapped the title. Phone engage-tab still
+  uses `width: 100%`. **Supersedes the 2026-08-27 "Engage rail (320px)"
+  layout width and the same-day 272px 15% cut.**
+
 - 2026-08-31 (William Johnson): the desktop engage rail is 272px wide
   (15% under the original 320px). Phone engage-tab still uses `width: 100%`.
   **Supersedes the 2026-08-27 "Engage rail (320px)" layout width.**
+  **Superseded 2026-08-31 (later): 288px so the title stays one line —
+  see the same-day rail-title-one-line entry above.**
 
 ## Open threads
 

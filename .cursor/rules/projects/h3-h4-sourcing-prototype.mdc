@@ -131,6 +131,8 @@ alwaysApply: false
   - Stage bar under the search header: 1 DEFINE ("N of M" questions) /
     2 EVALUATE ("X of 2,482 match") / 3 ENGAGE ("N selected"), columns sized
     to the panes below (280 / flex / 320).
+    **Superseded 2026-08-31: the engage rail is 272px (15% narrower) —
+    see the same-day rail-width entry.**
   - Fixed-width define pane (280px desktop, 240px ≤1100px) — the drag divider
     and resizable split were removed. Pane restyled flat: 30px badge + serif
     15px header, hairline-separated question sections, single-column radio
@@ -154,6 +156,8 @@ alwaysApply: false
     The floating Quick Contact pill and the dark selection footer were
     removed; `SupplierResults` reports the rail count up via
     `onRailCountChange` for the stage bar.
+    **Superseded 2026-08-31: rail width is 272px — see the same-day
+    rail-width entry.**
   - Responsive per the reference: ≤1100px hides the rail and shows a fixed
     bottom engage tray (avatar stack, "N suppliers to engage", Send RFI);
     ≤699px hides the stage bar/nav links/location for mobile tabs
@@ -399,6 +403,10 @@ alwaysApply: false
   from the first answer onward — it no longer turns green at 5+ answers.
   `.rail-rfi-defined` was removed. Empty stays white. **Supersedes the
   same-day "5+ stays green" RFI-bar tint.**
+
+- 2026-08-31 (William Johnson): the desktop engage rail is 272px wide
+  (15% under the original 320px). Phone engage-tab still uses `width: 100%`.
+  **Supersedes the 2026-08-27 "Engage rail (320px)" layout width.**
 
 ## Open threads
 

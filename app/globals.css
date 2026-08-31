@@ -1314,10 +1314,10 @@ a.contact-email-cta-primary {
   min-width: 0;
 }
 
-/* Engage column: 320px, header + removable shortlist rows + stacked CTAs. */
+/* Engage column: 272px (15% under the original 320), header + shortlist + CTAs. */
 .select-rail {
   box-sizing: border-box;
-  width: 320px;
+  width: 272px;
   flex-shrink: 0;
   border-left: 1px solid var(--l-color-border);
   background: #fff;

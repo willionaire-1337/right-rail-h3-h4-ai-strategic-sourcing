@@ -71,15 +71,10 @@ export function SelectSuppliersRail({
         </ul>
       )}
 
-      {/* Draft-status module: the top bar tints with how defined the RFI is —
-          white/grey with no answers, blue from the first answer, green at 5+. */}
+      {/* Draft-status module: white/grey with no answers, blue once drafted. */}
       <div
         className={`rail-rfi-card ${
-          requirementCount === 0
-            ? "rail-rfi-empty"
-            : requirementCount >= 5
-              ? "rail-rfi-defined"
-              : "rail-rfi-drafted"
+          requirementCount === 0 ? "rail-rfi-empty" : "rail-rfi-drafted"
         }`}
       >
         <div className="rail-rfi-bar">

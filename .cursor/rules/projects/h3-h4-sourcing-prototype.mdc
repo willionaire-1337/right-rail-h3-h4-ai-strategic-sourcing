@@ -114,13 +114,16 @@ alwaysApply: false
   are also deselectable — dismissals are tracked so they stay off; re-adding
   restores them. Manual additions append in click order.
 - 2026-08-27 (William Johnson): The capability pills row on cards became a
-  requirements summary: green circle-check + "All X requirements met" (exact
+  requirements summary: green circle-check +   "All X requirements met" (exact
   matches), "Y of X requirements met" (near matches, one answer relaxed), or
   "Matches your search" before any answers. `CapabilityRow` still exists for
   the unmounted tile variant. **Superseded 2026-08-31: current wording is
   "All X requirements met" (2+), "Requirement met" (exactly 1), "Matches your
   search" (0), shown on every card including near matches — see the 08-28
   boss-feedback entry below for the intermediate exact-only state.**
+  **Superseded 2026-08-31 (later): the green requirements badge is gone —
+  cards show up to 5 grey-outline blue-check capability pills (`matchPillsFor`
+  in `lib/match-pills.ts`; see the same-day match-pills entry).**
 
 - 2026-08-27 (William Johnson, reference HTML "Supplier Search 2a — responsive
   standalone" provided): Full layout rework to the reference's three-stage
@@ -142,6 +145,8 @@ alwaysApply: false
     employees · $rev · Est. year"), semibold types line, description with
     more+, and the requirements summary as a bordered pill with a solid green
     circle check. Card CTAs are 36px.
+    **Superseded 2026-08-31: the green summary pill is replaced by grey-outline
+    blue-check capability pills (max 5) — see the same-day match-pills entry.**
   - Engage rail (320px): "Shortlist & contact suppliers" header with
     paper-plane badge and subcopy, removable entries (28px monogram, name,
     location, ✕), "+ Add to shortlist", "Send RFI to N Suppliers", and the
@@ -197,6 +202,8 @@ alwaysApply: false
   "Matches your search" for 0; near matches included. Later the same day the
   near-match "Closest matches — … except X" divider was removed too (William),
   so near matches now appear with no callout at all.** —
+  **Superseded 2026-08-31 (later): the green requirements badge is gone;
+  cards show capability pills instead (see the same-day match-pills entry).** —
   and rail auto-picks now draw exclusively from exact matches so an RFI
   never pre-targets a near match. "Visit Website(s)" sub-CTA dropped (it did
   nothing). Cards compacted (12px vertical padding, 8px gaps, 40px logo,
@@ -224,6 +231,8 @@ alwaysApply: false
   Services) first, then each logged answer with its label. Data threaded as
   `requirementDetails` from `supplier-results.tsx` into `supplier-card.tsx`;
   the category is not counted in the pill's N.
+  **Superseded 2026-08-31: the badge, hover popover, and `requirementDetails`
+  were removed. Cards show capability pills instead (see match-pills entry).**
 - 2026-08-28 (William Johnson): the contact modal's "Sending to" list
   collapses to the first 2 recipient chips plus a tinted "+X" chip
   (`RECIPIENT_PREVIEW` in `contact-supplier-modal.tsx`); clicking +X unfolds
@@ -291,6 +300,8 @@ alwaysApply: false
   search" for none), and the near-match "Closest matches — … except X"
   divider was removed — near matches are visually indistinguishable for now.
   See the superseded 08-27/08-28 badge entries above for the history.
+  **Superseded 2026-08-31 (later): the green badge is replaced by capability
+  pills — see the same-day match-pills entry.**
 
 - 2026-08-31 (William Johnson): the rail's action footer became a
   "Supplier Response Guaranteed" card (`.rail-guarantee`): bordered white
@@ -329,6 +340,9 @@ alwaysApply: false
   **Superseded 2026-08-31: drafted bar uses the former body blue
   (`blue-5`) and is shorter (`padding: 4px`); body is white. Empty bar
   stays white; 5+ stays green.**
+  **Superseded 2026-08-31 (later): the 5+ green state (`.rail-rfi-defined`)
+  was dropped — any drafted RFI stays blue. See the same-day RFI-bar-stays-blue
+  entry.**
 
 - 2026-08-31 (layout fix): the rail's middle section (`.select-rail-list`
   chips / `.rail-placeholder`) is now the flexible, internally-scrolling
@@ -370,6 +384,21 @@ alwaysApply: false
 - 2026-08-31 (William Johnson): define-pane footer Back control is the word
   "Back" only — the leading "←" was dropped. **Supersedes the 2026-08-27
   toolbar notation "← Back".**
+
+- 2026-08-31 (William Johnson): result cards no longer show a green
+  "All N requirements met" badge. The foot row is up to 5 grey-outline
+  blue-check pills (existing `.cap-pill` style, tighter in `.card-foot`)
+  with generic capability labels from `matchPillsFor` — always "Stamping
+  Services", then material (Aluminum → "Aluminum Alloy"), process family
+  (Progressive Die → "Metal Stampings"), part, mapped features, industry,
+  certs. Raw answers, quantities, thickness, location, and the hover
+  popover are gone. **Supersedes the 2026-08-27/08-28/08-31 green-badge
+  entries.**
+
+- 2026-08-31 (William Johnson): the drafted RFI status bar stays blue
+  from the first answer onward — it no longer turns green at 5+ answers.
+  `.rail-rfi-defined` was removed. Empty stays white. **Supersedes the
+  same-day "5+ stays green" RFI-bar tint.**
 
 ## Open threads
 

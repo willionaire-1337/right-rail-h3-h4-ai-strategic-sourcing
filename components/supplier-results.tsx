@@ -22,7 +22,8 @@ import {
   type LoggedAnswer,
 } from "@/lib/simulation";
 import { planScreening, scoreRecord } from "@/lib/screening";
-import { CATEGORY_LABEL, type Supplier } from "@/lib/suppliers";
+import { matchPillsFor } from "@/lib/match-pills";
+import { type Supplier } from "@/lib/suppliers";
 
 const PAGE_SIZE = 25;
 
@@ -312,9 +313,7 @@ export function SupplierResults({
     value: facet.value,
   }));
 
-  // What the requirements pill's hover popover lists: the searched category
-  // first, then every logged answer.
-  const requirementDetails = [{ label: "Service", value: CATEGORY_LABEL }, ...requirements];
+  const matchPills = matchPillsFor(logged);
 
   /** The rail's list: exactly what the buyer added from the cards — nothing
       is pre-picked. */
@@ -411,18 +410,13 @@ export function SupplierResults({
 
         <div className="pane-scroll" ref={scrollRef}>
         <div className="results-list">
-          {results.slice(pageStart, pageStart + PAGE_SIZE).map((supplier, index) => (
+          {results.slice(pageStart, pageStart + PAGE_SIZE).map((supplier) => (
             <Fragment key={supplier.id}>
               <SupplierCard
                 supplier={supplier}
                 added={railIds.has(supplier.id)}
                 onToggleAdd={() => toggleRailAdd(supplier)}
-                requirementsMet={
-                  // Near matches were padded in by relaxing one answer.
-                  pageStart + index < exact.length ? logged.length : Math.max(0, logged.length - 1)
-                }
-                requirementsTotal={logged.length}
-                requirementDetails={requirementDetails}
+                matchPills={matchPills}
               />
             </Fragment>
           ))}

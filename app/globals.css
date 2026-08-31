@@ -1467,18 +1467,11 @@ a.contact-email-cta-primary {
   color: var(--l-color-darkblue-50);
 }
 
-/* Drafting underway (1–4 answers): the former body blue, blue text. */
+/* Drafting underway: the former body blue, blue text. Stays blue at 5+. */
 .rail-rfi-drafted .rail-rfi-bar {
   background: var(--l-color-blue-5, #f2f6fd);
   border-bottom-color: var(--l-color-blue-5, #f2f6fd);
   color: var(--l-color-blue-100);
-}
-
-/* Well defined (5+ answers): light green, green text. */
-.rail-rfi-defined .rail-rfi-bar {
-  background: var(--l-color-green-10, #e0f2e4);
-  border-bottom-color: var(--l-color-green-10, #e0f2e4);
-  color: var(--l-color-green-125, #1d7a35);
 }
 
 .rail-rfi-body {
@@ -2457,7 +2450,7 @@ a.contact-email-cta-primary {
   color: var(--l-color-darkblue-100);
 }
 
-/* Foot row: requirement badge on the left; on phones the website link
+/* Foot row: capability pills on the left; on phones the website link
    replaces the header's primary button on the right. */
 .card-foot {
   display: flex;
@@ -2466,102 +2459,30 @@ a.contact-email-cta-primary {
   gap: var(--l-space-3);
 }
 
+.match-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.card-foot .cap-pill {
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.card-foot .cap-pill l-icon {
+  font-size: 10px;
+}
+
 .card-foot-website {
   display: none;
   font-size: 11.5px;
   font-weight: var(--l-font-weight-semibold);
-}
-
-/* Requirements-met badge: bordered pill with a solid green circle check. */
-.req-met {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 3px 11px 3px 6px;
-  border: 1px solid var(--l-color-green-50, #a9dcc2);
-  border-radius: var(--l-radius-full);
-  background: var(--l-color-green-5, #eef9f2);
-  font-size: 12.5px;
-  font-weight: var(--l-font-weight-semibold);
-  color: var(--app-color-green-ink, #178a50);
-  cursor: default;
-}
-
-/* Hover / focus popover: spells out what the badge is counting. */
-.req-pop {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
-  z-index: 30;
-  display: none;
-  flex-direction: column;
-  gap: 6px;
-  width: max-content;
-  max-width: 280px;
-  padding: var(--l-space-3) var(--l-space-4);
-  border: 1px solid var(--l-color-border);
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(19, 41, 63, 0.14);
-}
-
-.req-met:hover .req-pop,
-.req-met:focus-visible .req-pop {
-  display: flex;
-}
-
-.req-pop-title {
-  font-size: 10.5px;
-  font-weight: var(--l-font-weight-bold);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--l-color-darkblue-50);
-}
-
-.req-pop-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 12.5px;
-  font-weight: var(--l-font-weight-regular);
-  color: var(--l-color-darkblue-100);
-}
-
-.req-pop-check {
-  width: 13px;
-  height: 13px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
-  border-radius: var(--l-radius-full);
-  background: var(--l-color-green-100);
-  color: #fff;
-  font-size: 7.5px;
-}
-
-.req-pop-label {
-  display: block;
-  font-size: 10px;
-  font-weight: var(--l-font-weight-bold);
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  color: var(--l-color-darkblue-50);
-}
-
-.req-met-check {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--l-radius-full);
-  background: var(--l-color-green-100);
-  color: #fff;
-  font-size: 8.5px;
 }
 
 /* Tailoft's icon map carries no envelope; the Font Awesome face it ships

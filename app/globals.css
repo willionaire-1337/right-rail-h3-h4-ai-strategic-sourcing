@@ -7,8 +7,12 @@
   /* Tailoft's greens bottom out at green-125, which is still light for body
      copy; this is the ink used on answered options and settled answers. */
   --app-color-green-ink: #0a6b4b;
-  /* Fixed define-column width; narrows on tablet. */
+  /* Side columns stay in a 240–360 band; the center list takes the rest.
+     Preferred sizes sit in the middle of that band. */
   --define-width: 280px;
+  --rail-width: 288px;
+  --pane-min: 240px;
+  --pane-max: 360px;
 }
 
 html,
@@ -300,6 +304,48 @@ p,
   flex: 1;
 }
 
+/* Project description: contenteditable so Label: Value can bold the
+   selection. Hidden textarea is what FormData reads. */
+.contact-desc-editor {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 192px;
+  margin-top: var(--l-space-1);
+  padding: var(--l-space-1) var(--l-space-2);
+  overflow-y: auto;
+  border: 1px solid var(--l-color-darkblue-50);
+  border-radius: var(--l-radius-1);
+  background: #fff;
+  color: var(--l-color-darkblue-90);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: var(--l-font-lineheight-4);
+  white-space: pre-wrap;
+  outline: none;
+}
+
+.contact-desc-editor:focus {
+  border-color: var(--l-color-blue-100);
+  box-shadow: var(--l-color-blue-50) 0 0 4px 1px;
+}
+
+.contact-desc-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--l-color-darkblue-75);
+  pointer-events: none;
+}
+
+.contact-desc-editor strong,
+.contact-email-desc strong,
+.tfi-section-body strong {
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-100);
+}
+
+.contact-form textarea.contact-desc-value {
+  display: none;
+}
+
 /* Left-rail answers echoed on the quote form, and the recipient list shown
    when a message goes to several selected suppliers — both label + chips. */
 .contact-reqs,
@@ -449,6 +495,7 @@ p,
   border-left: 3px solid var(--l-color-blue-100);
   background: var(--l-color-blue-5, #f2f7fd);
   border-radius: 0 var(--l-radius-1) var(--l-radius-1) 0;
+  white-space: pre-wrap;
 }
 
 /* Final-notice warning — same quote treatment, heavier type. */
@@ -761,10 +808,13 @@ a.contact-email-cta-primary {
   background: #fff;
 }
 
-/* Left pane: the fixed-width define column. */
+/* Left pane: clamped define column. Extra viewport width goes to results. */
 .pane-left {
+  box-sizing: border-box;
+  flex: 0 0 auto;
   width: var(--define-width, 280px);
-  flex-shrink: 0;
+  min-width: var(--pane-min, 240px);
+  max-width: var(--pane-max, 360px);
   background: #fff;
   padding: 0;
   overflow: hidden;
@@ -805,8 +855,7 @@ a.contact-email-cta-primary {
   box-shadow: 0 2px 8px rgb(9 44 71 / 0.08);
 }
 
-/* Title and count stack on the left; the location field and filter button sit
-   at the right, centred against that whole stack rather than one line of it. */
+/* Title on the left; All Filters pinned right. */
 .results-meta {
   display: flex;
   align-items: center;
@@ -870,12 +919,13 @@ a.contact-email-cta-primary {
   color: var(--l-color-darkblue-75);
 }
 
-/* Way into the classic facet drawer, sized to match the location field. */
+/* Way into the classic facet drawer. */
 .all-filters {
   display: inline-flex;
   align-items: center;
   gap: var(--l-space-2);
   flex-shrink: 0;
+  margin-left: auto;
   height: 38px;
   padding: 0 var(--l-space-4);
   background: #fff;
@@ -1282,6 +1332,44 @@ a.contact-email-cta-primary {
   overflow-y: auto;
 }
 
+.results-center .pane-scroll {
+  padding-bottom: 72px;
+}
+
+/* Smart-add dock: floats over the foot of the results list, not the rail. */
+.smart-add {
+  position: absolute;
+  bottom: var(--l-space-4);
+  left: 50%;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--l-space-2);
+  height: 40px;
+  padding: 0 var(--l-space-4);
+  transform: translateX(-50%);
+  background: var(--l-color-blue-10, #e6f0fd);
+  border: 1px solid var(--l-color-blue-100);
+  border-radius: var(--l-radius-full);
+  box-shadow: 0 4px 16px rgb(9 44 71 / 0.14);
+  color: var(--l-color-blue-100);
+  font-family: inherit;
+  font-size: var(--l-font-size-smaller);
+  font-weight: var(--l-font-weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.smart-add:hover:not(:disabled) {
+  background: var(--l-color-blue-25, #c3dafb);
+}
+
+.smart-add:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 /* Results split: the scrolling list on the left, the Select Suppliers rail
    pinned beside it on the right. */
 .results-body {
@@ -1294,6 +1382,7 @@ a.contact-email-cta-primary {
    across the engage rail. Sized as a container so the header can shed the
    location field when the column runs narrow. */
 .results-center {
+  position: relative;
   flex: 1;
   min-width: 0;
   min-height: 0;
@@ -1314,12 +1403,15 @@ a.contact-email-cta-primary {
   min-width: 0;
 }
 
-/* Engage column: 288px — wide enough for "Shortlist & contact suppliers"
-   on one line; still under the original 320. */
+/* Engage column: clamped like the define pane so ultrawide leftover
+   width lands in the results list, not here. 288px keeps the title
+   on one line inside that band. */
 .select-rail {
   box-sizing: border-box;
-  width: 288px;
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  width: var(--rail-width, 288px);
+  min-width: var(--pane-min, 240px);
+  max-width: var(--pane-max, 360px);
   border-left: 1px solid var(--l-color-border);
   background: #fff;
   padding: var(--l-space-4) var(--l-space-5);
@@ -1342,7 +1434,7 @@ a.contact-email-cta-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: var(--l-radius-1, 3px);
   background: var(--l-color-blue-10, #eaf2fd);
   color: var(--l-color-blue-100);
   font-size: 12px;
@@ -1370,10 +1462,10 @@ a.contact-email-cta-primary {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  /* The chip area soaks up leftover height and scrolls internally, so the
-     RFI draft and guarantee cards below it are never pushed out of view. */
-  flex: 1 1 auto;
-  min-height: 0;
+  /* Leftover height lives here and scrolls. Basis 0 so extra chips never
+     steal height from the RFI card (which is flex-shrink: 0). */
+  flex: 1 1 0;
+  min-height: 48px;
   overflow-y: auto;
   align-content: flex-start;
 }
@@ -1416,19 +1508,17 @@ a.contact-email-cta-primary {
   white-space: nowrap;
 }
 
-/* Empty rail: quiet centered prompt where the picked chips will appear. */
+/* Empty rail: prompt sits under the header at a fixed offset. It must not
+   flex-grow — if it filled the leftover height and centered, the copy jumped
+   up every time the RFI card below gained answers. The gap to the RFI is
+   leftover space (margin-top: auto on the card), not this module's height. */
 .rail-placeholder {
-  /* Fills the space above the pinned RFI card, centering the prompt in it,
-     and shrinks first when the rail runs short so the cards stay visible. */
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: var(--l-space-2);
-  padding: var(--l-space-5) var(--l-space-4);
+  padding: var(--l-space-6, 32px) var(--l-space-4) var(--l-space-4);
   text-align: center;
 }
 
@@ -1442,25 +1532,47 @@ a.contact-email-cta-primary {
   color: var(--l-color-darkblue-50);
 }
 
-/* Drafted RFI module: pinned to the foot of the rail with the CTAs below it;
-   whatever sits above (placeholder or chips) gets the leftover height. A
-   full-width status bar tops the module, tinted by draft progress. */
+/* Drafted RFI module: pinned to the foot of the rail with the CTAs below it.
+   Never shrinks when chips wrap (`flex: 0 0 auto`); chips take leftover
+   height and scroll. Empty placeholder stays put under the header. Minus /
+   plus on the status bar collapses the body. */
 .rail-rfi-card {
+  flex: 0 0 auto;
   margin-top: auto;
   border: 1px solid var(--l-color-gray-5);
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fff;
   overflow: hidden;
 }
 
 .rail-rfi-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--l-space-2);
+  width: 100%;
+  height: auto;
+  margin: 0;
   padding: 4px var(--l-space-4);
+  border: none;
   border-bottom: 1px solid var(--l-color-gray-5);
+  border-radius: 0;
+  background: inherit;
+  box-shadow: none;
+  font-family: inherit;
   font-size: 10px;
   font-weight: var(--l-font-weight-bold);
   letter-spacing: 0.6px;
   line-height: 1.3;
+  text-align: left;
   text-transform: uppercase;
+  cursor: pointer;
+  min-height: 0;
+}
+
+.rail-rfi-bar l-icon {
+  flex-shrink: 0;
+  font-size: 11px;
 }
 
 /* No answers yet: quiet white bar, grey text. */
@@ -1479,6 +1591,14 @@ a.contact-email-cta-primary {
 .rail-rfi-body {
   padding: var(--l-space-3) var(--l-space-4) var(--l-space-4);
   background: #fff;
+}
+
+.rail-rfi-collapsed .rail-rfi-body {
+  display: none;
+}
+
+.rail-rfi-collapsed .rail-rfi-bar {
+  border-bottom: none;
 }
 
 .rail-rfi-title {
@@ -1529,6 +1649,7 @@ a.contact-email-cta-primary {
 .select-rail-actions {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   gap: var(--l-space-1);
   margin-top: var(--l-space-4);
   text-align: center;
@@ -1770,7 +1891,7 @@ a.contact-email-cta-primary {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: var(--l-radius-1, 3px);
   background: var(--l-color-blue-10);
   color: var(--l-color-blue-100);
   font-size: 13px;
@@ -1944,6 +2065,8 @@ a.contact-email-cta-primary {
   color: var(--l-color-blue-100);
   font-size: 13px;
   font-weight: var(--l-font-weight-semibold);
+  /* Body line-height is 24px; that made wrapped answers a tall blue slab. */
+  line-height: 1.2;
   box-sizing: border-box;
 }
 
@@ -1960,6 +2083,7 @@ a.contact-email-cta-primary {
   font-size: 12.5px;
   font-style: italic;
   font-weight: 500;
+  line-height: 1.2;
   box-sizing: border-box;
 }
 
@@ -2100,6 +2224,14 @@ a.contact-email-cta-primary {
 .location-entry-field .location-search {
   width: 100%;
   background: #fff;
+}
+
+.location-entry-field .location-search l-icon {
+  font-size: 13px;
+}
+
+.location-entry-field .location-search input {
+  font-size: var(--l-font-size-smallest);
 }
 
 /* Full-width compact submit, same default-CTA geometry as the footer's
@@ -2268,14 +2400,19 @@ a.contact-email-cta-primary {
   cursor: default;
 }
 
-/* Square icon tools: undo and the all-questions accordion. */
+/* Icon tools: same 32px / 3px geometry as Back and Done, square so the
+   glyph stays centered. */
 .define-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  width: 34px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   background: #fff;
   border: 1px solid var(--l-color-blue-50, #c6d8f5);
-  border-radius: 8px;
+  border-radius: var(--l-radius-1, 3px);
   color: var(--l-color-blue-100);
   font-family: inherit;
   font-size: 13px;
@@ -2681,6 +2818,27 @@ l-icon[name="envelope"]::before {
   color: var(--l-color-blue-100);
 }
 
+.supplier-logo img,
+.rail-logo img,
+.contact-recipient-logo img,
+.contact-email-alt-logo img,
+.engage-tray-avatars span img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.supplier-logo:has(img),
+.rail-logo:has(img),
+.contact-recipient-logo:has(img),
+.contact-email-alt-logo:has(img),
+.engage-tray-avatars span:has(img) {
+  background: #fff;
+  padding: 2px;
+  overflow: hidden;
+}
+
 /* Dot-joined fact line: location · employees · revenue · Est. year. */
 .supplier-facts {
   display: flex;
@@ -3070,6 +3228,8 @@ l-icon[name="envelope"]::before {
 
   .app-main[data-mobile-tab="define"] .pane-left:not([hidden]) {
     width: 100%;
+    min-width: 0;
+    max-width: none;
     border-right: none;
   }
 
@@ -3080,6 +3240,8 @@ l-icon[name="envelope"]::before {
   .app-main[data-mobile-tab="engage"] .select-rail {
     display: flex;
     width: 100%;
+    min-width: 0;
+    max-width: none;
     border-left: none;
   }
 
@@ -3437,5 +3599,392 @@ l-icon[name="envelope"]::before {
   .gm-body,
   .gm-reply-row {
     padding-left: 0;
+  }
+}
+
+/* ---- Thomas For Industry lead detail (/lead), opened from View contact
+   details on the supplier email. ---- */
+
+.tfi-shell {
+  min-height: 100vh;
+  display: flex;
+  background: #e8eef3;
+  color: #1a2b3c;
+  font-size: 14px;
+}
+
+.tfi-sidebar {
+  width: 248px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0 28px;
+  background: #0b3558;
+  color: #fff;
+}
+
+.tfi-logo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 20px 18px;
+  color: #fff;
+  text-decoration: none;
+  line-height: 1.1;
+}
+
+.tfi-logo-mark {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.tfi-logo-sub {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.tfi-account-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 0 12px 16px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.08);
+}
+
+.tfi-account-tabs button {
+  height: 34px;
+  border: none;
+  background: transparent;
+  color: rgb(255 255 255 / 0.7);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tfi-account-tabs button[aria-selected="true"] {
+  background: #fff;
+  color: #0b3558;
+}
+
+.tfi-company {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.12);
+}
+
+.tfi-company-logo {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #fff;
+  color: #0b3558;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tfi-company-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.tfi-company-name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.tfi-company-loc {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: rgb(255 255 255 / 0.7);
+}
+
+.tfi-company-badge {
+  margin-left: auto;
+  color: #ffc118;
+  font-size: 14px;
+}
+
+.tfi-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px;
+}
+
+.tfi-nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-left: 3px solid transparent;
+  border-radius: 0 4px 4px 0;
+  color: rgb(255 255 255 / 0.82);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tfi-nav a:hover {
+  background: rgb(255 255 255 / 0.06);
+  color: #fff;
+}
+
+.tfi-nav a[aria-current="page"] {
+  background: rgb(255 255 255 / 0.12);
+  border-left-color: #5ba3e8;
+  color: #fff;
+}
+
+.tfi-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 28px 16px;
+}
+
+.tfi-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+  color: #5a6b7a;
+}
+
+.tfi-crumbs a {
+  color: #2f6fad;
+  text-decoration: none;
+}
+
+.tfi-crumbs a:hover {
+  text-decoration: underline;
+}
+
+.tfi-card {
+  flex: 1;
+  padding: 24px 28px 32px;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(9 44 71 / 0.08);
+}
+
+.tfi-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tfi-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #1a2b3c;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.tfi-back:hover {
+  color: #0b3558;
+}
+
+.tfi-title {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #1a2b3c;
+}
+
+.tfi-viewed {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 4px;
+  background: #e8eef3;
+  color: #5a6b7a;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.tfi-tabs {
+  display: flex;
+  margin: 18px 0 0;
+  border-bottom: 1px solid #d8dee1;
+}
+
+.tfi-tabs button {
+  height: 40px;
+  padding: 0 4px 10px;
+  margin-right: 24px;
+  border: none;
+  border-bottom: 3px solid #0b3558;
+  background: none;
+  color: #1a2b3c;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: default;
+}
+
+.tfi-meta {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin: 22px 0 0;
+  padding-bottom: 22px;
+}
+
+.tfi-meta dt,
+.tfi-contact dt {
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #5a6b7a;
+}
+
+.tfi-meta dd,
+.tfi-contact dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a2b3c;
+}
+
+.tfi-section {
+  padding: 22px 0;
+  border-top: 1px solid #d8dee1;
+}
+
+.tfi-section-title {
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a2b3c;
+}
+
+.tfi-section-body {
+  max-width: 72ch;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #1a2b3c;
+  white-space: pre-wrap;
+}
+
+.tfi-contact {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+}
+
+.tfi-contact a {
+  color: #2f6fad;
+  text-decoration: none;
+}
+
+.tfi-contact a:hover {
+  text-decoration: underline;
+}
+
+.tfi-ratings {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tfi-rating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 88px;
+  padding: 12px 8px;
+  border: 1px solid #d8dee1;
+  border-radius: 6px;
+  background: #fff;
+  color: #1a2b3c;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.tfi-rating:hover {
+  border-color: #5ba3e8;
+  background: #f4f8fc;
+}
+
+.tfi-rating[aria-pressed="true"] {
+  border-color: #0b3558;
+  background: #eaf2fd;
+  box-shadow: inset 0 0 0 1px #0b3558;
+}
+
+.tfi-rating-n {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  color: #0b3558;
+}
+
+.tfi-rating-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tfi-rating-thanks {
+  margin-top: 14px;
+  font-size: 13.5px;
+  color: #0a6b4b;
+}
+
+.tfi-foot {
+  margin-top: 16px;
+  font-size: 11.5px;
+  color: #5a6b7a;
+}
+
+.tfi-foot a {
+  color: #2f6fad;
+}
+
+@media (max-width: 1024px) {
+  .tfi-meta,
+  .tfi-ratings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .tfi-shell {
+    flex-direction: column;
+  }
+
+  .tfi-sidebar {
+    width: 100%;
+  }
+
+  .tfi-nav {
+    display: none;
+  }
+
+  .tfi-contact {
+    grid-template-columns: 1fr;
   }
 }

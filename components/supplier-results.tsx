@@ -4,7 +4,8 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { ContactSupplierModal } from "@/components/contact-supplier-modal";
 import { FilterDrawer, type FilterGroup } from "@/components/filter-drawer";
 import { SelectSuppliersRail } from "@/components/select-suppliers-rail";
-import { monogram, SupplierCard } from "@/components/supplier-card";
+import { SupplierCard } from "@/components/supplier-card";
+import { SupplierLogo } from "@/components/supplier-logo";
 import {
   capabilitiesForMaterials,
   certificationsForAnswers,
@@ -26,6 +27,8 @@ import { matchPillsFor } from "@/lib/match-pills";
 import { type Supplier } from "@/lib/suppliers";
 
 const PAGE_SIZE = 25;
+/** How many ranked suppliers the floating smart-add control queues. */
+const SMART_ADD_COUNT = 3;
 
 /** Short spec labels for the RFI draft card's bulleted requirement lines —
     the questionnaire titles are too long to read as "Label: Value". */
@@ -306,11 +309,13 @@ export function SupplierResults({
     value: answer.values.join(", "),
   }));
 
-  // Logged answers echoed on the contact modal's quote form, sentence-cased
-  // since they sit inline rather than as tiny chip headers.
-  const requirements = facets.map((facet) => ({
-    label: facet.label.charAt(0) + facet.label.slice(1).toLowerCase(),
-    value: facet.value,
+  // Logged answers echoed on the contact modal and the rail RFI card.
+  const requirements = logged.map((answer) => ({
+    label:
+      RFI_SPEC_LABELS[answer.questionId] ??
+      questionById(answer.questionId)?.title ??
+      answer.questionId,
+    value: answer.values.join(", "),
   }));
 
   const matchPills = matchPillsFor(logged);
@@ -329,6 +334,20 @@ export function SupplierResults({
         ? current.filter((id) => id !== supplier.id)
         : [...current, supplier.id],
     );
+  };
+
+  /** Ranked suppliers the smart-add control would queue — exact matches first. */
+  const topMatches = results.slice(0, SMART_ADD_COUNT);
+  const topMatchesQueued =
+    topMatches.length > 0 && topMatches.every((supplier) => railIds.has(supplier.id));
+
+  /** Seed the rail with the top ranked matches; keep any extras the buyer added. */
+  const smartAddTopMatches = () => {
+    const topIds = topMatches.map((supplier) => supplier.id);
+    setRailAdded((current) => [
+      ...topIds,
+      ...current.filter((id) => !topIds.includes(id)),
+    ]);
   };
 
   // The engage rail's RFI goes to its own list.
@@ -358,15 +377,6 @@ export function SupplierResults({
       ? [...draftPieces, answerValue("part") ?? "Parts"].join(" ")
       : query;
 
-  /** The logged spec, stacked on the draft card as "Label: Value" lines. */
-  const requirementPreview = logged.map((answer) => ({
-    label:
-      RFI_SPEC_LABELS[answer.questionId] ??
-      questionById(answer.questionId)?.title ??
-      answer.questionId,
-    value: answer.values.join(", "),
-  }));
-
   /** Rail secondary CTA: save the pre-picked top suppliers. */
   const shortlistRailSuppliers = () => {
     setSaved((set) => {
@@ -385,16 +395,6 @@ export function SupplierResults({
           <div className="results-headline">
             <h3 className="mar-0">Suppliers that match your spec</h3>
           </div>
-          <label className="location-search results-location">
-            <l-icon name="location-dot" aria-hidden="true" />
-            <input
-              type="text"
-              value={locationDraft}
-              aria-label="Location by State, City, or Zip"
-              placeholder="Location by State, City, or Zip"
-              onChange={(event) => onLocation(event.target.value)}
-            />
-          </label>
           <button
             type="button"
             className="all-filters"
@@ -462,6 +462,17 @@ export function SupplierResults({
           )}
         </div>
         </div>
+        {topMatches.length > 0 && (
+          <button
+            type="button"
+            className="smart-add"
+            disabled={topMatchesQueued}
+            onClick={smartAddTopMatches}
+          >
+            <l-icon name="sparkles" fill aria-hidden="true" />
+            Smart add top suppliers
+          </button>
+        )}
       </div>
 
         <SelectSuppliersRail
@@ -470,7 +481,7 @@ export function SupplierResults({
           onSendRfi={openRailRfi}
           draftTitle={draftTitle}
           requirementCount={logged.length}
-          requirementPreview={requirementPreview}
+          requirementPreview={requirements}
         />
       </div>
 
@@ -482,7 +493,9 @@ export function SupplierResults({
         {railSuppliers.length > 0 && (
           <span className="engage-tray-avatars" aria-hidden="true">
             {railSuppliers.slice(0, 3).map((supplier) => (
-              <span key={supplier.id}>{monogram(supplier.name)}</span>
+              <span key={supplier.id}>
+                <SupplierLogo name={supplier.name} size={26} />
+              </span>
             ))}
           </span>
         )}

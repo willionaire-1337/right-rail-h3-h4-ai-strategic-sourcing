@@ -2,7 +2,7 @@
 
 import { GmailMessageFrame, GmailShell, useQuoteEmailPayload } from "@/components/gmail-shell";
 import { MOCK_BUYER, type QuoteEmailPayload } from "@/components/contact-supplier-modal";
-import { monogram } from "@/components/supplier-card";
+import { SupplierLogo } from "@/components/supplier-logo";
 import { BASE_PATH } from "@/lib/base-path";
 import { SUPPLIERS, type Supplier } from "@/lib/suppliers";
 
@@ -73,7 +73,7 @@ export function BuyerDeclineEmail({ showMatches }: BuyerDeclineEmailProps) {
                 {matches.map((supplier) => (
                   <li className="contact-email-alt" key={supplier.id}>
                     <span className="contact-email-alt-logo" aria-hidden="true">
-                      {monogram(supplier.name)}
+                      <SupplierLogo name={supplier.name} size={36} />
                     </span>
                     <div className="contact-email-alt-meta">
                       <p className="contact-email-alt-name mar-0">{supplier.name}</p>

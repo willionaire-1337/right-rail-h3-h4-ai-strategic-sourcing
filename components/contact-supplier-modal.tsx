@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { monogram } from "@/components/supplier-card";
+import { DescriptionEditor } from "@/components/requirement-description";
+import { SupplierLogo } from "@/components/supplier-logo";
 import { BASE_PATH } from "@/lib/base-path";
 import type { Supplier } from "@/lib/suppliers";
 
@@ -22,6 +23,7 @@ export const MOCK_BUYER = {
   firstName: "Sarah",
   company: "Meridian Dynamics",
   email: "s.mitchell@meridiandynamics.com",
+  phone: "(312) 555-0184",
 };
 
 /** Where the submitted quote is stashed for the /supplier-email page — the
@@ -51,20 +53,6 @@ function formatFileSize(bytes: number): string {
 }
 
 /**
- * Lowercases answer values for mid-sentence use while leaving acronyms and
- * trademarks alone: "Progressive Die" -> "progressive die", "ISO 9001" stays.
- */
-function naturalCase(value: string): string {
-  return value
-    .split(" ")
-    .map((word) => {
-      const letters = word.replace(/[^A-Za-z]/g, "");
-      return /^[A-Z][a-z]*$/.test(letters) ? word.toLowerCase() : word;
-    })
-    .join(" ");
-}
-
-/**
  * Short editable project name seeded from the part and the strongest
  * selections (material + process) — e.g. "Aluminum Progressive Die Brackets".
  * Same rules-based approach as the description — no AI. Multi-value answers
@@ -76,76 +64,23 @@ export function buildProjectName(requirements: ContactRequirement[]): string {
   );
   const first = (label: string) => byLabel.get(label)?.split(",")[0]?.trim();
 
-  const part = first("part type") ?? DEFAULT_PART;
+  const part = first("product") ?? first("part type") ?? DEFAULT_PART;
   // Title-style: "Aluminum Progressive Die Brackets", never "… brackets".
   const partName = part.charAt(0).toUpperCase() + part.slice(1);
   return [first("material"), first("process"), partName].filter(Boolean).join(" ");
 }
 
 /**
- * Composes a project description from the logged left-rail answers with plain
- * template rules — no AI. Every clause is optional, so the paragraph reads
- * naturally whether the buyer answered one question or all of them.
+ * Seeds the project-description box with the logged spec as an editable
+ * list — "My requirements include..." then one "Label: Value" line per
+ * answer. Empty when nothing is logged yet so the placeholder shows.
  */
 export function buildProjectDescription(requirements: ContactRequirement[]): string {
-  // Nothing logged yet — leave the field to its placeholder.
   if (requirements.length === 0) return "";
-
-  const byLabel = new Map(
-    requirements.map((requirement) => [requirement.label.toLowerCase(), requirement.value]),
+  const lines = requirements.map(
+    (requirement) => `${requirement.label}: ${requirement.value}`,
   );
-  const answer = (label: string) => {
-    const value = byLabel.get(label);
-    return value ? naturalCase(value) : undefined;
-  };
-
-  const sentences: string[] = [];
-
-  let opening = `We are looking to manufacture ${answer("part type") ?? DEFAULT_PART}`;
-  const process = answer("process");
-  if (process) opening += ` using ${process} stamping`;
-  const material = answer("material");
-  if (material) opening += ` in ${material}`;
-  const thickness = answer("thickness");
-  if (thickness) opening += ` at ${thickness} thickness`;
-  sentences.push(`${opening}.`);
-
-  const quantity = answer("quantity");
-  // "Short Run" already says run — avoid "a short run run".
-  const run = quantity && (/\brun\b/i.test(quantity) ? quantity : `${quantity} run`);
-  const size = answer("size");
-  if (run && size) sentences.push(`This is a ${run} of ${size}-sized parts.`);
-  else if (run) sentences.push(`This is a ${run}.`);
-  else if (size) sentences.push(`Parts are ${size}-sized.`);
-
-  const tooling = answer("tooling");
-  if (tooling) sentences.push(`The project will need ${tooling}.`);
-
-  const tolerance = answer("tolerance");
-  if (tolerance) sentences.push(`Parts must hold ${tolerance}.`);
-
-  const features = answer("features");
-  if (features) sentences.push(`Additional requirements include ${features}.`);
-
-  const industry = byLabel.get("industry");
-  if (industry) sentences.push(`The parts are for the ${naturalCase(industry)} industry.`);
-
-  const certifications = byLabel.get("certifications");
-  if (certifications) sentences.push(`Suppliers should hold ${certifications}.`);
-
-  const location = byLabel.get("location");
-  if (location) {
-    sentences.push(
-      /national/i.test(location)
-        ? "We are open to suppliers nationwide."
-        : `We would prefer suppliers located near ${location}.`,
-    );
-  }
-
-  const diversity = byLabel.get("diversity");
-  if (diversity) sentences.push(`We are prioritizing ${naturalCase(diversity)} suppliers.`);
-
-  return sentences.join(" ");
+  return ["My requirements include...", ...lines].join("\n");
 }
 
 /** A requirement the buyer logged in the left rail, e.g. Process: Progressive Die. */
@@ -159,8 +94,7 @@ type ContactSupplierModalProps = {
   suppliers: Supplier[];
   open: boolean;
   onClose: () => void;
-  /** Logged left-rail answers — they seed the project description and are
-      listed in the collapsed "Your requirements" accordion. */
+  /** Logged left-rail answers — they seed the project description list. */
   requirements?: ContactRequirement[];
 };
 
@@ -324,12 +258,10 @@ export function ContactSupplierModal({
                 </fieldset>
                 <fieldset>
                   <label htmlFor="contact-quote-desc">Project description</label>
-                  <textarea
+                  <DescriptionEditor
                     id="contact-quote-desc"
                     name="description"
-                    rows={5}
-                    required
-                    defaultValue={buildProjectDescription(requirements) || undefined}
+                    initial={buildProjectDescription(requirements)}
                     placeholder="Material, dimensions, tolerances, finish — anything that helps them quote."
                   />
                   {requirements.length > 0 && (
@@ -376,19 +308,6 @@ export function ContactSupplierModal({
                     </l-filepreview>
                   ))}
                 </fieldset>
-                {requirements.length > 0 && (
-                  <details kind="accordion" className="contact-reqs-accordion">
-                    <summary>Your requirements ({requirements.length})</summary>
-                    <div className="contact-reqs-list">
-                      {requirements.map((requirement) => (
-                        <span className="contact-req-pill" key={requirement.label}>
-                          <span className="contact-req-label">{requirement.label}</span>
-                          {requirement.value}
-                        </span>
-                      ))}
-                    </div>
-                  </details>
-                )}
                 <div className="contact-form-row">
                   <fieldset>
                     <label htmlFor="contact-quote-qty">Estimated quantity</label>
@@ -415,7 +334,7 @@ export function ContactSupplierModal({
                         (recipient) => (
                           <span className="contact-recipient-pill" key={recipient.id}>
                             <span className="contact-recipient-logo" aria-hidden="true">
-                              {monogram(recipient.name)}
+                              <SupplierLogo name={recipient.name} size={22} />
                             </span>
                             {recipient.name}
                           </span>

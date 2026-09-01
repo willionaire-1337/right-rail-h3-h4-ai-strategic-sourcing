@@ -6,6 +6,7 @@ import {
   MOCK_BUYER,
   type QuoteEmailPayload,
 } from "@/components/contact-supplier-modal";
+import { RequirementDescription } from "@/components/requirement-description";
 import { BASE_PATH } from "@/lib/base-path";
 
 export type SupplierEmailVariant = "original" | "reminder" | "final-notice";
@@ -123,9 +124,14 @@ export function SupplierQuoteEmail({ variant }: SupplierQuoteEmailProps) {
               <button type="button" className="contact-email-cta-ghost" onClick={decline}>
                 Not interested
               </button>
-              <button type="button" className="contact-email-cta-primary">
+              <a
+                className="contact-email-cta-primary"
+                href={`${BASE_PATH}/lead/`}
+                target="_blank"
+                rel="noreferrer"
+              >
                 View contact details
-              </button>
+              </a>
             </div>
           )}
           <p className="contact-email-reply mar-0">
@@ -194,15 +200,12 @@ function ProjectRecap({ payload }: { payload: QuoteEmailPayload }) {
   return (
     <>
       {payload.description && (
-        <blockquote className="contact-email-desc mar-0">{payload.description}</blockquote>
+        <blockquote className="contact-email-desc mar-0">
+          <RequirementDescription className="mar-0" text={payload.description} />
+        </blockquote>
       )}
-      {(payload.requirements.length > 0 || payload.quantity || payload.needBy) && (
+      {(payload.quantity || payload.needBy) && (
         <ul className="contact-email-reqs mar-0">
-          {payload.requirements.map((requirement) => (
-            <li key={requirement.label}>
-              <strong>{requirement.label}:</strong> {requirement.value}
-            </li>
-          ))}
           {payload.quantity && (
             <li>
               <strong>Estimated quantity:</strong> {payload.quantity}

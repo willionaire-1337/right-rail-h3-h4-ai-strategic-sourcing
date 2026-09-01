@@ -9,8 +9,38 @@ alwaysApply: false
 
 - Next.js 16 prototype of AI-assisted supplier discovery for Stamping Services,
   styled with the vendored Tailoft design system (`public/tailoft/`).
+- Supplier tiles use 12 local placeholder marks in `public/supplier-marks/`,
+  assigned by a hash of the company name via `SupplierLogo`. Initials remain
+  the onError fallback.
 - Supplier results render as full-width cards (`supplier-card.tsx`); a two-up
   tile variant (`supplier-tile.tsx`) exists but is not currently mounted.
+- Empty-rail "Add suppliers to contact or shortlist" sits under the header
+  at a fixed offset; filling in the RFI card below does not move it. The
+  RFI card does not shrink when chips wrap — the shortlist scrolls. Minus
+  on the status bar collapses the body; plus expands it.
+- Define / shortlist panes are 240–360px (`min-width` / `max-width`), preferred
+  280 / 288, pinned to the window edges. The center results column takes all
+  leftover width with no card max-width.
+  **Superseded 2026-09-01 (later): sides no longer step to 320/344, and
+  cards no longer cap at 1040px — see the same-day pane-clamp entry.**
+  Original: Define / shortlist panes stay 280 / 288 through laptop width, then 320 /
+  320 at ≥1440 and 344 / 344 at ≥1920, still pinned to the window edges.
+  Result cards cap at 1040px so the middle column does not stretch with the
+  leftover space.
+- A floating "Smart add top suppliers" pill (light blue-10 fill, blue
+  outline/text, sparkles icon) sits at the foot of the results list and
+  queues the top 3 ranked suppliers onto the engage rail.
+  **Superseded 2026-09-01 (later): label is "Smart add top suppliers"; fill
+  is blue-10 (was white).**
+  Original: A floating "Smart add top matches" pill sits at the foot of the results
+  list and queues the top 3 ranked suppliers onto the engage rail.
+- Location is the 6th smart-filter question (after quantity). The results
+  header no longer has a location field; All Filters still can set it.
+- After "View contact details" on the supplier email, the supplier lands on
+  `/lead` — a Thomas For Industry lead page with buyer contact + a 1–5
+  rating (Unqualified → Great). Requirement-list values (after the colon)
+  are semibold on the lead Description, the contact description editor,
+  and the supplier-email quote.
 
 ## Key decisions
 
@@ -29,9 +59,15 @@ alwaysApply: false
   fonts already carry.
 - 2026-08-20 (William Johnson): Multi-recipient quote requests show a
   "Sending to" row below Estimated quantity / Response needed by: gray-outline
-  pills, each with a mini monogram tile (suppliers have no image logos) plus
-  the name. Hidden for single-recipient sends. The old top-of-dialog chip row
-  was removed.
+  pills, each with a mini local placeholder mark (initials if the image
+  misses) plus the name. Hidden for single-recipient sends. The old
+  top-of-dialog chip row was removed.
+  **Superseded 2026-09-01 (later): tiles use local SVG marks, not Logo.dev —
+  see the same-day placeholder-marks entry.** Original: mini Logo.dev company
+  mark (initials if the image misses)
+  **Superseded 2026-09-01: supplier tiles now load from Logo.dev — see the
+  2026-09-01 logo.dev entry.** Original: mini monogram tile (suppliers have
+  no image logos) plus the name.
 - 2026-08-20 (William Johnson): The Project name field is auto-seeded by
   `buildProjectName` — first material + first process + part, title-styled
   (e.g. "Aluminum Progressive Die Brackets"). No recipient in the name (was
@@ -42,6 +78,13 @@ alwaysApply: false
   answers by `buildProjectDescription` (pure template rules, no AI; bracket
   use case hardcodes "brackets" unless a Part type answer exists). The
   requirement pills moved into a closed-by-default Tailoft
+  `details kind="accordion"` labeled "Your requirements (n)".
+  **Superseded 2026-09-01: the description box is "My requirements include..."
+  plus Label: Value lines; the accordion is gone — see the same-day
+  description-list entry.** Original: The project description is pre-drafted
+  from logged answers by `buildProjectDescription` (pure template rules, no
+  AI; bracket use case hardcodes "brackets" unless a Part type answer exists).
+  The requirement pills moved into a closed-by-default Tailoft
   `details kind="accordion"` labeled "Your requirements (n)".
 - 2026-08-20 (William Johnson): The quote form has an Attachments module built
   from Tailoft's own `l-fileupload` (dashed dropzone, shows accepted types) and
@@ -73,6 +116,8 @@ alwaysApply: false
   Dynamics), light-blue quoted project description, requirements list,
   full-width "Not interested" / "View contact details" CTAs, reply-directly
   note, and a light-blue blue-text "Sent via Thomas on behalf of…" footer.
+  **Superseded 2026-09-01: View contact details opens `/lead` — see the
+  same-day TFI lead-page entry.** Original: "View contact details" CTAs
   Body copy says "through Thomas" (was Xometry). For multi-supplier sends the
   page shows the copy addressed to the first recipient. Clicking "Not
   interested" opens `/buyer-email` (buyer Gmail: that supplier declined) and
@@ -143,12 +188,22 @@ alwaysApply: false
     removed.
   - Center column: title row carries a 230px location field (wired to the loc
     answer) + All Filters; answer chips are compact single pills with the
-    label inside (PROCESS Progressive Die ✕). Cards are flat rows separated
+    label inside (PROCESS Progressive Die ✕).
+    **Superseded 2026-09-01: location lives in the define flow as question 6;
+    the results header is title + All Filters only — see loc-as-q6.**
+    Original: title row carries a 230px location field (wired to the loc
+    answer) + All Filters. Cards are flat rows separated
     by hairlines (supersedes the rounded-panel look from earlier today):
-    46px bordered monogram, dot-joined facts line ("City, ST ZIP · N
-    employees · $rev · Est. year"), semibold types line, description with
-    more+, and the requirements summary as a bordered pill with a solid green
-    circle check. Card CTAs are 36px.
+    40px local placeholder mark (initials if the image misses), dot-joined
+    facts line ("City, ST ZIP · N employees · $rev · Est. year"), semibold
+    types line, description with more+, and grey-outline capability pills.
+    Card CTAs are 32px.
+    **Superseded 2026-09-01 (later): card identity tiles are local SVG
+    marks, not Logo.dev — see the same-day placeholder-marks entry.**
+    Original: 40px Logo.dev company mark (initials if the image misses)
+    **Superseded 2026-09-01: card identity tiles are Logo.dev images, not
+    letter monograms — see the 2026-09-01 logo.dev entry.** Original: 46px
+    bordered monogram
     **Superseded 2026-08-31: the green summary pill is replaced by grey-outline
     blue-check capability pills (max 5) — see the same-day match-pills entry.**
   - Engage rail (320px): "Shortlist & contact suppliers" header with
@@ -179,8 +234,13 @@ alwaysApply: false
   chips moved out of the results header into the All Filters drawer (pinned
   under the actions row), category labels dropped, pills ~8px thinner; the
   results header now carries its own bottom hairline. Engage rail picks
-  restyled from hairline rows to compact tinted pills (22px monogram,
-  tight name/location stack, hairline-separated ✕).
+  restyled from hairline rows to compact tinted pills (22px local placeholder
+  mark, tight name/location stack, hairline-separated ✕).
+  **Superseded 2026-09-01 (later): chip tiles are local SVG marks, not
+  Logo.dev — see the same-day placeholder-marks entry.** Original: 22px
+  Logo.dev mark
+  **Superseded 2026-09-01: chip tiles are Logo.dev images, not letter
+  monograms — see the 2026-09-01 logo.dev entry.** Original: 22px monogram
 
 - 2026-08-27 (William Johnson, engage rail v2 + polish pass): rail redesigned
   around a drafted RFI — header now counts "N suppliers saved", picks are
@@ -191,6 +251,10 @@ alwaysApply: false
   2026-08-28: was "Send to N Suppliers"**), and quiet
   sub-CTAs "+ Add to shortlist" / "Visit Website(s)". Auto Contact and the
   "+ Add" chip were dropped. Location question removed from the define flow
+  (header field / drawer only; the answer still filters).
+  **Superseded 2026-09-01: location is question 6 in the define flow again;
+  the results-header field is gone — see the same-day loc-as-q6 entry.**
+  Original: Location question removed from the define flow
   (header field / drawer only; the answer still filters). Card fact rows got
   their icons back (location-dot/users/landmark/calendar/industry) in dark
   text; requirements badge tinted green. Stage bar: define count dropped,
@@ -222,6 +286,9 @@ alwaysApply: false
 - 2026-08-28 (William Johnson): rail no longer auto-seeds — it starts empty
   with a placeholder (circle-plus icon, "Add suppliers to contact or
   shortlist"); the card Add/Added toggle is the only way suppliers get on.
+  **Superseded 2026-09-01: the floating "Smart add top matches" pill also
+  queues the top 3 ranked suppliers — see the same-day smart-add entry.**
+  Original: the card Add/Added toggle is the only way suppliers get on.
   **Superseded 2026-08-31: the desktop rail no longer starts visible at all —
   it stays hidden until the buyer adds a supplier or logs a smart-filter
   answer (see the 2026-08-31 dormant-rail entry). The placeholder still
@@ -231,8 +298,12 @@ alwaysApply: false
   **Superseded 2026-08-28: the placeholder icon is now the factory/supplier
   glyph (`l-icon name="industry"`, same as card company-type rows), not
   circle-plus.** The RFI card + send/shortlist CTAs are pinned to the rail's
-  foot (`margin-top: auto`); the placeholder centers in the leftover space
-  above, and saved chips flow from the top with a minimum gap to the card.
+  foot (`margin-top: auto`); the empty placeholder sits under the header at
+  a fixed offset (does not grow or re-center when the RFI fills in), and
+  saved chips flow from the top with a minimum gap to the card.
+  **Superseded 2026-09-01: the placeholder no longer centers in leftover
+  space — see the same-day rail-placeholder-pin entry.** Original: the
+  placeholder centers in the leftover space above
 - 2026-08-28 (William Johnson): the "All N requirements met" pill is
   hoverable/focusable — a CSS popover ("Matching your search") lists what
   matched with green checks: the searched category (Service · Stamping
@@ -255,11 +326,14 @@ alwaysApply: false
 
 - 2026-08-28 (William Johnson): the rail's RFI card gets a placeholder state
   when zero smart-filter answers are logged: gray "No RFI drafted yet" flag
-  (`.rail-rfi-flag-empty`) plus one line — "Answer the smart filter questions
+  (`.rail-rfi-flag-empty`) plus one line — "Answer smart filter questions
   and we'll draft an RFI from your requirements." — no title, no Preview RFI
   link. The old zero-answer copy ("RFI drafted for you" / search query /
   "Written from your search") is gone; the drafted card now only appears once
   ≥1 answer is logged. The Contact button still opens the modal regardless.
+  **Superseded 2026-09-01: empty-card copy dropped "the" — see the same-day
+  empty-RFI wording entry.** Original: plus one line — "Answer the smart
+  filter questions and we'll draft an RFI from your requirements."
 
 - 2026-08-31 (William Johnson): the desktop engage rail is visible on load
   again — empty placeholder until a supplier is added, empty RFI card until
@@ -352,11 +426,15 @@ alwaysApply: false
   was dropped — any drafted RFI stays blue. See the same-day RFI-bar-stays-blue
   entry.**
 
-- 2026-08-31 (layout fix): the rail's middle section (`.select-rail-list`
-  chips / `.rail-placeholder`) is now the flexible, internally-scrolling
-  piece (`flex: 1 1 auto; min-height: 0; overflow-y: auto`), so the RFI and
-  guarantee cards at the foot are never pushed below the viewport — they
-  were getting clipped on shorter windows.
+- 2026-08-31 (layout fix): saved chips (`.select-rail-list`) are the
+  flexible, internally-scrolling piece (`flex: 1 1 auto; min-height: 0;
+  overflow-y: auto`), so the RFI and CTAs at the foot are never pushed
+  below the viewport. The empty placeholder is content-sized and pinned
+  under the header — it is not in that flex pool.
+  **Superseded 2026-09-01: `.rail-placeholder` is no longer flexible —
+  see the same-day rail-placeholder-pin entry.** Original: the rail's
+  middle section (`.select-rail-list` chips / `.rail-placeholder`) is now
+  the flexible, internally-scrolling piece
 
 - 2026-08-31 (William Johnson): buyer decline emails. When a supplier clicks
   "Not interested" on `/supplier-email`, Thomas notifies the buyer (Sarah
@@ -421,11 +499,140 @@ alwaysApply: false
   **Superseded 2026-08-31 (later): 288px so the title stays one line —
   see the same-day rail-title-one-line entry above.**
 
+- 2026-09-01 (William Johnson): Supplier identity tiles use 12 local SVG
+  placeholder marks in `public/supplier-marks/`, picked by a hash of the
+  company name (`placeholderMarkSrc` in `lib/logo.ts`). Initials if the
+  image fails. Same surfaces as before (cards, tiles, rail chips, contact
+  pills, buyer-email matches, engage-tray, TFI lead sidebar). Logo.dev and
+  the publishable-key env/secret are gone.
+  **Supersedes the earlier 2026-09-01 Logo.dev name-lookup entry.**
+
+- 2026-09-01 (William Johnson): Supplier identity tiles load company logos
+  from Logo.dev's name endpoint (`img.logo.dev/name/{encoded name}`) via
+  `components/supplier-logo.tsx`. Catalog has names, not domains, so name
+  lookup is the path; Logo.dev's generated monogram covers misses, and our
+  initials tile covers a failed request or a missing publishable key. Surfaces:
+  cards, tiles, rail chips, contact "Sending to" pills, buyer-email matches,
+  engage-tray avatars. Token is `NEXT_PUBLIC_LOGO_DEV_PUBLISHABLE_KEY` (pk_,
+  client-safe) in `.env.local` and the GitHub Pages workflow secret of the
+  same name. Quiet "Logos provided by Logo.dev" attribution under the
+  results list when the token is set (free-plan requirement).
+  **Superseded 2026-09-01 (later): local SVG marks replace Logo.dev — see
+  the same-day placeholder-marks entry above.**
+  **Supersedes the 2026-08-20 "suppliers have no image logos" / monogram-only
+  tiles.**
+
+- 2026-09-01 (William Johnson): empty-rail "Add suppliers to contact or
+  shortlist" sits under the header at a fixed offset (`padding-top:
+  space-6`) instead of vertically centering in leftover space. `.rail-placeholder`
+  is `flex: 0 0 auto` so filling in the RFI card below shrinks the gap, not
+  the prompt. The RFI card is `flex: 0 0 auto` so adding chips never shrinks
+  it; chips (`flex: 1 1 0`) scroll in leftover height. Minus / plus on the
+  status bar collapses the body.
+  **Superseded 2026-09-01 (later): RFI no longer flex-shrinks; chips use
+  basis 0; bar has a collapse control — see the same-day rfi-collapse
+  entry.** Original: Chips still flex-grow and scroll. RFI stays `margin-top: auto`.
+  **Supersedes the 2026-08-28 "placeholder centers in the leftover space"
+  and the 2026-08-31 layout-fix claim that the placeholder is flexible.**
+
+- 2026-09-01 (William Johnson): "View contact details" on the supplier email
+  opens `/lead` (new tab), a Thomas For Industry dashboard recreation:
+  navy account rail, breadcrumbs, project title + Viewed badge, Details tab,
+  buyer / request / type / dates, description from the stashed quote,
+  Contact Details (Sarah Mitchell email + phone), then five selectable
+  rating tiles — 1 Unqualified, 2 Poor, 3 Ok, 4 Good, 5 Great. Rating is
+  local state only. No payload → demo lead so the page is still viewable.
+  **Supersedes the 2026-08-20 "View contact details" CTA that went nowhere.**
+
+- 2026-09-01 (William Johnson): define and engage columns are clamped
+  `min-width: 240px; max-width: 360px` (preferred 280 / 288). They do not
+  grow with the viewport; leftover width goes to the results column, which
+  has no card max-width. Phone tabs still use `width: 100%` (`max-width:
+  none`). **Supersedes the same-day large-screen 320/344 + 1040px card cap
+  in Current status.** The 2026-08-31 288px rail preferred width still holds
+  inside this band.
+
+- 2026-09-01 (William Johnson): a floating "Smart add top suppliers" pill
+  (light blue-10 fill, blue outline/text, sparkles icon) docks at the
+  bottom of the results column. It queues the top 3 ranked suppliers onto
+  the engage rail, keeping any extras the buyer already added. Disabled
+  once those three are on the rail. This is the opt-in replacement for
+  auto-seeding the rail; it does not open the contact dialog (unlike the
+  removed Quick Contact / Auto Contact CTAs).
+  **Superseded 2026-09-01 (later): fill is blue-10, not white.**
+  Original: a floating "Smart add top suppliers" pill
+  (white, blue outline/text, sparkles icon) docks at the bottom of the
+  results column.
+  **Superseded 2026-09-01 (later): label is "Smart add top suppliers".**
+  Original: a floating "Smart add top matches" pill
+
+- 2026-09-01 (William Johnson): define-pane Restart and List icon tools
+  match Back / Done geometry — 32px tall, `l-radius-1` (3px) corners —
+  instead of the taller 38px / 8px squares.
+
+- 2026-09-01 (William Johnson): location is question 6 in the smart-filter
+  sequence (`part`, `process`, `material`, `stock`, `qty`, `loc`, …). The
+  results-header location field is gone; All Filters still has a location
+  input that writes the same `loc` answer. **Supersedes the 2026-08-27
+  "location removed from the define flow (header field / drawer only)".**
+
+- 2026-09-01 (William Johnson): the contact dialog's project description
+  is a contenteditable list — "My requirements include..." then one
+  "Label: **Value**" line per logged answer (same labels as the rail RFI
+  card). Values after the colon are semibold in that editor, the TFI
+  lead Description, and the supplier-email quote. Stored payload stays
+  plain text. The "Your requirements" accordion was removed so the list
+  isn't shown twice. The supplier email quotes that box and only appends
+  quantity / need-by.
+  **Superseded 2026-09-01 (later): values are semibold; the field is no
+  longer a plain textarea — see the same-day bold-values entry.**
+  Original: The textarea opens with "My
+  requirements include..." then one "Label: Value" line per logged
+  answer (same labels as the rail RFI card). The "Your requirements"
+  accordion was removed so the list isn't shown twice. The supplier
+  email quotes that box and only appends quantity / need-by.
+
+- 2026-09-01 (William Johnson): the Smart add pill uses a light blue-10
+  fill (blue-25 on hover) so the tint reads against the results list.
+  Define and rail header badges share Back/Done's 3px radius; the RFI
+  card is 8px (was 12px).
+  **Superseded 2026-09-01 (later): rest fill is blue-10, not blue-5.**
+  Original: the Smart add pill uses a light blue-5 fill (blue-10 on hover)
+  instead of white, so it reads against the results list. Define and rail
+  header badges share Back/Done's 3px radius; the RFI card is 8px (was 12px).
+
+- 2026-09-01 (William Johnson): empty RFI card copy is "Answer smart filter
+  questions and we'll draft an RFI from your requirements." (dropped "the").
+
+- 2026-09-01 (William Johnson): the define-pane product/location typeahead
+  uses 13px type (`--l-font-size-smallest`) and a 13px search/pin icon,
+  one step under the shared `.location-search` 14px field.
+
+- 2026-09-01 (William Johnson): requirement-list values after the colon
+  are semibold on the TFI lead Description, the contact project-description
+  editor, and the supplier-email quote of that box. The rail RFI card
+  already did this.
+
+- 2026-09-01 (William Johnson): the rail RFI card keeps its content height
+  when suppliers are added (`flex: 0 0 auto`); extra chips scroll in the
+  shortlist. The status bar is a toggle — minus collapses the body, plus
+  expands it.
+
+- 2026-09-01 (William Johnson): settled answer pills (and skipped bars) use
+  line-height 1.2 so a wrapped value like "Open / stock tooling" stays a
+  compact chip. They were inheriting the body's 24px line-height.
+
 ## Open threads
 
 - Analytics ask from the boss (2026-08-28): instrument how many buyers edit
   the drafted RFI before sending (draft-changed vs sent-as-is). Prototype has
   no analytics layer; belongs in the production spec.
+- Logo.dev publishable key is not needed (2026-09-01, later): tiles use
+  local placeholder marks. **Superseded 2026-09-01 (later): see the
+  placeholder-marks entry.** Original: Logo.dev publishable key is not in
+  the repo yet (2026-09-01). Local logos need `.env.local`; Pages needs the
+  GitHub Actions secret `NEXT_PUBLIC_LOGO_DEV_PUBLISHABLE_KEY`. Until then
+  tiles stay initials.
 - Lead-form "additional questions" (beyond the logged requirements echoed on
   the RFI) are out of H4 scope per the boss's own read; nothing to build here
   yet.

@@ -13,7 +13,6 @@ import {
   impliedAnswers,
   introSummary,
   isDontKnowOption,
-  LOCATION_QUESTION_ID,
   matchSetFor,
   mergeParsedAnswers,
   nextAsk,
@@ -363,13 +362,6 @@ export function SourcingExperience() {
         ...answers.filter((answer) => answer.questionId !== questionId),
         { questionId, values, skipped: false },
       ];
-
-      // Location lives in the results header and All Filters drawer only —
-      // it never takes a card in the define pane.
-      if (questionId === LOCATION_QUESTION_ID) {
-        setAnswers(updated);
-        return;
-      }
 
       const activeSame = transcript.some(
         (entry) =>

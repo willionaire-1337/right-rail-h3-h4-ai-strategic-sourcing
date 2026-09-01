@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useLayoutEffect, useRef, useState } from "react";
+import { SupplierLogo } from "@/components/supplier-logo";
 import { BASE_PATH } from "@/lib/base-path";
 import type { Supplier } from "@/lib/suppliers";
 
@@ -13,15 +14,6 @@ type SupplierCardProps = {
   /** Generic capability labels (max 5) derived from the search and answers. */
   matchPills: string[];
 };
-
-export function monogram(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter((word) => /^[A-Za-z]/.test(word))
-    .slice(0, 2)
-    .map((word) => word[0]!.toUpperCase())
-    .join("");
-}
 
 /** Category keywords bolded inside descriptions, as on the reference SRP card. */
 function emphasize(text: string): React.ReactNode[] {
@@ -120,7 +112,7 @@ export function SupplierCard({
       {/* Header row: identity + actions */}
       <div className="card-head flex gap-3 align-items-start">
         <div className="supplier-logo" aria-hidden="true">
-          {monogram(supplier.name)}
+          <SupplierLogo name={supplier.name} size={40} />
         </div>
         <div className="card-identity flex-1">
           <div className="flex align-items-center gap-2">

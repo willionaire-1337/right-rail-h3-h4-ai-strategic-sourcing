@@ -450,12 +450,11 @@ export const ASK_SEQUENCE = [
   "material", // Q2
   "stock", // Q3
   "qty", // Q4
+  "loc", // Q9 — sixth in this flow (2026-09-01)
   "size", // Q5
   "tooling", // Q6
   "delivery", // Q7
   "tol", // Q8
-  // "loc" left the define flow 2026-08-27 — location is set from the results
-  // header field or the All Filters drawer instead; the answer still filters.
   "features", // Q10
   "app", // Q12
   "cert", // Q13

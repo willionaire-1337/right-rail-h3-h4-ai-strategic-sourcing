@@ -6,7 +6,8 @@ import {
   ContactSupplierModal,
   type ContactRequirement,
 } from "@/components/contact-supplier-modal";
-import { CapabilityRow, MediaTile, monogram, noop } from "@/components/supplier-card";
+import { CapabilityRow, MediaTile, noop } from "@/components/supplier-card";
+import { SupplierLogo } from "@/components/supplier-logo";
 import { BASE_PATH } from "@/lib/base-path";
 import type { Supplier } from "@/lib/suppliers";
 
@@ -47,7 +48,7 @@ export function SupplierTile({
     <l-panel class="supplier-tile">
       <div className="flex gap-3 align-items-start">
         <div className="supplier-logo" aria-hidden="true">
-          {monogram(supplier.name)}
+          <SupplierLogo name={supplier.name} size={40} />
         </div>
         <div className="flex-1">
           <div className="flex align-items-center gap-2">

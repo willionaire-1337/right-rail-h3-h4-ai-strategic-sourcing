@@ -1,6 +1,7 @@
 "use client";
 
-import { monogram } from "@/components/supplier-card";
+import { useState } from "react";
+import { SupplierLogo } from "@/components/supplier-logo";
 import type { Supplier } from "@/lib/suppliers";
 
 type SelectSuppliersRailProps = {
@@ -30,6 +31,8 @@ export function SelectSuppliersRail({
   requirementCount,
   requirementPreview,
 }: SelectSuppliersRailProps) {
+  const [rfiCollapsed, setRfiCollapsed] = useState(false);
+
   return (
     <aside
       className="select-rail"
@@ -61,7 +64,7 @@ export function SelectSuppliersRail({
           {suppliers.map((supplier) => (
             <li key={supplier.id}>
               <span className="rail-logo" aria-hidden="true">
-                {monogram(supplier.name)}
+                <SupplierLogo name={supplier.name} size={22} />
               </span>
               <span className="rail-entry-name" title={supplier.name}>
                 {supplier.name}
@@ -71,19 +74,29 @@ export function SelectSuppliersRail({
         </ul>
       )}
 
-      {/* Draft-status module: white/grey with no answers, blue once drafted. */}
+      {/* Draft-status module: white/grey with no answers, blue once drafted.
+          Does not shrink when the chip list grows — chips scroll instead. */}
       <div
         className={`rail-rfi-card ${
           requirementCount === 0 ? "rail-rfi-empty" : "rail-rfi-drafted"
-        }`}
+        }${rfiCollapsed ? " rail-rfi-collapsed" : ""}`}
       >
-        <div className="rail-rfi-bar">
-          {requirementCount === 0 ? "No RFI drafted yet" : "RFI drafted for you"}
-        </div>
-        <div className="rail-rfi-body">
+        <button
+          type="button"
+          className="rail-rfi-bar"
+          aria-expanded={!rfiCollapsed}
+          aria-controls="rail-rfi-body"
+          onClick={() => setRfiCollapsed((collapsed) => !collapsed)}
+        >
+          <span>
+            {requirementCount === 0 ? "No RFI drafted yet" : "RFI drafted for you"}
+          </span>
+          <l-icon name={rfiCollapsed ? "plus" : "minus"} aria-hidden="true" />
+        </button>
+        <div id="rail-rfi-body" className="rail-rfi-body">
           {requirementCount === 0 ? (
             <p className="rail-rfi-note mar-0">
-              Answer the smart filter questions and we&apos;ll draft an RFI from
+              Answer smart filter questions and we&apos;ll draft an RFI from
               your requirements.
             </p>
           ) : (

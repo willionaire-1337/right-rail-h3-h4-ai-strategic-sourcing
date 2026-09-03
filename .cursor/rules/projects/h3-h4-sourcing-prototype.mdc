@@ -27,7 +27,13 @@ alwaysApply: false
   320 at ≥1440 and 344 / 344 at ≥1920, still pinned to the window edges.
   Result cards cap at 1040px so the middle column does not stretch with the
   leftover space.
-- A floating "Smart add top suppliers" pill (light blue-10 fill, blue
+- Completing the smart-filter questionnaire (run wraps up, or Done after at
+  least one answer) auto-queues the top 3 ranked suppliers onto the engage
+  rail. Each chip has an ✕ to remove it; clicking the chip (logo + name)
+  scrolls the results list to that supplier's card.
+  **Superseded 2026-09-02: Smart add is gone; top 3 queue automatically when
+  the questionnaire completes — see the same-day auto-queue-on-complete
+  entry.** Original: A floating "Smart add top suppliers" pill (light blue-10 fill, blue
   outline/text, sparkles icon) sits at the foot of the results list and
   queues the top 3 ranked suppliers onto the engage rail.
   **Superseded 2026-09-01 (later): label is "Smart add top suppliers"; fill
@@ -38,7 +44,12 @@ alwaysApply: false
   header no longer has a location field; All Filters still can set it.
 - After "View contact details" on the supplier email, the supplier lands on
   `/lead` — a Thomas For Industry lead page with buyer contact + a 1–5
-  rating (Unqualified → Great). Requirement-list values (after the colon)
+  rating (Spam or Offensive Content → Interested, High Priority Follow-Up).
+  **Superseded 2026-09-02: scale is Spam or Offensive Content / Not Relevant
+  to my Business / Not Interested / Interested (Need More Information) /
+  Interested (High Priority Follow-Up) — see the same-day tfi-rating-labels
+  entry.** Original: rating (Unqualified → Great).
+  Requirement-list values (after the colon)
   are semibold on the lead Description, the contact description editor,
   and the supplier-email quote.
 
@@ -282,10 +293,15 @@ alwaysApply: false
   32px CTAs, 112×72 media) so multiple results show above the fold. Rail
   chips lost their ✕ — the card's Add/Added toggle is the single
   select/deselect control; chips just reflect it.
+  **Superseded 2026-09-02: chips have an ✕ again (and tap-to-reveal) — see
+  the same-day auto-queue-on-complete entry.** Original: chips lost their ✕ — the card's Add/Added toggle is the single
+  select/deselect control; chips just reflect it.
 
 - 2026-08-28 (William Johnson): rail no longer auto-seeds — it starts empty
   with a placeholder (circle-plus icon, "Add suppliers to contact or
   shortlist"); the card Add/Added toggle is the only way suppliers get on.
+  **Superseded 2026-09-02: completing the questionnaire auto-queues the top 3
+  — see the same-day auto-queue-on-complete entry.** Original: the card Add/Added toggle is the only way suppliers get on.
   **Superseded 2026-09-01: the floating "Smart add top matches" pill also
   queues the top 3 ranked suppliers — see the same-day smart-add entry.**
   Original: the card Add/Added toggle is the only way suppliers get on.
@@ -540,7 +556,12 @@ alwaysApply: false
   navy account rail, breadcrumbs, project title + Viewed badge, Details tab,
   buyer / request / type / dates, description from the stashed quote,
   Contact Details (Sarah Mitchell email + phone), then five selectable
-  rating tiles — 1 Unqualified, 2 Poor, 3 Ok, 4 Good, 5 Great. Rating is
+  rating tiles — 1 Spam or Offensive Content, 2 Not Relevant to my Business,
+  3 Not Interested, 4 Interested (Need More Information), 5 Interested
+  (High Priority Follow-Up). Rating is
+  local state only. No payload → demo lead so the page is still viewable.
+  **Superseded 2026-09-02: labels are the TFI interest scale — see the
+  same-day tfi-rating-labels entry.** Original: rating tiles — 1 Unqualified, 2 Poor, 3 Ok, 4 Good, 5 Great. Rating is
   local state only. No payload → demo lead so the page is still viewable.
   **Supersedes the 2026-08-20 "View contact details" CTA that went nowhere.**
 
@@ -559,6 +580,11 @@ alwaysApply: false
   once those three are on the rail. This is the opt-in replacement for
   auto-seeding the rail; it does not open the contact dialog (unlike the
   removed Quick Contact / Auto Contact CTAs).
+  **Superseded 2026-09-02: Smart add is gone; top 3 queue when the
+  questionnaire completes — see the same-day auto-queue-on-complete entry.**
+  Original: This is the opt-in replacement for auto-seeding the rail; it does
+  not open the contact dialog (unlike the removed Quick Contact / Auto
+  Contact CTAs).
   **Superseded 2026-09-01 (later): fill is blue-10, not white.**
   Original: a floating "Smart add top suppliers" pill
   (white, blue outline/text, sparkles icon) docks at the bottom of the
@@ -592,7 +618,11 @@ alwaysApply: false
   accordion was removed so the list isn't shown twice. The supplier
   email quotes that box and only appends quantity / need-by.
 
-- 2026-09-01 (William Johnson): the Smart add pill uses a light blue-10
+- 2026-09-01 (William Johnson): Define and rail header badges share
+  Back/Done's 3px radius; the RFI card is 8px (was 12px). The Smart add pill
+  used a light blue-10 fill (blue-25 on hover).
+  **Superseded 2026-09-02: Smart add is gone — see auto-queue-on-complete.
+  Badge and RFI radii still hold.** Original: the Smart add pill uses a light blue-10
   fill (blue-25 on hover) so the tint reads against the results list.
   Define and rail header badges share Back/Done's 3px radius; the RFI
   card is 8px (was 12px).
@@ -621,6 +651,33 @@ alwaysApply: false
 - 2026-09-01 (William Johnson): settled answer pills (and skipped bars) use
   line-height 1.2 so a wrapped value like "Open / stock tooling" stays a
   compact chip. They were inheriting the body's 24px line-height.
+
+- 2026-09-02 (William Johnson): TFI lead rating tiles use the interest
+  scale — 1 Spam or Offensive Content, 2 Not Relevant to my Business,
+  3 Not Interested, 4 Interested (Need More Information), 5 Interested
+  (High Priority Follow-Up). Numbers stay; captions wrap under them.
+  **Supersedes the 2026-09-01 Unqualified / Poor / Ok / Good / Great labels
+  on the same tiles.**
+
+- 2026-09-02 (William Johnson): completing the questionnaire auto-queues the
+  top 3 ranked suppliers onto the engage rail (run `done`, or Done/close after
+  at least one answer). The floating Smart add pill is gone. Each chip has an
+  ✕ to remove it; clicking the logo/name scrolls the results list to that
+  card. Card Add/Added still works. Does not re-queue after a manual remove
+  until Reset starts a new run.
+  **Supersedes the 2026-09-01 Smart add pill and the 2026-08-28 "rail starts
+  empty / card toggle is the only way on" rule.**
+
+- 2026-09-03 (William Johnson): settled answer pills (`.ask-answer`) and the
+  skipped pill (`.ask-skipped`) in the define pane match `.option-row`
+  exactly — 8px vertical padding, 1.35 line-height, 9px radius, 13px type —
+  so the blue "Brackets / Edit" bar is the same 35.5px as the options below.
+  **Supersedes the 2026-09-02 3px / 1.2 compact-pill sizing.**
+
+- 2026-09-03 (William Johnson): the ≤1100px bottom engage tray gets a
+  neutral "Shortlist" button directly left of the primary "Send RFI"
+  (`.engage-tray-shortlist`). It calls the same `shortlistRailSuppliers`
+  the rail's "+ Add to shortlist" uses; disabled when the rail is empty.
 
 ## Open threads
 

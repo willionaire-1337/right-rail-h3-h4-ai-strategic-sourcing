@@ -106,10 +106,11 @@ export function DescriptionEditor({
           document.execCommand("insertText", false, text);
         }}
       />
+      {/* Optional: the logged spec ships as structured requirements beside the
+          box, so the buyer's own notes are a bonus rather than a gate. */}
       <textarea
         ref={hiddenRef}
         name={name}
-        required
         defaultValue={initial}
         className="contact-desc-value"
         tabIndex={-1}

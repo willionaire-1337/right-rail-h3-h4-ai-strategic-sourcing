@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DescriptionEditor } from "@/components/requirement-description";
 import { SupplierLogo } from "@/components/supplier-logo";
 import { BASE_PATH } from "@/lib/base-path";
@@ -9,8 +9,6 @@ import type { Supplier } from "@/lib/suppliers";
 /** Drawing and spec formats suppliers expect with an RFQ. */
 const QUOTE_FILE_TYPES = ".pdf, .step, .iges, .dxf, .dwg, .zip";
 
-/** Recipient chips shown before the list collapses behind a "+X" toggle. */
-const RECIPIENT_PREVIEW = 2;
 
 /** What the buyer is making — fixed for this prototype's bracket use case,
     unless they logged a Part type answer in the left rail. */
@@ -71,16 +69,12 @@ export function buildProjectName(requirements: ContactRequirement[]): string {
 }
 
 /**
- * Seeds the project-description box with the logged spec as an editable
- * list — "My requirements include..." then one "Label: Value" line per
- * answer. Empty when nothing is logged yet so the placeholder shows.
+ * The description box is the buyer's own words now — the logged spec rides
+ * alongside it as removable requirement chips, so seeding the box with the
+ * same list would only duplicate it.
  */
-export function buildProjectDescription(requirements: ContactRequirement[]): string {
-  if (requirements.length === 0) return "";
-  const lines = requirements.map(
-    (requirement) => `${requirement.label}: ${requirement.value}`,
-  );
-  return ["My requirements include...", ...lines].join("\n");
+export function buildProjectDescription(): string {
+  return "";
 }
 
 /** A requirement the buyer logged in the left rail, e.g. Process: Progressive Die. */
@@ -111,8 +105,38 @@ export function ContactSupplierModal({
   /** Flips the dialog to the sent confirmation once the email page opens. */
   const [sent, setSent] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  /** Whether the "Sending to" list shows everyone or just the first few. */
-  const [recipientsOpen, setRecipientsOpen] = useState(false);
+  /** Requirement chips cleared before sending, by label. */
+  const [droppedRequirements, setDroppedRequirements] = useState<string[]>([]);
+
+  /** The "Sending to" scroller and how many chips sit off its right edge. */
+  const recipientsRef = useRef<HTMLDivElement>(null);
+  const [offscreenCount, setOffscreenCount] = useState(0);
+
+  /** Counts the chips scrolled past the right edge, so "+N" tracks the scroll
+      rather than a fixed preview length. */
+  const measureRecipients = useCallback(() => {
+    const scroller = recipientsRef.current;
+    if (!scroller) return;
+    // Measured against the scrollport's own edge, so scrolling to the end
+    // always lands on zero and retires the chip.
+    const edge = scroller.getBoundingClientRect().right;
+    let hidden = 0;
+    for (const chip of scroller.querySelectorAll(".contact-recipient-pill")) {
+      if (chip.getBoundingClientRect().right > edge + 1) hidden += 1;
+    }
+    setOffscreenCount(hidden);
+  }, []);
+
+  // Measure once the strip is laid out, and again whenever the dialog is
+  // resized — "+N" is a live count, not a fixed preview length.
+  useEffect(() => {
+    const scroller = recipientsRef.current;
+    if (!scroller) return;
+    measureRecipients();
+    const observer = new ResizeObserver(measureRecipients);
+    observer.observe(scroller);
+    return () => observer.disconnect();
+  }, [measureRecipients, open, sent, suppliers.length]);
 
   // Fresh form each time the dialog opens (state adjusted during render, per
   // react.dev "adjusting state when a prop changes").
@@ -122,7 +146,8 @@ export function ContactSupplierModal({
     if (open) {
       setSent(false);
       setFiles([]);
-      setRecipientsOpen(false);
+      setOffscreenCount(0);
+      setDroppedRequirements([]);
     }
   }
 
@@ -151,6 +176,10 @@ export function ContactSupplierModal({
   const single = suppliers.length === 1 ? suppliers[0] : null;
   /** The supplier whose copy of the email the preview is addressed to. */
   const previewSupplier = suppliers[0];
+  /** What still ships with the request, after any chips the buyer cleared. */
+  const keptRequirements = requirements.filter(
+    (requirement) => !droppedRequirements.includes(requirement.label),
+  );
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -165,7 +194,7 @@ export function ContactSupplierModal({
       description: field("description"),
       quantity: field("quantity"),
       needBy: field("needBy"),
-      requirements,
+      requirements: keptRequirements,
       sentAt: new Date().toISOString(),
     };
     localStorage.setItem(QUOTE_EMAIL_STORAGE_KEY, JSON.stringify(payload));
@@ -197,41 +226,20 @@ export function ContactSupplierModal({
                 <h2 className="contact-title mar-0">Quote request sent</h2>
                 <p className="mar-0 txt-smaller txt-darkblue-75">
                   {single
-                    ? `We've opened the email ${single.name} will receive in a new tab.`
-                    : `Each of the ${suppliers.length} suppliers gets their own copy — we've opened the one addressed to ${previewSupplier.name} in a new tab.`}
+                    ? `${single.name} has your request and can reply with a quote.`
+                    : `All ${suppliers.length} suppliers have your request and can reply with a quote.`}
                 </p>
               </div>
             </div>
-            <p className="mar-0 txt-smaller txt-darkblue-75">
-              If they don&apos;t reply, Thomas sends a reminder the next day, then a final
-              notice before the RFI is offered to other suppliers.
-            </p>
-            <div className="contact-sent-followups">
-              <a
-                className="contact-sent-link"
-                href={`${BASE_PATH}/supplier-email/`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <l-icon name="envelope" fill aria-hidden="true" /> Original request
-              </a>
-              <a
-                className="contact-sent-link"
-                href={`${BASE_PATH}/supplier-email/reminder/`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <l-icon name="clock" fill aria-hidden="true" /> Reminder
-              </a>
-              <a
-                className="contact-sent-link"
-                href={`${BASE_PATH}/supplier-email/final-notice/`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <l-icon name="paper-plane" fill aria-hidden="true" /> Final notice
-              </a>
-            </div>
+
+            {/* What the buyer can expect, rather than links into the email
+                previews — the chase runs on its own once the request is out. */}
+            <ol className="contact-sent-next">
+              <li>Quotes come back to your inbox, usually within two business days.</li>
+              <li>No reply? Thomas sends a reminder the next day, then a final notice.</li>
+              <li>Still nothing, and the RFI is offered to other matching suppliers.</li>
+            </ol>
+
             <div className="contact-sent-actions">
               <button kind="primary" onClick={onClose}>
                 Done
@@ -243,6 +251,48 @@ export function ContactSupplierModal({
             <h2 id="contact-supplier-title" className="contact-title mar-0">
               Contact {single ? single.name : `${suppliers.length} Suppliers`}
             </h2>
+
+            {!single && (
+              <div
+                className="contact-recipients"
+                aria-label="Suppliers receiving this request"
+              >
+                <span className="contact-reqs-title">Sending to</span>
+                {/* One line, scrolled sideways: the recipient list never
+                    wraps into the form, and "+N" sticks to the right edge as a
+                    live count of who's still off-screen. */}
+                <div
+                  className="contact-reqs-list contact-recipients-strip"
+                  ref={recipientsRef}
+                  onScroll={measureRecipients}
+                >
+                  {suppliers.map((recipient) => (
+                    <span className="contact-recipient-pill" key={recipient.id}>
+                      <span className="contact-recipient-logo" aria-hidden="true">
+                        <SupplierLogo name={recipient.name} size={22} />
+                      </span>
+                      {recipient.name}
+                    </span>
+                  ))}
+                  <button
+                    type="button"
+                    className="contact-recipient-more"
+                    hidden={offscreenCount === 0}
+                    aria-label={`Scroll to the other ${offscreenCount} suppliers`}
+                    onClick={() => {
+                      const scroller = recipientsRef.current;
+                      if (!scroller) return;
+                      scroller.scrollBy({
+                        left: scroller.clientWidth * 0.8,
+                        behavior: "smooth",
+                      });
+                    }}
+                  >
+                    +{offscreenCount}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <form className="contact-form" onSubmit={submit}>
                 <fieldset>
@@ -261,15 +311,41 @@ export function ContactSupplierModal({
                   <DescriptionEditor
                     id="contact-quote-desc"
                     name="description"
-                    initial={buildProjectDescription(requirements)}
-                    placeholder="Material, dimensions, tolerances, finish — anything that helps them quote."
+                    initial={buildProjectDescription()}
+                    placeholder="Add additional details about your request..."
                   />
-                  {requirements.length > 0 && (
-                    <p className="contact-note mar-0">
-                      Drafted from your logged requirements — edit anything before sending.
-                    </p>
-                  )}
                 </fieldset>
+                {/* The logged spec travels as structured requirements rather
+                    than as text inside the description, so the buyer can clear
+                    any single one before sending. */}
+                {keptRequirements.length > 0 && (
+                  <fieldset>
+                    <label htmlFor="contact-quote-reqs">Requirements</label>
+                    {/* Same element as the results header's facet pills:
+                        caption over a blue pill with its own clear control,
+                        wrapping onto new lines as the spec grows. */}
+                    <div className="answer-pill-row" id="contact-quote-reqs">
+                      {keptRequirements.map((requirement) => (
+                        <div className="answer-pill-stack" key={requirement.label}>
+                          <span className="answer-pill-label">{requirement.label}</span>
+                          <span className="answer-pill">
+                            {requirement.value}
+                            <button
+                              type="button"
+                              className="answer-pill-remove"
+                              aria-label={`Remove ${requirement.label}: ${requirement.value}`}
+                              onClick={() =>
+                                setDroppedRequirements((dropped) => [...dropped, requirement.label])
+                              }
+                            >
+                              <l-icon name="xmark" aria-hidden="true" />
+                            </button>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
                 <fieldset>
                   <label htmlFor="contact-quote-files">Attachments</label>
                   <l-fileupload
@@ -323,37 +399,6 @@ export function ContactSupplierModal({
                     <input id="contact-quote-date" name="needBy" type="date" />
                   </fieldset>
                 </div>
-                {!single && (
-                  <div
-                    className="contact-recipients"
-                    aria-label="Suppliers receiving this request"
-                  >
-                    <span className="contact-reqs-title">Sending to</span>
-                    <div className="contact-reqs-list">
-                      {(recipientsOpen ? suppliers : suppliers.slice(0, RECIPIENT_PREVIEW)).map(
-                        (recipient) => (
-                          <span className="contact-recipient-pill" key={recipient.id}>
-                            <span className="contact-recipient-logo" aria-hidden="true">
-                              <SupplierLogo name={recipient.name} size={22} />
-                            </span>
-                            {recipient.name}
-                          </span>
-                        ),
-                      )}
-                      {!recipientsOpen && suppliers.length > RECIPIENT_PREVIEW && (
-                        <button
-                          type="button"
-                          className="contact-recipient-more"
-                          aria-expanded={false}
-                          aria-label={`Show all ${suppliers.length} suppliers`}
-                          onClick={() => setRecipientsOpen(true)}
-                        >
-                          +{suppliers.length - RECIPIENT_PREVIEW}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
                 <div className="contact-actions">
                   <label className="contact-consent">
                     <input type="checkbox" defaultChecked required />

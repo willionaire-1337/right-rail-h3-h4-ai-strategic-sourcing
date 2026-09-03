@@ -95,6 +95,8 @@ export function SourcingExperience() {
    * so the buyer can scan the run and jump back into a question.
    */
   const [browseAsks, setBrowseAsks] = useState(false);
+  /** Bumps when the run resets so the rail drops auto-queued chips. */
+  const [runId, setRunId] = useState(0);
   /** Deep Drawing hand-off confirm, opened from the process question. */
   const [deepDrawGateOpen, setDeepDrawGateOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -512,6 +514,7 @@ export function SourcingExperience() {
     setThinking(false);
     setBrowseAsks(false);
     setAgentOpen(true);
+    setRunId((id) => id + 1);
   }, []);
 
   const activeAsk = transcript.find(
@@ -520,6 +523,9 @@ export function SourcingExperience() {
   );
   const hasActiveAsk = activeAsk != null;
   const started = transcript.some((entry) => entry.kind === "user");
+  const questionnaireComplete =
+    transcript.some((entry) => entry.kind === "done" && !entry.routed) ||
+    (!agentOpen && answers.length > 0);
   const canGoBack = transcript.some((entry) => entry.kind === "ask" && entry.status !== "active");
   /**
    * Picking an option answers a single-select question outright. Multi-select
@@ -867,6 +873,8 @@ export function SourcingExperience() {
             onClearMappedAnswers={() => removeAnswers(syncableQuestionIds())}
             onRailCountChange={setRailCount}
             onRefine={openDefine}
+            questionnaireComplete={questionnaireComplete}
+            runId={runId}
           />
         </section>
 

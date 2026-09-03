@@ -25,11 +25,11 @@ const NAV = [
 ] as const;
 
 const RATINGS = [
-  { value: 1, label: "Unqualified" },
-  { value: 2, label: "Poor" },
-  { value: 3, label: "Ok" },
-  { value: 4, label: "Good" },
-  { value: 5, label: "Great" },
+  { value: 1, label: "Spam or Offensive Content" },
+  { value: 2, label: "Not Relevant to my Business" },
+  { value: 3, label: "Not Interested" },
+  { value: 4, label: "Interested (Need More Information)" },
+  { value: 5, label: "Interested (High Priority Follow-Up)" },
 ] as const;
 
 /** Shown when the supplier opens /lead without sending a quote first. */
@@ -209,6 +209,7 @@ export function LeadDetails() {
                   key={entry.value}
                   type="button"
                   className="tfi-rating"
+                  aria-label={`${entry.value}. ${entry.label}`}
                   aria-pressed={rating === entry.value}
                   onClick={() => setRating(entry.value)}
                 >

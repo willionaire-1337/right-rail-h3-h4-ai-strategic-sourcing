@@ -5,9 +5,11 @@ import { SupplierLogo } from "@/components/supplier-logo";
 import type { Supplier } from "@/lib/suppliers";
 
 type SelectSuppliersRailProps = {
-  /** Suppliers queued for engagement — top-ranked picks plus card additions.
-      Managed from the cards' Add/Added toggle; the chips just reflect it. */
+  /** Suppliers queued for engagement — auto-queued top matches plus card additions. */
   suppliers: Supplier[];
+  onRemove: (supplierId: string) => void;
+  /** Scroll the results list to this supplier's card. */
+  onReveal: (supplierId: string) => void;
   onAddToShortlist: () => void;
   onSendRfi: () => void;
   /** Drafted RFI headline, synthesized from the logged answers. */
@@ -25,6 +27,8 @@ type SelectSuppliersRailProps = {
  */
 export function SelectSuppliersRail({
   suppliers,
+  onRemove,
+  onReveal,
   onAddToShortlist,
   onSendRfi,
   draftTitle,
@@ -46,7 +50,7 @@ export function SelectSuppliersRail({
           <h4 className="mar-0">Shortlist &amp; contact suppliers</h4>
           <p className="mar-0">
             {suppliers.length === 0
-              ? "No suppliers selected yet"
+              ? "Add suppliers to your list"
               : `${suppliers.length} supplier${suppliers.length === 1 ? "" : "s"} saved`}
           </p>
         </div>
@@ -56,6 +60,14 @@ export function SelectSuppliersRail({
         <div className="rail-placeholder">
             <span className="rail-placeholder-icon" aria-hidden="true">
               <l-icon name="industry" />
+              {/* Drawn rather than set as a Font Awesome glyph: a "plus" small
+                  enough to badge the mark would carry a much thinner stroke
+                  than the factory it sits on. */}
+              <span className="rail-placeholder-plus">
+                <svg viewBox="0 0 11 11" width="11" height="11">
+                  <path d="M5.5 1V10M1 5.5H10" />
+                </svg>
+              </span>
             </span>
           <p className="mar-0">Add suppliers to contact or shortlist</p>
         </div>
@@ -63,12 +75,28 @@ export function SelectSuppliersRail({
         <ul className="select-rail-list">
           {suppliers.map((supplier) => (
             <li key={supplier.id}>
-              <span className="rail-logo" aria-hidden="true">
-                <SupplierLogo name={supplier.name} size={22} />
-              </span>
-              <span className="rail-entry-name" title={supplier.name}>
-                {supplier.name}
-              </span>
+              <button
+                type="button"
+                className="rail-chip-open"
+                title={`Show ${supplier.name} in results`}
+                aria-label={`Show ${supplier.name} in results`}
+                onClick={() => onReveal(supplier.id)}
+              >
+                <span className="rail-logo" aria-hidden="true">
+                  <SupplierLogo name={supplier.name} size={22} />
+                </span>
+                <span className="rail-entry-name" title={supplier.name}>
+                  {supplier.name}
+                </span>
+              </button>
+              <button
+                type="button"
+                className="rail-chip-remove"
+                aria-label={`Remove ${supplier.name}`}
+                onClick={() => onRemove(supplier.id)}
+              >
+                <l-icon name="xmark" aria-hidden="true" />
+              </button>
             </li>
           ))}
         </ul>

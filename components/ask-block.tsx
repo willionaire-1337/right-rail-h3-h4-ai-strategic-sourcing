@@ -7,6 +7,9 @@ import { DONT_KNOW_OPTION, isDontKnowOption, type NextAsk } from "@/lib/simulati
 /** Most rows the search question's dropdown shows at once. */
 const MAX_SEARCH_SUGGESTIONS = 8;
 
+/** Escape hatch pinned to the foot of the search catalog. */
+const OTHER_OPTION = "Other";
+
 /** Most rows of options to offer, however tall the window gets. */
 const MAX_OPTION_ROWS = 6;
 /** Rows assumed until the grid has been measured, in two-column terms. */
@@ -145,6 +148,10 @@ export function AskBlock({
   const [suggestOpen, setSuggestOpen] = useState(false);
   /** Row the arrow keys have landed on. */
   const [highlighted, setHighlighted] = useState(0);
+  /** "Other" picked from the catalog — the write-in field is open below. */
+  const [otherOpen, setOtherOpen] = useState(false);
+  /** Write-in product, typed when the catalog doesn't have it. */
+  const [otherText, setOtherText] = useState("");
 
   // Both typed-entry questions share the combobox: the location question
   // suggests places, the search question suggests its own option catalog —
@@ -155,11 +162,16 @@ export function AskBlock({
       : question.location
         ? locationSuggestions(place)
         : question.search
-          ? options
-              .filter((option) => !isDontKnowOption(option))
-              .filter((option) => option.toLowerCase().includes(place.trim().toLowerCase()))
-              .slice(0, MAX_SEARCH_SUGGESTIONS)
-              .map((option) => ({ label: option, value: option }))
+          ? [
+              ...options
+                .filter((option) => !isDontKnowOption(option))
+                .filter((option) => option.toLowerCase().includes(place.trim().toLowerCase()))
+                .slice(0, MAX_SEARCH_SUGGESTIONS)
+                .map((option) => ({ label: option, value: option, kind: undefined })),
+              // Pinned last and never filtered: whatever the buyer types, the
+              // catalog always leaves them a way to name the product itself.
+              { label: OTHER_OPTION, value: OTHER_OPTION, kind: undefined },
+            ]
           : [];
   const suggesting = suggestOpen && suggestions.length > 0;
 
@@ -167,7 +179,15 @@ export function AskBlock({
   const submitPlace = (value: string) => {
     const text = value.trim();
     if (!text) return;
+    // "Other" isn't an answer — it opens the write-in field below instead.
+    if (question.search && text === OTHER_OPTION) {
+      setSuggestOpen(false);
+      setOtherOpen(true);
+      return;
+    }
     setPlace("");
+    setOtherOpen(false);
+    setOtherText("");
     setSuggestOpen(false);
     onSelect(text);
   };
@@ -257,7 +277,8 @@ export function AskBlock({
           className="location-entry"
           onSubmit={(event) => {
             event.preventDefault();
-            submitPlace(place);
+            // Once "Other" is open, the write-in field is the answer.
+            submitPlace(otherOpen ? otherText : place);
           }}
         >
           <div className="location-entry-field">
@@ -344,7 +365,29 @@ export function AskBlock({
               />
             </label>
           </div>
-          <button kind="primary" type="submit" disabled={!place.trim()}>
+          {/* Write-in, opened by picking "Other" from the catalog. Sits under
+              the search field so the buyer can still go back to browsing. */}
+          {otherOpen && (
+            <div className="other-entry">
+              <label className="other-entry-label" htmlFor={`${question.id}-other`}>
+                Name your product
+              </label>
+              <input
+                id={`${question.id}-other`}
+                className="other-entry-input"
+                type="text"
+                value={otherText}
+                autoFocus
+                placeholder="Describe the product you're making"
+                onChange={(event) => setOtherText(event.target.value)}
+              />
+            </div>
+          )}
+          <button
+            kind="primary"
+            type="submit"
+            disabled={otherOpen ? !otherText.trim() : !place.trim()}
+          >
             {question.location ? "Set location" : "Set product"}
           </button>
         </form>

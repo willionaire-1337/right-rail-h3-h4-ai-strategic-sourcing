@@ -156,7 +156,9 @@ p,
   background: #fff;
   border-radius: var(--l-radius-2, 12px);
   box-shadow: 0 24px 64px rgb(9 44 71 / 0.28);
-  padding: var(--l-space-6, 32px);
+  /* No bottom padding: the sticky action bar runs to the dialog's edge and
+     owns the space under Send. Views without that bar add their own below. */
+  padding: var(--l-space-6, 32px) var(--l-space-6, 32px) 0;
   text-align: left;
 }
 
@@ -183,14 +185,21 @@ p,
   color: var(--l-color-darkblue-90);
 }
 
-/* "+X" tail chip: click to unfold the rest of the recipient list. */
+/* "+X" tail chip: sticks to the right edge of the recipient strip and scrolls
+   the next run of suppliers into view. The white shadow to its left hides the
+   chips passing underneath so they don't bleed out from behind it. */
 .contact-recipient-more {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   padding: 4px 12px;
   border: 1px solid var(--l-color-border);
   border-radius: var(--l-radius-1);
   background: var(--l-color-blue-5);
+  box-shadow: -8px 0 0 4px #fff;
   font-family: inherit;
   font-size: var(--l-font-size-smallest);
   font-weight: var(--l-font-weight-semibold);
@@ -309,7 +318,11 @@ p,
 .contact-desc-editor {
   box-sizing: border-box;
   width: 100%;
-  min-height: 192px;
+  /* Starts at 120px and grows with what's typed, capped at 180px before it
+     scrolls — the spec lives in the requirement chips below, so the box only
+     has to hold the buyer's own notes. */
+  min-height: 120px;
+  max-height: 180px;
   margin-top: var(--l-space-1);
   padding: var(--l-space-1) var(--l-space-2);
   overflow-y: auto;
@@ -367,6 +380,54 @@ p,
   gap: var(--l-space-2);
 }
 
+/* Recipients ride on one line and scroll sideways — the list is a roster to
+   skim, not a block that should push the form down as suppliers are added. */
+.contact-recipients-strip {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  /* Scrollbar is kept in the layout but painted transparent until the strip is
+     hovered or focused — showing it on demand rather than toggling
+     scrollbar-width, which would reflow the row on hover. */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  /* Room for the sticky chip's white shadow at the tail of the scroll. */
+  padding-bottom: 2px;
+}
+
+.contact-recipients:hover .contact-recipients-strip,
+.contact-recipients-strip:focus-within {
+  scrollbar-color: var(--l-color-gray-4) transparent;
+}
+
+.contact-recipients-strip::-webkit-scrollbar {
+  height: 6px;
+}
+
+.contact-recipients-strip::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: transparent;
+}
+
+.contact-recipients:hover .contact-recipients-strip::-webkit-scrollbar-thumb,
+.contact-recipients-strip:focus-within::-webkit-scrollbar-thumb {
+  background: var(--l-color-gray-4);
+}
+
+.contact-recipients-strip .contact-recipient-pill {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* Requirements in the contact dialog reuse the results header's facet pills,
+   wrapping onto new lines rather than scrolling — the dialog has the height
+   to spend and nothing should hide behind a scroll before sending. */
+.contact-form .answer-pill-row {
+  align-items: flex-end;
+  gap: var(--l-space-2) var(--l-space-3);
+  margin-top: var(--l-space-1);
+}
+
 .contact-req-pill {
   display: inline-flex;
   align-items: baseline;
@@ -380,6 +441,7 @@ p,
 }
 
 .contact-req-label {
+  line-height: 1.2;
   font-size: 10px;
   font-weight: var(--l-font-weight-semibold);
   letter-spacing: 0.04em;
@@ -387,11 +449,21 @@ p,
   color: var(--l-color-darkblue-75);
 }
 
+/* Pinned to the foot of the dialog so consent and Send stay reachable however
+   long the form runs. Runs edge to edge on negative side margins and sits
+   flush with the bottom, since the dialog gives up its bottom padding to it. */
 .contact-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--l-space-3);
-  margin-top: var(--l-space-1);
+  margin: var(--l-space-1) calc(var(--l-space-6, 32px) * -1) 0;
+  padding: var(--l-space-4) var(--l-space-6, 32px);
+  border-top: 1px solid var(--l-color-border);
+  background: #fff;
 }
 
 /* Consent line on the quote form: pre-checked, but still a real control. */
@@ -399,7 +471,7 @@ p,
   display: flex;
   align-items: flex-start;
   gap: var(--l-space-2);
-  font-size: var(--l-font-size-smaller);
+  font-size: 12px;
   color: var(--l-color-darkblue-75);
   cursor: pointer;
 }
@@ -414,8 +486,7 @@ p,
 }
 
 .contact-actions button[kind="primary"] {
-  margin-left: auto;
-  flex-shrink: 0;
+  width: 100%;
   height: 44px;
   padding: 0 var(--l-space-5);
 }
@@ -428,6 +499,8 @@ p,
 /* Post-submit view: confirmation header plus a preview of the email the
    supplier receives, so the buyer sees exactly what went out. */
 .contact-sent {
+  /* No sticky bar here, so this view pays the bottom padding itself. */
+  padding-bottom: var(--l-space-6, 32px);
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -446,14 +519,25 @@ p,
   color: var(--l-color-green-100, #1a7f37);
 }
 
-/* Original / reminder / final-notice previews stacked above Done. */
-.contact-sent-followups {
+/* What happens next, numbered so the chase reads as a sequence the buyer
+   doesn't have to drive. Replaced the email-preview CTAs that used to sit
+   here — the confirmation is about the request, not about our email. */
+.contact-sent-next {
   display: flex;
   flex-direction: column;
   gap: var(--l-space-2);
+  margin: 0;
+  padding-left: 18px;
+  color: var(--l-color-darkblue-75);
+  font-size: var(--l-font-size-smaller);
 }
 
-/* Confirmation footer: Done sits after the follow-up links. */
+.contact-sent-next li::marker {
+  color: var(--l-color-darkblue-50);
+  font-weight: var(--l-font-weight-semibold);
+}
+
+/* Confirmation footer: Done closes the dialog out. */
 .contact-sent-actions {
   display: flex;
   align-items: center;
@@ -463,28 +547,6 @@ p,
 
 .contact-sent-actions button[kind="primary"] {
   padding: 0 var(--l-space-6);
-}
-
-.contact-sent-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--l-space-2);
-  height: 40px;
-  padding: 0 var(--l-space-4);
-  border: 1px solid var(--l-color-blue-100);
-  border-radius: var(--l-radius-1);
-  color: var(--l-color-blue-100);
-  font-size: var(--l-font-size-smaller);
-  font-weight: var(--l-font-weight-semibold);
-  text-decoration: none;
-}
-
-.contact-sent-followups .contact-sent-link {
-  justify-content: flex-start;
-}
-
-.contact-sent-link:hover {
-  background: var(--l-color-blue-5, #f2f7fd);
 }
 
 /* ---- Email content, rendered on the /supplier-email Gmail page. ---- */
@@ -1234,6 +1296,64 @@ a.contact-email-cta-primary {
   gap: 6px;
 }
 
+/* In the results header each pill is captioned with the facet it narrowed, so
+   the row reads as a spec rather than a bag of values. The row rides on one
+   line and scrolls sideways however many facets are logged — wrapping would
+   grow the sticky header and eat the results list. */
+.results-header .answer-pill-row {
+  align-items: flex-end;
+  gap: var(--l-space-3);
+  margin-top: var(--l-space-3);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  /* Scrollbar holds its place in the layout and is painted only on hover, so
+     revealing it can't reflow the row. */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  padding-bottom: 2px;
+}
+
+.results-header .answer-pill-row:hover,
+.results-header .answer-pill-row:focus-within {
+  scrollbar-color: var(--l-color-gray-4) transparent;
+}
+
+.results-header .answer-pill-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.results-header .answer-pill-row::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: transparent;
+}
+
+.results-header .answer-pill-row:hover::-webkit-scrollbar-thumb,
+.results-header .answer-pill-row:focus-within::-webkit-scrollbar-thumb {
+  background: var(--l-color-gray-4);
+}
+
+.results-header .answer-pill-stack {
+  flex: 0 0 auto;
+}
+
+.answer-pill-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.answer-pill-label {
+  /* Tight leading as well as a small gap: the caption should sit on its pill,
+     not float above it. */
+  line-height: 1;
+  font-size: 10px;
+  font-weight: var(--l-font-weight-semibold);
+  letter-spacing: 0.04em;
+  color: var(--l-color-darkblue-50);
+}
+
 /* Pill row pinned between the drawer's action row and its scrolling body. */
 .drawer-applied {
   flex-shrink: 0;
@@ -1245,28 +1365,25 @@ a.contact-email-cta-primary {
 .answer-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   white-space: nowrap;
   padding: 0 8px;
   border: 1px solid var(--l-color-blue-25, var(--l-color-blue-50, #c6d8f5));
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--l-color-blue-10);
   color: var(--l-color-blue-100);
   font-size: 11px;
   font-weight: var(--l-font-weight-semibold);
 }
 
-/* Only the X removes the answer; the pill body is inert. A hairline rule
-   sets the remove affordance apart from the label. */
+/* Only the X removes the answer; the pill body is inert. No divider — the X
+   sits right up against the value it clears. */
 .answer-pill-remove {
   display: inline-flex;
   align-items: center;
   border: none;
-  border-left: 1px solid var(--l-color-blue-25);
   border-radius: 0;
-  padding: 0 0 0 var(--l-space-2);
-  align-self: stretch;
-  margin: -2px 0;
+  padding: 0;
   background: none;
   color: inherit;
   font-size: 11px;
@@ -1333,41 +1450,7 @@ a.contact-email-cta-primary {
 }
 
 .results-center .pane-scroll {
-  padding-bottom: 72px;
-}
-
-/* Smart-add dock: floats over the foot of the results list, not the rail. */
-.smart-add {
-  position: absolute;
-  bottom: var(--l-space-4);
-  left: 50%;
-  z-index: 5;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--l-space-2);
-  height: 40px;
-  padding: 0 var(--l-space-4);
-  transform: translateX(-50%);
-  background: var(--l-color-blue-10, #e6f0fd);
-  border: 1px solid var(--l-color-blue-100);
-  border-radius: var(--l-radius-full);
-  box-shadow: 0 4px 16px rgb(9 44 71 / 0.14);
-  color: var(--l-color-blue-100);
-  font-family: inherit;
-  font-size: var(--l-font-size-smaller);
-  font-weight: var(--l-font-weight-semibold);
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.smart-add:hover:not(:disabled) {
-  background: var(--l-color-blue-25, #c3dafb);
-}
-
-.smart-add:disabled {
-  opacity: 0.45;
-  cursor: default;
+  padding-bottom: var(--l-space-4);
 }
 
 /* Results split: the scrolling list on the left, the Select Suppliers rail
@@ -1475,12 +1558,59 @@ a.contact-email-cta-primary {
 .select-rail-list li {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   max-width: 100%;
-  padding: 4px 9px 4px 4px;
+  padding: 4px 4px 4px 4px;
   border: 1px solid var(--l-color-border);
   border-radius: var(--l-radius-full, 999px);
   background: #fff;
+}
+
+.rail-chip-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  height: auto;
+  min-height: 0;
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rail-chip-open:hover .rail-entry-name {
+  color: var(--l-color-blue-100);
+}
+
+.rail-chip-remove {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--l-radius-full, 999px);
+  background: none;
+  box-shadow: none;
+  min-height: 0;
+  color: var(--l-color-darkblue-50);
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rail-chip-remove:hover {
+  color: var(--l-color-darkblue-100);
+  background: var(--l-color-gray-6, #f2f2f2);
 }
 
 .rail-logo {
@@ -1522,9 +1652,43 @@ a.contact-email-cta-primary {
   text-align: center;
 }
 
+/* Factory mark for the empty rail, badged with a plus so it reads as "add a
+   supplier here" rather than a decorative industry glyph. The badge sits in a
+   white ring so it stays legible against the roofline it overlaps. */
 .rail-placeholder-icon {
+  position: relative;
+  display: inline-flex;
   font-size: 22px;
   color: var(--l-color-darkblue-50);
+}
+
+.rail-placeholder-plus {
+  position: absolute;
+  top: -3px;
+  right: -6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 1.5px #fff;
+  line-height: 1;
+}
+
+.rail-placeholder-plus svg {
+  display: block;
+  overflow: visible;
+}
+
+.rail-placeholder-plus path {
+  fill: none;
+  stroke: currentColor;
+  /* Font Awesome Regular's stroke measures ~2.15px with the industry glyph set
+     at 22px, so the badge carries the same weight as the mark it sits on.
+     Tied to that font size — rescale both together. */
+  stroke-width: 2.15;
 }
 
 .rail-placeholder p {
@@ -1764,6 +1928,11 @@ a.contact-email-cta-primary {
   font-size: var(--l-font-size-smallest);
   font-weight: var(--l-font-weight-semibold);
   color: var(--l-color-darkblue-100);
+}
+
+/* Secondary CTA sits directly left of Send RFI; never shrinks under the note. */
+.engage-tray-shortlist {
+  flex-shrink: 0;
 }
 
 /* Left rail shell: no outer card — the header floats above the transcript. */
@@ -2058,15 +2227,16 @@ a.contact-email-cta-primary {
   display: flex;
   align-items: center;
   gap: var(--l-space-2);
-  padding: 3px 12px;
+  /* Match .option-row exactly (padding, line-height, radius) so the settled
+     pill is the same height as the answer options below it. */
+  padding: 8px 12px;
   border: 1px solid var(--l-color-blue-25, var(--l-color-blue-50, #b7d0f5));
-  border-radius: 8px;
+  border-radius: 9px;
   background: var(--l-color-blue-5, #f6f9ff);
   color: var(--l-color-blue-100);
   font-size: 13px;
   font-weight: var(--l-font-weight-semibold);
-  /* Body line-height is 24px; that made wrapped answers a tall blue slab. */
-  line-height: 1.2;
+  line-height: 1.35;
   box-sizing: border-box;
 }
 
@@ -2075,15 +2245,15 @@ a.contact-email-cta-primary {
   display: flex;
   align-items: center;
   gap: var(--l-space-2);
-  padding: 3px 12px;
+  padding: 8px 12px;
   border: 1px solid var(--l-color-border);
-  border-radius: 8px;
+  border-radius: 9px;
   background: var(--l-color-gray-6, #f2f2f2);
   color: var(--l-color-darkblue-75);
-  font-size: 12.5px;
+  font-size: 13px;
   font-style: italic;
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 1.35;
   box-sizing: border-box;
 }
 
@@ -2232,6 +2402,40 @@ a.contact-email-cta-primary {
 
 .location-entry-field .location-search input {
   font-size: var(--l-font-size-smallest);
+}
+
+/* Write-in product, opened by picking "Other" from the search catalog. Sits
+   between the search field and the submit, indented off a rule so it reads as
+   a branch off the catalog rather than a second search. */
+.other-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 10px;
+  border-left: 2px solid var(--l-color-blue-50, #c6d8f5);
+}
+
+.other-entry-label {
+  font-size: var(--l-font-size-smallest);
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-90);
+}
+
+.other-entry-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--l-color-gray-5);
+  border-radius: var(--l-radius-1, 3px);
+  background: #fff;
+  font-family: inherit;
+  font-size: var(--l-font-size-smallest);
+  color: var(--l-color-darkblue-100);
+}
+
+.other-entry-input:focus-visible {
+  outline: 2px solid var(--l-color-blue-100);
+  outline-offset: -1px;
 }
 
 /* Full-width compact submit, same default-CTA geometry as the footer's
@@ -2411,21 +2615,28 @@ a.contact-email-cta-primary {
   height: 32px;
   padding: 0;
   background: #fff;
-  border: 1px solid var(--l-color-blue-50, #c6d8f5);
+  /* Grey, not blue: reset and browse-all are utilities beside the Done CTA,
+     so they sit back from the blue actions rather than competing with them.
+     Kept dark enough to read as enabled — the lighter greys looked disabled
+     next to Back's blue. */
+  border: 1px solid var(--l-color-gray-4);
   border-radius: var(--l-radius-1, 3px);
-  color: var(--l-color-blue-100);
+  color: var(--l-color-darkblue-75);
   font-family: inherit;
   font-size: 13px;
   cursor: pointer;
 }
 
 .define-tool:hover {
-  background: var(--l-color-blue-5, #f6f9ff);
+  border-color: var(--l-color-gray-2);
+  background: var(--l-color-gray-7);
+  color: var(--l-color-darkblue-90);
 }
 
 .define-tool[aria-pressed="true"] {
-  background: var(--l-color-blue-10);
-  border-color: var(--l-color-blue-100);
+  background: var(--l-color-gray-6);
+  border-color: var(--l-color-gray-1);
+  color: var(--l-color-darkblue-100);
 }
 
 /* Quiet tertiary: a step backwards shouldn't compete with the way forward. */
@@ -2541,6 +2752,14 @@ a.contact-email-cta-primary {
 .near-match-note l-icon {
   color: var(--l-color-blue-100);
   flex-shrink: 0;
+}
+
+.supplier-anchor {
+  scroll-margin-top: 72px;
+}
+
+.supplier-anchor.is-focused .supplier-card {
+  background: var(--l-color-blue-5, #f2f6fd);
 }
 
 /* Supplier card — flat row in the results list, closed by a hairline rule,
@@ -3913,9 +4132,9 @@ l-icon[name="envelope"]::before {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 6px;
-  min-height: 88px;
+  min-height: 108px;
   padding: 12px 8px;
   border: 1px solid #d8dee1;
   border-radius: 6px;
@@ -3944,8 +4163,10 @@ l-icon[name="envelope"]::before {
 }
 
 .tfi-rating-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
 }
 
 .tfi-rating-thanks {

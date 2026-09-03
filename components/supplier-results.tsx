@@ -27,8 +27,8 @@ import { matchPillsFor } from "@/lib/match-pills";
 import { type Supplier } from "@/lib/suppliers";
 
 const PAGE_SIZE = 25;
-/** How many ranked suppliers the floating smart-add control queues. */
-const SMART_ADD_COUNT = 3;
+/** How many ranked suppliers land on the rail when the questionnaire wraps up. */
+const AUTO_QUEUE_COUNT = 3;
 
 /** Short spec labels for the RFI draft card's bulleted requirement lines —
     the questionnaire titles are too long to read as "Label: Value". */
@@ -78,6 +78,10 @@ type SupplierResultsProps = {
   onRailCountChange: (count: number) => void;
   /** Engage tray's Refine control: reopens the define pane. */
   onRefine: () => void;
+  /** True once the run wraps up or the buyer clicks Done. */
+  questionnaireComplete: boolean;
+  /** Increments on Reset so the rail can drop auto-queued chips. */
+  runId: number;
 };
 
 /**
@@ -93,6 +97,8 @@ export function SupplierResults({
   onClearMappedAnswers,
   onRailCountChange,
   onRefine,
+  questionnaireComplete,
+  runId,
 }: SupplierResultsProps) {
   const [page, setPage] = useState(1);
   /** Shortlisted supplier ids; nothing renders it since the card Save button
@@ -113,8 +119,13 @@ export function SupplierResults({
   const [railAdded, setRailAdded] = useState<string[]>([]);
   /** Soft shadow under the sticky header once the results list has scrolled. */
   const [scrolled, setScrolled] = useState(false);
+  /** Card currently highlighted after a rail-chip click. */
+  const [focusedSupplierId, setFocusedSupplierId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const locationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoQueued = useRef(false);
+  const pendingRevealId = useRef<string | null>(null);
+  const [revealNonce, setRevealNonce] = useState(0);
 
   const logged = answers.filter((answer) => !answer.skipped && answer.values.length > 0);
 
@@ -143,6 +154,12 @@ export function SupplierResults({
       if (locationTimer.current) clearTimeout(locationTimer.current);
     };
   }, []);
+
+  useEffect(() => {
+    autoQueued.current = false;
+    setRailAdded([]);
+    setFocusedSupplierId(null);
+  }, [runId]);
 
   /** Suppliers in the category still matching — the number the buyer is shown. */
   const matchTotal = simulatedMatchCount(answers);
@@ -320,8 +337,7 @@ export function SupplierResults({
 
   const matchPills = matchPillsFor(logged);
 
-  /** The rail's list: exactly what the buyer added from the cards — nothing
-      is pre-picked. */
+  /** The rail's list: auto-queued top matches plus card additions. */
   const railSuppliers = railAdded
     .map((id) => results.find((supplier) => supplier.id === id))
     .filter((supplier): supplier is Supplier => supplier != null);
@@ -336,19 +352,49 @@ export function SupplierResults({
     );
   };
 
-  /** Ranked suppliers the smart-add control would queue — exact matches first. */
-  const topMatches = results.slice(0, SMART_ADD_COUNT);
-  const topMatchesQueued =
-    topMatches.length > 0 && topMatches.every((supplier) => railIds.has(supplier.id));
+  const removeFromRail = (supplierId: string) => {
+    setRailAdded((current) => current.filter((id) => id !== supplierId));
+  };
 
-  /** Seed the rail with the top ranked matches; keep any extras the buyer added. */
-  const smartAddTopMatches = () => {
-    const topIds = topMatches.map((supplier) => supplier.id);
+  /** Queue the top ranked matches once the questionnaire wraps up. */
+  useEffect(() => {
+    if (!questionnaireComplete || autoQueued.current) return;
+    const topIds = results.slice(0, AUTO_QUEUE_COUNT).map((supplier) => supplier.id);
+    if (topIds.length === 0) return;
+    autoQueued.current = true;
     setRailAdded((current) => [
       ...topIds,
       ...current.filter((id) => !topIds.includes(id)),
     ]);
+  }, [questionnaireComplete, results]);
+
+  const revealSupplier = (supplierId: string) => {
+    const index = results.findIndex((supplier) => supplier.id === supplierId);
+    if (index < 0) return;
+    const targetPage = Math.floor(index / PAGE_SIZE) + 1;
+    pendingRevealId.current = supplierId;
+    setFocusedSupplierId(supplierId);
+    if (targetPage !== currentPage) {
+      setPage(targetPage);
+    } else {
+      setRevealNonce((nonce) => nonce + 1);
+    }
   };
+
+  useEffect(() => {
+    const id = pendingRevealId.current;
+    if (!id) return;
+    const card = scrollRef.current?.querySelector(`[data-supplier-id="${id}"]`);
+    if (!card) return;
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
+    pendingRevealId.current = null;
+  }, [page, revealNonce, results]);
+
+  useEffect(() => {
+    if (!focusedSupplierId) return;
+    const timer = setTimeout(() => setFocusedSupplierId(null), 1600);
+    return () => clearTimeout(timer);
+  }, [focusedSupplierId]);
 
   // The engage rail's RFI goes to its own list.
   const contactRecipients = railRfi ? railSuppliers : [];
@@ -394,6 +440,10 @@ export function SupplierResults({
         <div className="results-meta">
           <div className="results-headline">
             <h3 className="mar-0">Suppliers that match your spec</h3>
+            <p className="mar-0 txt-smaller txt-darkblue-75">
+              <span className="txt-blue-100 font-semi">{matchTotal.toLocaleString()}</span>{" "}
+              verified suppliers match your query.
+            </p>
           </div>
           <button
             type="button"
@@ -406,18 +456,49 @@ export function SupplierResults({
             {filterCount > 0 && <span className="all-filters-count">{filterCount}</span>}
           </button>
         </div>
+        {/* Logged answers echoed as removable pills, each under the facet it
+            narrowed — the spec stays visible without reopening the drawer. */}
+        {facets.length > 0 && (
+          <div className="answer-pill-row">
+            {facets.map((facet) => (
+              <div className="answer-pill-stack" key={facet.id}>
+                <span className="answer-pill-label">{facet.label}</span>
+                <span className="answer-pill">
+                  {facet.value}
+                  <button
+                    type="button"
+                    className="answer-pill-remove"
+                    aria-label={`Remove ${facet.title}: ${facet.value}`}
+                    onClick={() => onRemoveAnswer(facet.id)}
+                  >
+                    <l-icon name="xmark" aria-hidden="true" />
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
         <div className="pane-scroll" ref={scrollRef}>
         <div className="results-list">
           {results.slice(pageStart, pageStart + PAGE_SIZE).map((supplier) => (
             <Fragment key={supplier.id}>
-              <SupplierCard
-                supplier={supplier}
-                added={railIds.has(supplier.id)}
-                onToggleAdd={() => toggleRailAdd(supplier)}
-                matchPills={matchPills}
-              />
+              <div
+                className={
+                  focusedSupplierId === supplier.id
+                    ? "supplier-anchor is-focused"
+                    : "supplier-anchor"
+                }
+                data-supplier-id={supplier.id}
+              >
+                <SupplierCard
+                  supplier={supplier}
+                  added={railIds.has(supplier.id)}
+                  onToggleAdd={() => toggleRailAdd(supplier)}
+                  matchPills={matchPills}
+                />
+              </div>
             </Fragment>
           ))}
           {results.length === 0 && (
@@ -461,22 +542,13 @@ export function SupplierResults({
             </nav>
           )}
         </div>
-        </div>
-        {topMatches.length > 0 && (
-          <button
-            type="button"
-            className="smart-add"
-            disabled={topMatchesQueued}
-            onClick={smartAddTopMatches}
-          >
-            <l-icon name="sparkles" fill aria-hidden="true" />
-            Smart add top suppliers
-          </button>
-        )}
+      </div>
       </div>
 
         <SelectSuppliersRail
           suppliers={railSuppliers}
+          onRemove={removeFromRail}
+          onReveal={revealSupplier}
           onAddToShortlist={shortlistRailSuppliers}
           onSendRfi={openRailRfi}
           draftTitle={draftTitle}
@@ -502,6 +574,16 @@ export function SupplierResults({
         <span className="engage-tray-note">
           {railSuppliers.length} supplier{railSuppliers.length === 1 ? "" : "s"} to engage
         </span>
+        <button
+          kind="neutral"
+          scale="small"
+          type="button"
+          className="engage-tray-shortlist"
+          disabled={railSuppliers.length === 0}
+          onClick={shortlistRailSuppliers}
+        >
+          Shortlist
+        </button>
         <button
           kind="primary"
           scale="small"

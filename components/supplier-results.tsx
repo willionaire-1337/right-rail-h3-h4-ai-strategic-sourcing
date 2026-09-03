@@ -76,7 +76,6 @@ type SupplierResultsProps = {
   /** Clears every questionnaire-backed drawer facet in one shot. */
   onClearMappedAnswers: () => void;
   /** Reports how many suppliers sit on the engage rail, for the stage bar. */
-  onRailCountChange: (count: number) => void;
   /** Engage tray's Refine control: reopens the define pane. */
   onRefine: () => void;
   /** True once the run wraps up or the buyer clicks Done. */
@@ -96,7 +95,6 @@ export function SupplierResults({
   onRemoveAnswer,
   onApplyFilterAnswer,
   onClearMappedAnswers,
-  onRailCountChange,
   onRefine,
   questionnaireComplete,
   runId,
@@ -401,12 +399,6 @@ export function SupplierResults({
   // The engage rail's RFI goes to its own list.
   const contactRecipients = railRfi ? railSuppliers : [];
 
-  // The stage bar and mobile tabs live above this component; keep their
-  // "N selected" note in step with the rail.
-  useEffect(() => {
-    onRailCountChange(railSuppliers.length);
-  }, [railSuppliers.length, onRailCountChange]);
-
   /** Rail primary CTA: RFI addressed to the pre-picked top suppliers. */
   const openRailRfi = () => {
     setRailRfi(true);
@@ -567,17 +559,21 @@ export function SupplierResults({
         <button type="button" className="engage-tray-refine" onClick={onRefine}>
           <l-icon name="sparkles" fill aria-hidden="true" /> Refine
         </button>
-        {railSuppliers.length > 0 && (
-          <span className="engage-tray-avatars" aria-hidden="true">
-            {railSuppliers.slice(0, 3).map((supplier) => (
-              <span key={supplier.id}>
-                <SupplierLogo name={supplier.name} size={26} />
-              </span>
-            ))}
+        {/* Marks and their count share one cell, so the count sits against the
+            logos instead of being pushed out by the button column below. */}
+        <span className="engage-tray-picks">
+          {railSuppliers.length > 0 && (
+            <span className="engage-tray-avatars" aria-hidden="true">
+              {railSuppliers.slice(0, 3).map((supplier) => (
+                <span key={supplier.id}>
+                  <SupplierLogo name={supplier.name} size={26} />
+                </span>
+              ))}
+            </span>
+          )}
+          <span className="engage-tray-note">
+            {railSuppliers.length} supplier{railSuppliers.length === 1 ? "" : "s"} to engage
           </span>
-        )}
-        <span className="engage-tray-note">
-          {railSuppliers.length} supplier{railSuppliers.length === 1 ? "" : "s"} to engage
         </span>
         <button
           kind="neutral"

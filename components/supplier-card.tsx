@@ -214,9 +214,6 @@ export function SupplierCard({
             </span>
           ))}
         </div>
-        <a href="#" className="card-foot-website" onClick={noop}>
-          Visit Website <l-icon name="arrow-up-right-from-square" />
-        </a>
       </div>
 
       {/* Media */}

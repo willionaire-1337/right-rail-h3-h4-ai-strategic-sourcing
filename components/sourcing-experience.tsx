@@ -89,7 +89,6 @@ export function SourcingExperience() {
   /** Phone view: which of the three stages the tab bar is showing. */
   const [mobileTab, setMobileTab] = useState<"define" | "evaluate" | "engage">("evaluate");
   /** Suppliers currently on the engage rail, reported up for the stage bar. */
-  const [railCount, setRailCount] = useState(0);
   /**
    * Compact accordion of every ask so far — answered, skipped, or still open —
    * so the buyer can scan the run and jump back into a question.
@@ -501,6 +500,8 @@ export function SourcingExperience() {
   const closeChat = useCallback(() => {
     setBrowseAsks(false);
     setAgentOpen(false);
+    // No stage tabs any more, so closing is what returns the phone to results.
+    setMobileTab("evaluate");
   }, []);
 
   const reset = useCallback(() => {
@@ -563,12 +564,6 @@ export function SourcingExperience() {
     answerActive(picked, false);
   };
 
-  /* Mobile tab notes: questions settled, rail picks. */
-  const stageQuestionIds = browseableQuestionIds();
-  const answeredCount = stageQuestionIds.filter((id) =>
-    answers.some((answer) => answer.questionId === id),
-  ).length;
-
   /** Full questionnaire for browse mode — answered, skipped, active, or not yet asked. */
   const browseItems: BrowseItem[] = [];
   for (const questionId of browseableQuestionIds()) {
@@ -623,34 +618,6 @@ export function SourcingExperience() {
           }
         }}
       />
-
-      {/* Phone: the stages become tabs that swap the single column. */}
-      <div className="mobile-tabs" role="tablist" aria-label="Sourcing stages">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mobileTab === "define"}
-          onClick={() => setMobileTab("define")}
-        >
-          1 Define{answeredCount >= stageQuestionIds.length ? " ✓" : ""}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mobileTab === "evaluate"}
-          onClick={() => setMobileTab("evaluate")}
-        >
-          2 Evaluate
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mobileTab === "engage"}
-          onClick={() => setMobileTab("engage")}
-        >
-          3 Engage{railCount > 0 ? ` · ${railCount}` : ""}
-        </button>
-      </div>
 
       <main
         className="app-main"
@@ -871,7 +838,6 @@ export function SourcingExperience() {
             onRemoveAnswer={removeAnswer}
             onApplyFilterAnswer={applyFilterAnswer}
             onClearMappedAnswers={() => removeAnswers(syncableQuestionIds())}
-            onRailCountChange={setRailCount}
             onRefine={openDefine}
             questionnaireComplete={questionnaireComplete}
             runId={runId}

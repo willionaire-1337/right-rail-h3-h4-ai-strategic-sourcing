@@ -234,7 +234,7 @@ export function ContactSupplierModal({
         ) : (
           <>
             <h2 id="contact-supplier-title" className="contact-title mar-0">
-              Contact {single ? single.name : `${suppliers.length} Suppliers`}
+              Contact {single ? single.name : "Suppliers"}
             </h2>
 
             {!single && (
@@ -242,7 +242,10 @@ export function ContactSupplierModal({
                 className="contact-recipients"
                 aria-label="Suppliers receiving this request"
               >
-                <span className="contact-reqs-title">Sending to</span>
+                <span className="contact-reqs-title">
+                  Sending to <span className="contact-sending-count">{suppliers.length}</span>{" "}
+                  suppliers
+                </span>
                 {/* One line, scrolled sideways: the recipient list never wraps
                     into the form. */}
                 <div className="contact-reqs-list contact-recipients-strip">

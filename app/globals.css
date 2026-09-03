@@ -465,6 +465,11 @@ p,
   gap: var(--l-space-2);
 }
 
+/* The count is the number the buyer is checking — blue against the label. */
+.contact-sending-count {
+  color: var(--l-color-blue-100);
+}
+
 .contact-reqs-title {
   font-size: var(--l-font-size-smaller);
   font-weight: var(--l-font-weight-semibold);

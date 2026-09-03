@@ -522,7 +522,17 @@ p,
 .contact-form .answer-pill-row {
   align-items: flex-end;
   gap: var(--l-space-2) var(--l-space-3);
-  margin-top: var(--l-space-1);
+  /* A touch more air under "Requirements" than the form's other labels get:
+     the facet captions are their own tier of heading. */
+  margin-top: var(--l-space-3);
+}
+
+.contact-reqs-note {
+  margin-top: var(--l-space-3);
+  text-align: center;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--l-color-darkblue-50);
 }
 
 .contact-req-pill {

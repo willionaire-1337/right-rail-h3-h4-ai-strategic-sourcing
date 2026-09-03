@@ -308,6 +308,9 @@ export function ContactSupplierModal({
                         </div>
                       ))}
                     </div>
+                    <p className="contact-reqs-note mar-0">
+                      Your requirements are automatically attached to your request
+                    </p>
                   </fieldset>
                 )}
                 <fieldset>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { LoginScreen } from "@/components/login-screen";
 import { DescriptionEditor } from "@/components/requirement-description";
 import { SupplierLogo } from "@/components/supplier-logo";
 import { BASE_PATH } from "@/lib/base-path";
@@ -38,7 +39,8 @@ export type QuoteEmailPayload = {
   supplierCount: number;
   projectName: string;
   description: string;
-  quantity: string;
+  /** Optional; no longer collected on the contact form. */
+  quantity?: string;
   needBy: string;
   requirements: ContactRequirement[];
   sentAt: string;
@@ -105,38 +107,13 @@ export function ContactSupplierModal({
   /** Flips the dialog to the sent confirmation once the email page opens. */
   const [sent, setSent] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  /** Signed in for this session — the first send bounces through the login
+      wall, and the buyer comes back to press the real Send. */
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+
   /** Requirement chips cleared before sending, by label. */
   const [droppedRequirements, setDroppedRequirements] = useState<string[]>([]);
-
-  /** The "Sending to" scroller and how many chips sit off its right edge. */
-  const recipientsRef = useRef<HTMLDivElement>(null);
-  const [offscreenCount, setOffscreenCount] = useState(0);
-
-  /** Counts the chips scrolled past the right edge, so "+N" tracks the scroll
-      rather than a fixed preview length. */
-  const measureRecipients = useCallback(() => {
-    const scroller = recipientsRef.current;
-    if (!scroller) return;
-    // Measured against the scrollport's own edge, so scrolling to the end
-    // always lands on zero and retires the chip.
-    const edge = scroller.getBoundingClientRect().right;
-    let hidden = 0;
-    for (const chip of scroller.querySelectorAll(".contact-recipient-pill")) {
-      if (chip.getBoundingClientRect().right > edge + 1) hidden += 1;
-    }
-    setOffscreenCount(hidden);
-  }, []);
-
-  // Measure once the strip is laid out, and again whenever the dialog is
-  // resized — "+N" is a live count, not a fixed preview length.
-  useEffect(() => {
-    const scroller = recipientsRef.current;
-    if (!scroller) return;
-    measureRecipients();
-    const observer = new ResizeObserver(measureRecipients);
-    observer.observe(scroller);
-    return () => observer.disconnect();
-  }, [measureRecipients, open, sent, suppliers.length]);
 
   // Fresh form each time the dialog opens (state adjusted during render, per
   // react.dev "adjusting state when a prop changes").
@@ -146,8 +123,9 @@ export function ContactSupplierModal({
     if (open) {
       setSent(false);
       setFiles([]);
-      setOffscreenCount(0);
       setDroppedRequirements([]);
+      setLoggedIn(false);
+      setLoginOpen(false);
     }
   }
 
@@ -183,6 +161,11 @@ export function ContactSupplierModal({
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // First press sends the buyer to log in; they return to press it again.
+    if (!loggedIn) {
+      setLoginOpen(true);
+      return;
+    }
     const data = new FormData(event.currentTarget);
     const field = (name: string) => (data.get(name) ?? "").toString().trim();
     const payload: QuoteEmailPayload = {
@@ -192,20 +175,31 @@ export function ContactSupplierModal({
       supplierCount: suppliers.length,
       projectName: field("projectName"),
       description: field("description"),
-      quantity: field("quantity"),
       needBy: field("needBy"),
       requirements: keptRequirements,
       sentAt: new Date().toISOString(),
     };
     localStorage.setItem(QUOTE_EMAIL_STORAGE_KEY, JSON.stringify(payload));
-    // The supplier's inbox lives on its own page — open it beside the flow so
-    // the sourcing session stays intact. Called inside the submit handler, so
-    // popup blockers treat it as user-initiated.
-    window.open(`${BASE_PATH}/supplier-email`, "_blank");
     setSent(true);
   };
 
+  /** Done closes the dialog and opens the supplier's copy of the email. The
+      buyer reads the confirmation first — the inbox is the next beat, not an
+      interruption. Called from the click, so popup blockers allow it. */
+  const finish = () => {
+    window.open(`${BASE_PATH}/supplier-email`, "_blank");
+    onClose();
+  };
+
   return (
+    <>
+      <LoginScreen
+        open={loginOpen}
+        onDismiss={() => {
+          setLoggedIn(true);
+          setLoginOpen(false);
+        }}
+      />
     <div className="gate-scrim" role="presentation" onClick={onClose}>
       <div
         className="contact-modal"
@@ -223,25 +217,16 @@ export function ContactSupplierModal({
             <div className="contact-sent-head">
               <l-icon name="circle-check" aria-hidden="true" />
               <div>
-                <h2 className="contact-title mar-0">Quote request sent</h2>
+                <h2 className="contact-title mar-0">Request sent!</h2>
                 <p className="mar-0 txt-smaller txt-darkblue-75">
-                  {single
-                    ? `${single.name} has your request and can reply with a quote.`
-                    : `All ${suppliers.length} suppliers have your request and can reply with a quote.`}
+                  Your contact message has been successfully sent to the
+                  suppliers selected.
                 </p>
               </div>
             </div>
 
-            {/* What the buyer can expect, rather than links into the email
-                previews — the chase runs on its own once the request is out. */}
-            <ol className="contact-sent-next">
-              <li>Quotes come back to your inbox, usually within two business days.</li>
-              <li>No reply? Thomas sends a reminder the next day, then a final notice.</li>
-              <li>Still nothing, and the RFI is offered to other matching suppliers.</li>
-            </ol>
-
             <div className="contact-sent-actions">
-              <button kind="primary" onClick={onClose}>
+              <button kind="primary" onClick={finish}>
                 Done
               </button>
             </div>
@@ -258,14 +243,9 @@ export function ContactSupplierModal({
                 aria-label="Suppliers receiving this request"
               >
                 <span className="contact-reqs-title">Sending to</span>
-                {/* One line, scrolled sideways: the recipient list never
-                    wraps into the form, and "+N" sticks to the right edge as a
-                    live count of who's still off-screen. */}
-                <div
-                  className="contact-reqs-list contact-recipients-strip"
-                  ref={recipientsRef}
-                  onScroll={measureRecipients}
-                >
+                {/* One line, scrolled sideways: the recipient list never wraps
+                    into the form. */}
+                <div className="contact-reqs-list contact-recipients-strip">
                   {suppliers.map((recipient) => (
                     <span className="contact-recipient-pill" key={recipient.id}>
                       <span className="contact-recipient-logo" aria-hidden="true">
@@ -274,22 +254,6 @@ export function ContactSupplierModal({
                       {recipient.name}
                     </span>
                   ))}
-                  <button
-                    type="button"
-                    className="contact-recipient-more"
-                    hidden={offscreenCount === 0}
-                    aria-label={`Scroll to the other ${offscreenCount} suppliers`}
-                    onClick={() => {
-                      const scroller = recipientsRef.current;
-                      if (!scroller) return;
-                      scroller.scrollBy({
-                        left: scroller.clientWidth * 0.8,
-                        behavior: "smooth",
-                      });
-                    }}
-                  >
-                    +{offscreenCount}
-                  </button>
                 </div>
               </div>
             )}
@@ -386,16 +350,10 @@ export function ContactSupplierModal({
                 </fieldset>
                 <div className="contact-form-row">
                   <fieldset>
-                    <label htmlFor="contact-quote-qty">Estimated quantity</label>
-                    <input
-                      id="contact-quote-qty"
-                      name="quantity"
-                      type="text"
-                      placeholder="e.g. 5,000 / year"
-                    />
-                  </fieldset>
-                  <fieldset>
-                    <label htmlFor="contact-quote-date">Response needed by</label>
+                    <label className="field-label" htmlFor="contact-quote-date">
+                      Response needed by
+                      <span className="field-hint">optional</span>
+                    </label>
                     <input id="contact-quote-date" name="needBy" type="date" />
                   </fieldset>
                 </div>
@@ -403,11 +361,17 @@ export function ContactSupplierModal({
                   <label className="contact-consent">
                     <input type="checkbox" defaultChecked required />
                     <span>
-                      By requesting a quote you agree to share your project and contact details.
+                      I verify that no confidential or export-controlled data was uploaded
+                      or entered in this project.
                     </span>
                   </label>
                   <button kind="primary" type="submit">
-                    Send Inquiry
+                    {loggedIn ? "Send Inquiry" : "Log in to Send Inquiry"}
+                  </button>
+                  {/* Quiet second exit: same link treatment as the rail's
+                      "+ Add to shortlist", under the primary action. */}
+                  <button type="button" className="rail-sub contact-save-draft">
+                    {loggedIn ? "Save Draft" : "Log in to Save Draft"}
                   </button>
                 </div>
             </form>
@@ -415,5 +379,6 @@ export function ContactSupplierModal({
         )}
       </div>
     </div>
+    </>
   );
 }

@@ -4,6 +4,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { ContactSupplierModal } from "@/components/contact-supplier-modal";
 import { FilterDrawer, type FilterGroup } from "@/components/filter-drawer";
 import { SelectSuppliersRail } from "@/components/select-suppliers-rail";
+import { ShortlistModal } from "@/components/shortlist-modal";
 import { SupplierCard } from "@/components/supplier-card";
 import { SupplierLogo } from "@/components/supplier-logo";
 import {
@@ -113,6 +114,7 @@ export function SupplierResults({
   /** Local-only facets (no questionnaire twin) — e.g. company type. */
   const [localFacetPicks, setLocalFacetPicks] = useState<Record<string, string[]>>({});
   const [contactOpen, setContactOpen] = useState(false);
+  const [shortlistOpen, setShortlistOpen] = useState(false);
   /** The rail's RFI goes to its pre-picked top suppliers, not the selection. */
   const [railRfi, setRailRfi] = useState(false);
   /** Suppliers the buyer added to the rail from card "+ Add" CTAs, in order. */
@@ -423,13 +425,16 @@ export function SupplierResults({
       ? [...draftPieces, answerValue("part") ?? "Parts"].join(" ")
       : query;
 
-  /** Rail secondary CTA: save the pre-picked top suppliers. */
-  const shortlistRailSuppliers = () => {
+  /** Rail secondary CTA: pick a list before the suppliers are saved to it. */
+  const shortlistRailSuppliers = () => setShortlistOpen(true);
+
+  const saveToShortlist = () => {
     setSaved((set) => {
       const next = new Set(set);
       for (const supplier of railSuppliers) next.add(supplier.id);
       return next;
     });
+    setShortlistOpen(false);
   };
 
   return (
@@ -594,6 +599,13 @@ export function SupplierResults({
           Send RFI
         </button>
       </div>
+
+      <ShortlistModal
+        open={shortlistOpen}
+        onClose={() => setShortlistOpen(false)}
+        supplierCount={railSuppliers.length}
+        onSave={saveToShortlist}
+      />
 
       <ContactSupplierModal
         suppliers={contactRecipients}

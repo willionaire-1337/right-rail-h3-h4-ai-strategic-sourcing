@@ -201,16 +201,18 @@ export function ContactSupplierModal({
         }}
       />
     <div className="gate-scrim" role="presentation" onClick={onClose}>
+      {/* Shell exists so the close button can sit outside the dialog, which
+          scrolls and would otherwise clip it. */}
+      <div className="contact-shell" onClick={(event) => event.stopPropagation()}>
+        <button type="button" className="contact-close" aria-label="Close" onClick={onClose}>
+          <l-icon name="xmark" />
+        </button>
       <div
         className="contact-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="contact-supplier-title"
-        onClick={(event) => event.stopPropagation()}
       >
-        <button type="button" className="gate-close" aria-label="Close" onClick={onClose}>
-          <l-icon name="xmark" />
-        </button>
 
         {sent ? (
           <div className="contact-sent">
@@ -233,9 +235,21 @@ export function ContactSupplierModal({
           </div>
         ) : (
           <>
-            <h2 id="contact-supplier-title" className="contact-title mar-0">
-              Contact {single ? single.name : "Suppliers"}
-            </h2>
+            <div className="contact-heading">
+              <h2 id="contact-supplier-title" className="contact-title mar-0">
+                Contact {single ? single.name : "Suppliers"}
+              </h2>
+              {/* Who the request goes out as — editable before sending. */}
+              <button type="button" className="contact-sender">
+                <span className="contact-sender-avatar" aria-hidden="true">TG</span>
+                <span className="contact-sender-id">
+                  <strong>Tom Greco</strong>
+                  <span>Xometry</span>
+                </span>
+                <l-icon name="pen" aria-hidden="true" />
+                <span className="sr-only">Edit sender</span>
+              </button>
+            </div>
 
             {!single && (
               <div
@@ -383,6 +397,7 @@ export function ContactSupplierModal({
             </form>
           </>
         )}
+      </div>
       </div>
     </div>
     </>

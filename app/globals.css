@@ -64,6 +64,102 @@ p,
   text-align: center;
 }
 
+/* Shortlist picker, opened from the rail's "Add to shortlist". Left-aligned
+   under a centered wordmark — the fields are a form, not an announcement. */
+.shortlist-modal {
+  position: relative;
+  width: min(420px, 100%);
+  max-height: calc(100dvh - var(--l-space-5) * 2);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--l-space-2);
+  background: #fff;
+  border-radius: var(--l-radius-2, 12px);
+  box-shadow: 0 24px 64px rgb(9 44 71 / 0.28);
+  padding: var(--l-space-6, 32px);
+  text-align: left;
+}
+
+.shortlist-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--l-space-6, 32px);
+}
+
+.shortlist-brand img {
+  width: 238px;
+  height: auto;
+}
+
+.shortlist-brand span {
+  /* Sits under the wordmark's right edge, as the brand lockup is drawn. */
+  align-self: center;
+  margin: 2px 0 0 82px;
+  font-size: var(--l-font-size-small);
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-100);
+}
+
+.shortlist-check {
+  color: var(--l-color-darkblue-100);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.shortlist-title {
+  font-size: 20px;
+  font-weight: var(--l-font-weight-regular);
+  line-height: 1.3;
+  color: var(--l-color-darkblue-100);
+}
+
+.shortlist-manage {
+  font-size: 18px;
+  line-height: 1.3;
+  color: var(--l-color-darkblue-100);
+}
+
+.shortlist-manage a {
+  color: var(--l-color-blue-100);
+  font-weight: var(--l-font-weight-semibold);
+  text-decoration: none;
+}
+
+.shortlist-manage a:hover {
+  text-decoration: underline;
+}
+
+.shortlist-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--l-space-4);
+  margin-top: var(--l-space-3);
+}
+
+.shortlist-form fieldset > label {
+  font-size: var(--l-font-size-small);
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-100);
+}
+
+.shortlist-form :is(input, select) {
+  width: 100%;
+  height: 44px;
+  font-size: 15px;
+}
+
+/* Filled: this is the dialog's one action, so it carries the primary weight.
+   Colour comes from Tailoft's kind="primary"; only the sizing is ours. */
+.shortlist-save {
+  width: 100%;
+  height: 48px;
+  font-size: 17px;
+  font-weight: var(--l-font-weight-semibold);
+}
+
 .gate-close {
   position: absolute;
   top: var(--l-space-3);
@@ -185,32 +281,6 @@ p,
   color: var(--l-color-darkblue-90);
 }
 
-/* "+X" tail chip: sticks to the right edge of the recipient strip and scrolls
-   the next run of suppliers into view. The white shadow to its left hides the
-   chips passing underneath so they don't bleed out from behind it. */
-.contact-recipient-more {
-  position: sticky;
-  right: 0;
-  z-index: 1;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  border: 1px solid var(--l-color-border);
-  border-radius: var(--l-radius-1);
-  background: var(--l-color-blue-5);
-  box-shadow: -8px 0 0 4px #fff;
-  font-family: inherit;
-  font-size: var(--l-font-size-smallest);
-  font-weight: var(--l-font-weight-semibold);
-  color: var(--l-color-blue-100);
-  cursor: pointer;
-}
-
-.contact-recipient-more:hover {
-  background: var(--l-color-blue-10);
-}
-
 .contact-recipient-logo {
   width: 22px;
   height: 22px;
@@ -251,6 +321,23 @@ p,
   font-size: var(--l-font-size-smaller);
   font-weight: var(--l-font-weight-semibold);
   color: var(--l-color-darkblue-100);
+}
+
+/* Labels carrying a right-hand note — "optional", or where a field's content
+   ends up. Scoped to a class so the file dropzone's own label is left alone. */
+.contact-form fieldset > label.field-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--l-space-3);
+}
+
+.field-hint {
+  flex-shrink: 0;
+  color: var(--l-color-darkblue-50);
+  font-size: 13px;
+  font-style: italic;
+  font-weight: var(--l-font-weight-regular, 400);
 }
 
 /* Tailoft sizes inputs at 34px; the dialog fields run a touch taller. */
@@ -313,6 +400,16 @@ p,
   flex: 1;
 }
 
+/* Quantity and response date sit at the same 15px as the description, so the
+   three free-entry fields read as one set. */
+.contact-form-row fieldset input {
+  font-size: 15px;
+}
+
+.contact-form-row fieldset input::placeholder {
+  font-size: 15px;
+}
+
 /* Project description: contenteditable so Label: Value can bold the
    selection. Hidden textarea is what FormData reads. */
 .contact-desc-editor {
@@ -331,7 +428,7 @@ p,
   background: #fff;
   color: var(--l-color-darkblue-90);
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 15px;
   line-height: var(--l-font-lineheight-4);
   white-space: pre-wrap;
   outline: none;
@@ -471,7 +568,9 @@ p,
   display: flex;
   align-items: flex-start;
   gap: var(--l-space-2);
-  font-size: 12px;
+  font-size: 13px;
+  /* Tailoft's 24px line box left the wrapped attestation reading double-spaced. */
+  line-height: 1.4;
   color: var(--l-color-darkblue-75);
   cursor: pointer;
 }
@@ -491,6 +590,12 @@ p,
   padding: 0 var(--l-space-5);
 }
 
+/* Sits directly under Send, centered on it rather than left in the corner. */
+.contact-save-draft {
+  align-self: center;
+  font-size: 13px;
+}
+
 .contact-note {
   font-size: var(--l-font-size-smallest);
   color: var(--l-color-darkblue-75);
@@ -503,49 +608,56 @@ p,
   padding-bottom: var(--l-space-6, 32px);
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: var(--l-space-4);
-  text-align: left;
+  align-items: center;
+  gap: var(--l-space-5);
+  text-align: center;
 }
 
+/* Stacked and centered: the confirmation is an announcement, so the mark
+   leads, the copy follows, and Done sits under both. */
 .contact-sent-head {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   gap: var(--l-space-3);
 }
 
+/* 14px copy on Tailoft's 24px line box reads far too airy once it wraps —
+   tighten the leading and give the h2 a small gap instead. */
+.contact-sent-head p {
+  margin-top: 4px;
+  max-width: 38ch;
+  line-height: 1.4;
+}
+
 .contact-sent-head l-icon {
+  /* Centre the glyph in its own box rather than trusting the box to hug it —
+     a glyph's side bearings are not symmetrical. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   font-size: 32px;
   color: var(--l-color-green-100, #1a7f37);
 }
 
-/* What happens next, numbered so the chase reads as a sequence the buyer
-   doesn't have to drive. Replaced the email-preview CTAs that used to sit
-   here — the confirmation is about the request, not about our email. */
-.contact-sent-next {
-  display: flex;
-  flex-direction: column;
-  gap: var(--l-space-2);
-  margin: 0;
-  padding-left: 18px;
-  color: var(--l-color-darkblue-75);
-  font-size: var(--l-font-size-smaller);
-}
-
-.contact-sent-next li::marker {
-  color: var(--l-color-darkblue-50);
-  font-weight: var(--l-font-weight-semibold);
+/* Announcement heading, a step up from the form's dialog title. */
+.contact-sent .contact-title {
+  font-size: 28px;
 }
 
 /* Confirmation footer: Done closes the dialog out. */
 .contact-sent-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: var(--l-space-3);
+  width: 100%;
 }
 
 .contact-sent-actions button[kind="primary"] {
+  width: 100%;
+  height: 44px;
   padding: 0 var(--l-space-6);
 }
 
@@ -1374,6 +1486,13 @@ a.contact-email-cta-primary {
   color: var(--l-color-blue-100);
   font-size: 11px;
   font-weight: var(--l-font-weight-semibold);
+}
+
+/* Header facets drop the outline — the row already sits under its own rule,
+   and five bordered chips read as noise there. Transparent rather than none,
+   so losing the outline can't change the chip's height. */
+.results-header .answer-pill {
+  border-color: transparent;
 }
 
 /* Only the X removes the answer; the pill body is inert. No divider — the X
@@ -4208,4 +4327,239 @@ l-icon[name="envelope"]::before {
   .tfi-contact {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---- Login wall, shown when an unauthenticated buyer presses Send. ---- */
+
+/* Covers the app rather than sitting in a card: this stands in for leaving
+   the prototype for the real Thomas login. A click anywhere returns. */
+.login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #fff;
+  cursor: pointer;
+  overflow-y: auto;
+}
+
+@media (max-width: 900px) {
+  .login-screen {
+    grid-template-columns: 1fr;
+  }
+
+  .login-aside {
+    display: none;
+  }
+}
+
+.login-pane {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--l-space-6, 32px);
+}
+
+.login-wordmark {
+  position: absolute;
+  top: var(--l-space-6, 32px);
+  left: var(--l-space-6, 32px);
+  width: 148px;
+  height: auto;
+}
+
+.login-form {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--l-space-4);
+}
+
+.login-title {
+  font-family: var(--app-font-display);
+  font-size: 46px;
+  font-weight: var(--l-font-weight-semibold);
+  line-height: 1.1;
+  text-align: center;
+  color: var(--l-color-darkblue-100);
+}
+
+/* Label notched into the top border, as the real login draws it. */
+.login-field {
+  position: relative;
+  margin-top: var(--l-space-3);
+}
+
+.login-field-label {
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  padding: 0 4px;
+  background: #fff;
+  color: var(--l-color-blue-100);
+  font-size: 13px;
+}
+
+.login-field input {
+  width: 100%;
+  height: 56px;
+  padding: 0 var(--l-space-3);
+  border: 1px solid var(--l-color-blue-100);
+  border-radius: var(--l-radius-1);
+  background: #fff;
+  font-family: inherit;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.login-screen .login-continue {
+  width: 100%;
+  height: 56px;
+  font-size: 16px;
+}
+
+.login-terms,
+.login-register {
+  text-align: center;
+  color: var(--l-color-darkblue-75);
+  font-size: 15px;
+}
+
+.login-terms a {
+  color: var(--l-color-darkblue-75);
+}
+
+.login-register a {
+  margin-left: 4px;
+  color: var(--l-color-blue-100);
+  font-weight: var(--l-font-weight-semibold);
+  text-decoration: none;
+}
+
+.login-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--l-space-6, 32px);
+  padding: var(--l-space-7, 40px) var(--l-space-6, 32px);
+  background: var(--l-color-darkblue-5, #f5f7f8);
+}
+
+.login-aside-title {
+  font-family: var(--app-font-display);
+  font-size: 34px;
+  font-weight: var(--l-font-weight-semibold);
+  text-align: center;
+  color: var(--l-color-darkblue-100);
+}
+
+.login-match {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.login-match-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(320px, 100%);
+  padding: var(--l-space-3);
+  border: 1px solid var(--l-color-border);
+  border-radius: var(--l-radius-1);
+  background: #fff;
+  box-shadow: 0 12px 32px rgb(9 44 71 / 0.1);
+}
+
+.login-match-role {
+  color: var(--l-color-yellow-125, #f9ae00);
+  font-size: 10px;
+  font-weight: var(--l-font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.login-match-party {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-2);
+}
+
+.login-match-party strong {
+  display: block;
+  font-size: 14px;
+  color: var(--l-color-darkblue-100);
+}
+
+.login-match-party span {
+  font-size: 11px;
+  color: var(--l-color-darkblue-75);
+}
+
+.login-match-avatar {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--l-color-darkblue-25);
+}
+
+.login-match-quote {
+  font-size: 12px;
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-100);
+}
+
+.login-match-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--l-radius-1);
+  background: var(--l-color-blue-10);
+  color: var(--l-color-blue-100);
+  font-size: 10px;
+  font-weight: var(--l-font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.login-match-spec {
+  font-size: 11px;
+  color: var(--l-color-darkblue-75);
+}
+
+.login-trust {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--l-space-3);
+  text-align: center;
+}
+
+.login-trust p {
+  font-size: 14px;
+  color: var(--l-color-darkblue-75);
+}
+
+.login-trust ul {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--l-space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.login-trust li {
+  color: var(--l-color-darkblue-90);
+  font-size: 15px;
+  font-weight: var(--l-font-weight-bold);
+  letter-spacing: 0.02em;
 }

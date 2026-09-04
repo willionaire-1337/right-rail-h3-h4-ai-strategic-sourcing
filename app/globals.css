@@ -784,6 +784,42 @@ p,
   font-size: 13px;
 }
 
+/* Validation messages sit under the field they belong to, in the same red
+   the invalid border uses. */
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--l-color-red-125, #c72f12);
+  font-size: 12px;
+  font-weight: var(--l-font-weight-semibold);
+}
+
+.field-error l-icon {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.contact-form :is(input, select, textarea)[aria-invalid="true"],
+.contact-form [aria-invalid="true"] .contact-desc-editor {
+  border-color: var(--l-color-red-100, #e63817);
+}
+
+.contact-form :is(input, select)[aria-invalid="true"]:focus {
+  box-shadow: var(--l-color-red-50, #ef9a89) 0 0 4px 1px;
+}
+
+/* The consent box is small; tint the whole line so the miss is findable. */
+.contact-consent[data-invalid] {
+  color: var(--l-color-red-125, #c72f12);
+}
+
+.contact-consent[data-invalid] input {
+  outline: 2px solid var(--l-color-red-100, #e63817);
+  outline-offset: 1px;
+}
+
 .contact-note {
   font-size: var(--l-font-size-smallest);
   color: var(--l-color-darkblue-75);
@@ -1840,6 +1876,45 @@ a.contact-email-cta-primary {
   border: 1px solid var(--l-color-border);
   border-radius: var(--l-radius-full, 999px);
   background: #fff;
+}
+
+/* Saved, but Thomas can't route a request to them — muted so the chip reads
+   as shortlist-only, with the reason on hover. */
+.select-rail-list li.rail-entry-uncontactable {
+  position: relative;
+  border-style: dashed;
+  background: var(--l-color-darkblue-5, #f5f7f8);
+}
+
+.rail-entry-uncontactable .rail-chip-open {
+  opacity: 0.55;
+}
+
+.rail-entry-uncontactable::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 5;
+  width: max-content;
+  max-width: 240px;
+  padding: 8px 10px;
+  border-radius: var(--l-radius-1);
+  background: var(--l-color-darkblue-100);
+  color: #fff;
+  font-size: 11px;
+  font-weight: var(--l-font-weight-semibold);
+  line-height: 1.35;
+  white-space: normal;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.rail-entry-uncontactable:hover::after,
+.rail-entry-uncontactable:focus-within::after {
+  opacity: 1;
 }
 
 .rail-chip-open {

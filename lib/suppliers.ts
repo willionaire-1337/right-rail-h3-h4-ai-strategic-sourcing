@@ -30,6 +30,23 @@ export const SUPPLIERS = suppliersData as Supplier[]
  * match counts. (The local database holds a transcribed sample.)
  */
 export const CATEGORY_SUPPLIER_COUNT = 2482
+
+/** Shown wherever a supplier Thomas can't route a request to is offered. */
+export const UNCONTACTABLE_NOTE =
+  "This supplier cannot be contacted through Thomas, but can be added to your shortlist."
+
+/**
+ * Whether Thomas can route a request to the supplier at this position on the
+ * rail. Stubbed to the third entry until the supplier record carries the flag.
+ */
+export function isUncontactable(index: number): boolean {
+  return index === 2
+}
+
+/** The saved suppliers a request can actually be sent to. */
+export function contactableOnly(suppliers: Supplier[]): Supplier[] {
+  return suppliers.filter((_, index) => !isUncontactable(index))
+}
 export const CATEGORY_LABEL = "Stamping Services"
 
 /**

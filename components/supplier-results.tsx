@@ -25,7 +25,7 @@ import {
 } from "@/lib/simulation";
 import { planScreening, scoreRecord } from "@/lib/screening";
 import { matchPillsFor } from "@/lib/match-pills";
-import { type Supplier } from "@/lib/suppliers";
+import { contactableOnly, type Supplier } from "@/lib/suppliers";
 
 const PAGE_SIZE = 25;
 /** How many ranked suppliers land on the rail when the questionnaire wraps up. */
@@ -386,7 +386,9 @@ export function SupplierResults({
   }, [focusedSupplierId]);
 
   // The engage rail's RFI goes to its own list.
-  const contactRecipients = railRfi ? railSuppliers : [];
+  /** The request only goes to suppliers Thomas can route to — the rest stay on
+      the rail as shortlist-only entries. */
+  const contactRecipients = railRfi ? contactableOnly(railSuppliers) : [];
 
   /** Rail primary CTA: RFI addressed to the pre-picked top suppliers. */
   const openRailRfi = () => {
@@ -577,7 +579,7 @@ export function SupplierResults({
           kind="primary"
           scale="small"
           type="button"
-          disabled={railSuppliers.length === 0}
+          disabled={contactableOnly(railSuppliers).length === 0}
           onClick={openRailRfi}
         >
           Send RFI

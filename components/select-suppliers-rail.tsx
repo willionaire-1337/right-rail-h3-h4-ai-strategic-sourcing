@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { SupplierLogo } from "@/components/supplier-logo";
-import type { Supplier } from "@/lib/suppliers";
+import { UNCONTACTABLE_NOTE, contactableOnly, isUncontactable, type Supplier } from "@/lib/suppliers";
 
 type SelectSuppliersRailProps = {
   /** Suppliers queued for engagement — auto-queued top matches plus card additions. */
@@ -36,6 +36,8 @@ export function SelectSuppliersRail({
   requirementPreview,
 }: SelectSuppliersRailProps) {
   const [rfiCollapsed, setRfiCollapsed] = useState(false);
+  /** Saved suppliers a request can actually go to — the rest are shortlist only. */
+  const contactable = contactableOnly(suppliers);
 
   return (
     <aside
@@ -73,13 +75,25 @@ export function SelectSuppliersRail({
         </div>
       ) : (
         <ul className="select-rail-list">
-          {suppliers.map((supplier) => (
-            <li key={supplier.id}>
+          {suppliers.map((supplier, index) => (
+            <li
+              key={supplier.id}
+              className={isUncontactable(index) ? "rail-entry-uncontactable" : undefined}
+              data-tip={isUncontactable(index) ? UNCONTACTABLE_NOTE : undefined}
+            >
               <button
                 type="button"
                 className="rail-chip-open"
-                title={`Show ${supplier.name} in results`}
-                aria-label={`Show ${supplier.name} in results`}
+                title={
+                  isUncontactable(index)
+                    ? UNCONTACTABLE_NOTE
+                    : `Show ${supplier.name} in results`
+                }
+                aria-label={
+                  isUncontactable(index)
+                    ? `${supplier.name} — ${UNCONTACTABLE_NOTE}`
+                    : `Show ${supplier.name} in results`
+                }
                 onClick={() => onReveal(supplier.id)}
               >
                 <span className="rail-logo" aria-hidden="true">
@@ -149,10 +163,10 @@ export function SelectSuppliersRail({
         <button
           type="button"
           kind="primary"
-          disabled={suppliers.length === 0}
+          disabled={contactable.length === 0}
           onClick={onSendRfi}
         >
-          Contact {suppliers.length} Supplier{suppliers.length === 1 ? "" : "s"}
+          Contact {contactable.length} Supplier{contactable.length === 1 ? "" : "s"}
         </button>
         <button type="button" className="rail-sub" onClick={onAddToShortlist}>
           + Add to shortlist

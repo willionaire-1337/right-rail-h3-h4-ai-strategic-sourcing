@@ -75,6 +75,14 @@ export function buildProjectName(requirements: ContactRequirement[]): string {
  * alongside it as removable requirement chips, so seeding the box with the
  * same list would only duplicate it.
  */
+/** Today as yyyy-mm-dd, to compare against a date input's own format. */
+function todayISO(): string {
+  const now = new Date();
+  const month = `${now.getMonth() + 1}`.padStart(2, "0");
+  const day = `${now.getDate()}`.padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
 export function buildProjectDescription(): string {
   return "";
 }
@@ -112,6 +120,9 @@ export function ContactSupplierModal({
   const [loggedIn, setLoggedIn] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
 
+  /** Per-field messages raised on a failed send, keyed by field name. */
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   /** Requirement chips cleared before sending, by label. */
   const [droppedRequirements, setDroppedRequirements] = useState<string[]>([]);
 
@@ -126,6 +137,7 @@ export function ContactSupplierModal({
       setDroppedRequirements([]);
       setLoggedIn(false);
       setLoginOpen(false);
+      setErrors({});
     }
   }
 
@@ -159,6 +171,15 @@ export function ContactSupplierModal({
     (requirement) => !droppedRequirements.includes(requirement.label),
   );
 
+  /** Drops a field's message the moment the buyer starts fixing it. */
+  const clearError = (name: string) =>
+    setErrors((current) => {
+      if (!current[name]) return current;
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
+
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     // First press sends the buyer to log in; they return to press it again.
@@ -168,6 +189,30 @@ export function ContactSupplierModal({
     }
     const data = new FormData(event.currentTarget);
     const field = (name: string) => (data.get(name) ?? "").toString().trim();
+
+    // Everything the buyer must fix before this can go out. Checked here
+    // rather than left to the browser so the messages sit on the fields.
+    const found: Record<string, string> = {};
+    if (!field("projectName")) {
+      found.projectName = "Give this project a name so suppliers can identify it.";
+    }
+    const needBy = field("needBy");
+    if (needBy && needBy < todayISO()) {
+      found.needBy = "Pick a date in the future.";
+    }
+    if (!data.get("consent")) {
+      found.consent = "Confirm this before sending.";
+    }
+    setErrors(found);
+    if (Object.keys(found).length > 0) {
+      // Put the buyer on the first thing that needs fixing.
+      const first = Object.keys(found)[0];
+      const el = event.currentTarget.querySelector<HTMLElement>(`[name="${first}"]`);
+      el?.focus();
+      el?.scrollIntoView({ block: "center", behavior: "smooth" });
+      return;
+    }
+
     const payload: QuoteEmailPayload = {
       supplierName: previewSupplier.name,
       supplierId: previewSupplier.id,
@@ -279,7 +324,7 @@ export function ContactSupplierModal({
               </div>
             )}
 
-            <form className="contact-form" onSubmit={submit}>
+            <form className="contact-form" noValidate onSubmit={submit}>
                 <fieldset>
                   <label htmlFor="contact-quote-name">Project name</label>
                   <input
@@ -289,7 +334,15 @@ export function ContactSupplierModal({
                     required
                     defaultValue={buildProjectName(requirements)}
                     placeholder="e.g. Stainless mounting bracket — Rev B"
+                    aria-invalid={errors.projectName ? true : undefined}
+                    aria-describedby={errors.projectName ? "contact-quote-name-error" : undefined}
+                    onInput={() => clearError("projectName")}
                   />
+                  {errors.projectName && (
+                    <p className="field-error mar-0" id="contact-quote-name-error" role="alert">
+                      <l-icon name="circle-exclamation" aria-hidden="true" /> {errors.projectName}
+                    </p>
+                  )}
                 </fieldset>
                 <fieldset>
                   <label htmlFor="contact-quote-desc">Project description</label>
@@ -378,17 +431,41 @@ export function ContactSupplierModal({
                       Response needed by
                       <span className="field-hint">optional</span>
                     </label>
-                    <input id="contact-quote-date" name="needBy" type="date" />
+                    <input
+                      id="contact-quote-date"
+                      name="needBy"
+                      type="date"
+                      aria-invalid={errors.needBy ? true : undefined}
+                      aria-describedby={errors.needBy ? "contact-quote-date-error" : undefined}
+                      onInput={() => clearError("needBy")}
+                    />
+                    {errors.needBy && (
+                      <p className="field-error mar-0" id="contact-quote-date-error" role="alert">
+                        <l-icon name="circle-exclamation" aria-hidden="true" /> {errors.needBy}
+                      </p>
+                    )}
                   </fieldset>
                 </div>
                 <div className="contact-actions">
-                  <label className="contact-consent">
-                    <input type="checkbox" defaultChecked required />
+                  <label className="contact-consent" data-invalid={errors.consent ? true : undefined}>
+                    <input
+                      type="checkbox"
+                      name="consent"
+                      defaultChecked
+                      required
+                      aria-invalid={errors.consent ? true : undefined}
+                      onChange={() => clearError("consent")}
+                    />
                     <span>
                       I verify that no confidential or export-controlled data was uploaded
                       or entered in this project.
                     </span>
                   </label>
+                  {errors.consent && (
+                    <p className="field-error mar-0" role="alert">
+                      <l-icon name="circle-exclamation" aria-hidden="true" /> {errors.consent}
+                    </p>
+                  )}
                   <button kind="primary" type="submit">
                     {loggedIn ? "Send Inquiry" : "Log in to Send Inquiry"}
                   </button>

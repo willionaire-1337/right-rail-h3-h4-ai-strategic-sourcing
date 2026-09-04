@@ -834,16 +834,17 @@ p,
   font-size: 28px;
 }
 
-/* Confirmation footer: Done closes the dialog out. */
+/* Confirmation footer: the buyer's next step on top, Done under it. Stacked
+   full width to match the centred layout above them. */
 .contact-sent-actions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--l-space-3);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--l-space-2);
   width: 100%;
 }
 
-.contact-sent-actions button[kind="primary"] {
+.contact-sent-actions button {
   width: 100%;
   height: 44px;
   padding: 0 var(--l-space-6);
@@ -1176,19 +1177,12 @@ a.contact-email-cta-primary {
 }
 
 /* Results header — white bar over the top of the center column. */
+/* Scrolls away with the list rather than pinning: the header grows with the
+   facet pills, and holding all of it on screen took too much of the results. */
 .results-header {
-  position: sticky;
-  top: 0;
-  z-index: 4;
   background: #fff;
   padding: var(--l-space-4) var(--l-space-5);
   border-bottom: 1px solid var(--l-color-border);
-  transition: box-shadow 0.15s ease;
-}
-
-/* Soft lift once the results list scrolls under the sticky header. */
-.results-header[data-scrolled] {
-  box-shadow: 0 2px 8px rgb(9 44 71 / 0.08);
 }
 
 /* Title on the left; All Filters pinned right. */
@@ -4436,7 +4430,9 @@ l-icon[name="envelope"]::before {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  /* Centred, not top-aligned: the cards share a min-height, so short labels
+     were leaving their number stranded against the top edge. */
+  justify-content: center;
   gap: 6px;
   min-height: 108px;
   padding: 12px 8px;

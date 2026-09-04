@@ -228,7 +228,11 @@ export function ContactSupplierModal({
             </div>
 
             <div className="contact-sent-actions">
-              <button kind="primary" onClick={finish}>
+              {/* No requests page in the prototype yet, so this just closes. */}
+              <button kind="primary" onClick={onClose}>
+                View your requests
+              </button>
+              <button kind="neutral" onClick={finish}>
                 Done
               </button>
             </div>

@@ -117,8 +117,6 @@ export function SupplierResults({
   const [railRfi, setRailRfi] = useState(false);
   /** Suppliers the buyer added to the rail from card "+ Add" CTAs, in order. */
   const [railAdded, setRailAdded] = useState<string[]>([]);
-  /** Soft shadow under the sticky header once the results list has scrolled. */
-  const [scrolled, setScrolled] = useState(false);
   /** Card currently highlighted after a rail-chip click. */
   const [focusedSupplierId, setFocusedSupplierId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -139,15 +137,6 @@ export function SupplierResults({
     }
     setLocationDraft(answerLocation);
   }, [answerLocation]);
-
-  useEffect(() => {
-    const scroller = scrollRef.current;
-    if (!scroller) return;
-    const onScroll = () => setScrolled(scroller.scrollTop > 0);
-    onScroll();
-    scroller.addEventListener("scroll", onScroll, { passive: true });
-    return () => scroller.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -433,7 +422,8 @@ export function SupplierResults({
     <>
       <div className="results-body">
       <div className="results-center">
-      <div className="results-header" data-scrolled={scrolled || undefined}>
+        <div className="pane-scroll" ref={scrollRef}>
+      <div className="results-header">
         <div className="results-meta">
           <div className="results-headline">
             <h3 className="mar-0">Suppliers that match your spec</h3>
@@ -476,8 +466,6 @@ export function SupplierResults({
           </div>
         )}
       </div>
-
-        <div className="pane-scroll" ref={scrollRef}>
         <div className="results-list">
           {results.slice(pageStart, pageStart + PAGE_SIZE).map((supplier) => (
             <Fragment key={supplier.id}>

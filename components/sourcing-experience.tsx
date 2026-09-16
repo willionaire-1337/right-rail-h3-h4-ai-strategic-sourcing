@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AskBlock } from "@/components/ask-block";
 import { DeepDrawGate } from "@/components/deep-draw-gate";
+import { PaneResizer } from "@/components/pane-resizer";
 import { SiteNavbar } from "@/components/site-navbar";
 import { SupplierResults } from "@/components/supplier-results";
 import { ThinkingIndicator } from "@/components/thinking-indicator";
@@ -524,9 +525,6 @@ export function SourcingExperience() {
   );
   const hasActiveAsk = activeAsk != null;
   const started = transcript.some((entry) => entry.kind === "user");
-  const questionnaireComplete =
-    transcript.some((entry) => entry.kind === "done" && !entry.routed) ||
-    (!agentOpen && answers.length > 0);
   const canGoBack = transcript.some((entry) => entry.kind === "ask" && entry.status !== "active");
   /**
    * Picking an option answers a single-select question outright. Multi-select
@@ -830,6 +828,8 @@ export function SourcingExperience() {
           </div>
         </section>
 
+        <PaneResizer variable="--define-width" edge="left" label="Resize the define column" />
+
         {/* Center + right: supplier results and the engage rail */}
         <section className="pane" aria-label="Supplier results">
           <SupplierResults
@@ -839,7 +839,6 @@ export function SourcingExperience() {
             onApplyFilterAnswer={applyFilterAnswer}
             onClearMappedAnswers={() => removeAnswers(syncableQuestionIds())}
             onRefine={openDefine}
-            questionnaireComplete={questionnaireComplete}
             runId={runId}
           />
         </section>

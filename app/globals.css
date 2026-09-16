@@ -7,12 +7,13 @@
   /* Tailoft's greens bottom out at green-125, which is still light for body
      copy; this is the ink used on answered options and settled answers. */
   --app-color-green-ink: #0a6b4b;
-  /* Side columns stay in a 240–360 band; the center list takes the rest.
-     Preferred sizes sit in the middle of that band. */
-  --define-width: 280px;
-  --rail-width: 288px;
-  --pane-min: 240px;
-  --pane-max: 360px;
+  /* A quarter each to the rails, half to the results. Both are drag-resizable,
+     and the handles overwrite these on the root element as they move. Held in
+     vw so the nested rail still measures against the viewport, not its parent. */
+  --define-width: 25vw;
+  --rail-width: 25vw;
+  --pane-min: 14vw;
+  --pane-max: 40vw;
 }
 
 html,
@@ -241,6 +242,83 @@ p,
 
 /* Contact Supplier dialog: reuses the gate scrim, but the card reads as a
    form — left-aligned, with a segmented inquiry/quote toggle up top. */
+/* Registration wall in front of saving a shortlist: centred, brand-led, with
+   one way forward and one way to make an account. */
+.register-gate {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: calc(100dvh - var(--l-space-5) * 2);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--l-space-4);
+  background: #fff;
+  border-radius: var(--l-radius-2, 12px);
+  box-shadow: 0 24px 64px rgb(9 44 71 / 0.28);
+  padding: var(--l-space-7, 40px) var(--l-space-6, 32px);
+  text-align: center;
+}
+
+.register-gate-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--l-space-2);
+}
+
+.register-gate-brand img {
+  width: 238px;
+  height: auto;
+}
+
+.register-gate-brand span {
+  /* Under the wordmark's right edge, as the brand lockup is drawn. */
+  margin: 2px 0 0 82px;
+  font-size: var(--l-font-size-small);
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-100);
+}
+
+.register-gate-title {
+  font-size: 40px;
+  font-weight: var(--l-font-weight-regular);
+  line-height: 1.1;
+  color: var(--l-color-darkblue-100);
+}
+
+.register-gate-sub {
+  font-size: 17px;
+  color: var(--l-color-darkblue-100);
+}
+
+.register-gate .register-gate-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--l-space-2);
+  height: 56px;
+  padding: 0 var(--l-space-6, 32px);
+  font-size: 19px;
+  font-weight: var(--l-font-weight-semibold);
+}
+
+.register-gate-alt {
+  font-size: 17px;
+  color: var(--l-color-darkblue-100);
+}
+
+.register-gate-alt a {
+  margin-left: 4px;
+  color: var(--l-color-blue-100);
+  font-weight: var(--l-font-weight-semibold);
+  text-decoration: none;
+}
+
+.register-gate-alt a:hover {
+  text-decoration: underline;
+}
+
 /* Holds the dialog and its close button, which sits above the dialog rather
    than inside it — the dialog scrolls, and would clip a button on its edge. */
 .contact-shell {
@@ -802,8 +880,12 @@ p,
 }
 
 .contact-form :is(input, select, textarea)[aria-invalid="true"],
-.contact-form [aria-invalid="true"] .contact-desc-editor {
+.contact-form .contact-desc-editor[aria-invalid="true"] {
   border-color: var(--l-color-red-100, #e63817);
+}
+
+.contact-form .contact-desc-editor[aria-invalid="true"]:focus {
+  box-shadow: var(--l-color-red-50, #ef9a89) 0 0 4px 1px;
 }
 
 .contact-form :is(input, select)[aria-invalid="true"]:focus {
@@ -1185,13 +1267,46 @@ a.contact-email-cta-primary {
 .pane-left {
   box-sizing: border-box;
   flex: 0 0 auto;
-  width: var(--define-width, 280px);
-  min-width: var(--pane-min, 240px);
-  max-width: var(--pane-max, 360px);
+  width: var(--define-width, 25vw);
+  min-width: var(--pane-min, 14vw);
+  max-width: var(--pane-max, 40vw);
   background: #fff;
   padding: 0;
   overflow: hidden;
   border-right: 1px solid var(--l-color-border);
+}
+
+/* Drag handle between panes. A hairline that widens its hit area with a
+   transparent margin, so it's grabbable without drawing a thick divider. */
+.pane-resizer {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 3;
+  width: 5px;
+  margin: 0 -2px;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.pane-resizer:hover::after,
+.pane-resizer:focus-visible::after,
+body.is-resizing-panes .pane-resizer::after {
+  content: "";
+  position: absolute;
+  inset: 0 1px;
+  background: var(--l-color-blue-100);
+}
+
+.pane-resizer:focus-visible {
+  outline: none;
+}
+
+/* Nothing to drag while a pointer drag is in flight — keeps the pointer from
+   selecting text across the panes. */
+body.is-resizing-panes {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .pane {
@@ -1804,9 +1919,9 @@ a.contact-email-cta-primary {
 .select-rail {
   box-sizing: border-box;
   flex: 0 0 auto;
-  width: var(--rail-width, 288px);
-  min-width: var(--pane-min, 240px);
-  max-width: var(--pane-max, 360px);
+  width: var(--rail-width, 25vw);
+  min-width: var(--pane-min, 14vw);
+  max-width: var(--pane-max, 40vw);
   border-left: 1px solid var(--l-color-border);
   background: #fff;
   padding: var(--l-space-4) var(--l-space-5);
@@ -1867,6 +1982,29 @@ a.contact-email-cta-primary {
 
 /* Each pick reads as a compact name-only chip; rows pack left to right and
    wrap as needed, full names shown. */
+/* Group heading inside the chip list: a full-width row, not a pill. */
+.select-rail-list li.rail-group-title {
+  flex: 1 0 100%;
+  display: block;
+  padding: 0;
+  margin-top: var(--l-space-2);
+  border: none;
+  border-radius: 0;
+  background: none;
+}
+
+.select-rail-list li.rail-group-title:first-child {
+  margin-top: 0;
+}
+
+.rail-group-title h5 {
+  font-size: 11px;
+  font-weight: var(--l-font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--l-color-darkblue-50);
+}
+
 .select-rail-list li {
   display: inline-flex;
   align-items: center;
@@ -3769,7 +3907,8 @@ l-icon[name="envelope"]::before {
     --define-width: 240px;
   }
 
-  .select-rail {
+  .select-rail,
+  .results-body .pane-resizer {
     display: none;
   }
 
@@ -3800,6 +3939,11 @@ l-icon[name="envelope"]::before {
 
   .engage-tray-refine {
     display: inline-flex;
+  }
+
+  /* One column at a time on a phone — nothing to drag between. */
+  .pane-resizer {
+    display: none;
   }
 
   /* Which column shows follows the active tab. */

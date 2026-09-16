@@ -74,11 +74,20 @@ export function DescriptionEditor({
   name,
   initial,
   placeholder,
+  invalid,
+  describedBy,
+  onInput,
 }: {
   id: string;
   name: string;
   initial: string;
   placeholder: string;
+  /** Marks the editor as failing validation. */
+  invalid?: true;
+  /** Id of the message explaining why. */
+  describedBy?: string;
+  /** Fires as the buyer types, so a validation message can clear itself. */
+  onInput?: () => void;
 }) {
   const editorRef = useRef<HTMLDivElement>(null);
   const hiddenRef = useRef<HTMLTextAreaElement>(null);
@@ -92,6 +101,8 @@ export function DescriptionEditor({
         contentEditable
         role="textbox"
         aria-multiline="true"
+        aria-invalid={invalid}
+        aria-describedby={describedBy}
         data-placeholder={placeholder}
         suppressContentEditableWarning
         dangerouslySetInnerHTML={{ __html: descriptionToHtml(initial) }}
@@ -99,6 +110,7 @@ export function DescriptionEditor({
           if (hiddenRef.current && editorRef.current) {
             hiddenRef.current.value = editorPlainText(editorRef.current);
           }
+          onInput?.();
         }}
         onPaste={(event) => {
           event.preventDefault();

@@ -19,6 +19,9 @@ type SelectSuppliersRailProps = {
   /** The logged spec, one "Label: Value" line per answer, stacked on the
       draft card. */
   requirementPreview: { label: string; value: string }[];
+  /** How many chips at the head of the list are recommendations, re-ranked
+      as answers land; anything after them the buyer added by hand. */
+  recommendedCount: number;
 };
 
 /**
@@ -34,10 +37,50 @@ export function SelectSuppliersRail({
   draftTitle,
   requirementCount,
   requirementPreview,
+  recommendedCount,
 }: SelectSuppliersRailProps) {
   const [rfiCollapsed, setRfiCollapsed] = useState(false);
   /** Saved suppliers a request can actually go to — the rest are shortlist only. */
   const contactable = contactableOnly(suppliers);
+
+  /** One supplier chip; greyed with the reason on hover if it can't be contacted. */
+  const chip = (supplier: Supplier) => {
+    const blocked = isUncontactable(supplier);
+    return (
+      <li
+        key={supplier.id}
+        className={blocked ? "rail-entry-uncontactable" : undefined}
+        data-tip={blocked ? UNCONTACTABLE_NOTE : undefined}
+      >
+        <button
+          type="button"
+          className="rail-chip-open"
+          title={blocked ? UNCONTACTABLE_NOTE : `Show ${supplier.name} in results`}
+          aria-label={
+            blocked
+              ? `${supplier.name} — ${UNCONTACTABLE_NOTE}`
+              : `Show ${supplier.name} in results`
+          }
+          onClick={() => onReveal(supplier.id)}
+        >
+          <span className="rail-logo" aria-hidden="true">
+            <SupplierLogo name={supplier.name} size={22} />
+          </span>
+          <span className="rail-entry-name" title={supplier.name}>
+            {supplier.name}
+          </span>
+        </button>
+        <button
+          type="button"
+          className="rail-chip-remove"
+          aria-label={`Remove ${supplier.name}`}
+          onClick={() => onRemove(supplier.id)}
+        >
+          <l-icon name="xmark" aria-hidden="true" />
+        </button>
+      </li>
+    );
+  };
 
   return (
     <aside
@@ -75,44 +118,20 @@ export function SelectSuppliersRail({
         </div>
       ) : (
         <ul className="select-rail-list">
-          {suppliers.map((supplier, index) => (
-            <li
-              key={supplier.id}
-              className={isUncontactable(index) ? "rail-entry-uncontactable" : undefined}
-              data-tip={isUncontactable(index) ? UNCONTACTABLE_NOTE : undefined}
-            >
-              <button
-                type="button"
-                className="rail-chip-open"
-                title={
-                  isUncontactable(index)
-                    ? UNCONTACTABLE_NOTE
-                    : `Show ${supplier.name} in results`
-                }
-                aria-label={
-                  isUncontactable(index)
-                    ? `${supplier.name} — ${UNCONTACTABLE_NOTE}`
-                    : `Show ${supplier.name} in results`
-                }
-                onClick={() => onReveal(supplier.id)}
-              >
-                <span className="rail-logo" aria-hidden="true">
-                  <SupplierLogo name={supplier.name} size={22} />
-                </span>
-                <span className="rail-entry-name" title={supplier.name}>
-                  {supplier.name}
-                </span>
-              </button>
-              <button
-                type="button"
-                className="rail-chip-remove"
-                aria-label={`Remove ${supplier.name}`}
-                onClick={() => onRemove(supplier.id)}
-              >
-                <l-icon name="xmark" aria-hidden="true" />
-              </button>
+          {/* Headings are full-width rows in the same list, so both groups
+              share one scrolling column of chips. */}
+          {recommendedCount > 0 && (
+            <li className="rail-group-title">
+              <h5 className="mar-0">Recommended suppliers</h5>
             </li>
-          ))}
+          )}
+          {suppliers.slice(0, recommendedCount).map(chip)}
+          {suppliers.length > recommendedCount && (
+            <li className="rail-group-title">
+              <h5 className="mar-0">Added by you</h5>
+            </li>
+          )}
+          {suppliers.slice(recommendedCount).map(chip)}
         </ul>
       )}
 

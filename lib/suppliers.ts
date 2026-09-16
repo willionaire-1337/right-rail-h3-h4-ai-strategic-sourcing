@@ -36,16 +36,19 @@ export const UNCONTACTABLE_NOTE =
   "This supplier cannot be contacted through Thomas, but can be added to your shortlist."
 
 /**
- * Whether Thomas can route a request to the supplier at this position on the
- * rail. Stubbed to the third entry until the supplier record carries the flag.
+ * Whether Thomas can route a request to this supplier. Stubbed off the id so
+ * it's stable per supplier — roughly one in five — until the record carries
+ * the flag. Recommendations skip these; a buyer can still shortlist them.
  */
-export function isUncontactable(index: number): boolean {
-  return index === 2
+export function isUncontactable(supplier: Supplier): boolean {
+  let hash = 0
+  for (const char of supplier.id) hash = (hash * 31 + char.charCodeAt(0)) % 997
+  return hash % 5 === 0
 }
 
-/** The saved suppliers a request can actually be sent to. */
+/** The suppliers a request can actually be sent to. */
 export function contactableOnly(suppliers: Supplier[]): Supplier[] {
-  return suppliers.filter((_, index) => !isUncontactable(index))
+  return suppliers.filter((supplier) => !isUncontactable(supplier))
 }
 export const CATEGORY_LABEL = "Stamping Services"
 

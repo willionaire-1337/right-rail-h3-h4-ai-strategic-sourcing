@@ -196,6 +196,9 @@ export function ContactSupplierModal({
     if (!field("projectName")) {
       found.projectName = "Give this project a name so suppliers can identify it.";
     }
+    if (!field("description")) {
+      found.description = "Describe what you need so suppliers can quote it.";
+    }
     const needBy = field("needBy");
     if (needBy && needBy < todayISO()) {
       found.needBy = "Pick a date in the future.";
@@ -344,14 +347,22 @@ export function ContactSupplierModal({
                     </p>
                   )}
                 </fieldset>
-                <fieldset>
+                <fieldset data-invalid={errors.description ? true : undefined}>
                   <label htmlFor="contact-quote-desc">Project description</label>
                   <DescriptionEditor
                     id="contact-quote-desc"
                     name="description"
                     initial={buildProjectDescription()}
                     placeholder="Add additional details about your request..."
+                    invalid={errors.description ? true : undefined}
+                    describedBy={errors.description ? "contact-quote-desc-error" : undefined}
+                    onInput={() => clearError("description")}
                   />
+                  {errors.description && (
+                    <p className="field-error mar-0" id="contact-quote-desc-error" role="alert">
+                      <l-icon name="circle-exclamation" aria-hidden="true" /> {errors.description}
+                    </p>
+                  )}
                 </fieldset>
                 {/* The logged spec travels as structured requirements rather
                     than as text inside the description, so the buyer can clear

@@ -3,6 +3,9 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { ContactSupplierModal } from "@/components/contact-supplier-modal";
 import { FilterDrawer, type FilterGroup } from "@/components/filter-drawer";
+import { LoginScreen } from "@/components/login-screen";
+import { PaneResizer } from "@/components/pane-resizer";
+import { RegisterGate } from "@/components/register-gate";
 import { SelectSuppliersRail } from "@/components/select-suppliers-rail";
 import { ShortlistModal } from "@/components/shortlist-modal";
 import { SupplierCard } from "@/components/supplier-card";
@@ -29,7 +32,8 @@ import { contactableOnly, type Supplier } from "@/lib/suppliers";
 
 const PAGE_SIZE = 25;
 /** How many ranked suppliers land on the rail when the questionnaire wraps up. */
-const AUTO_QUEUE_COUNT = 3;
+/** Recommendations always on the rail, re-ranked as answers land. */
+const RECOMMENDED_COUNT = 5;
 
 /** Short spec labels for the RFI draft card's bulleted requirement lines —
     the questionnaire titles are too long to read as "Label: Value". */
@@ -79,7 +83,6 @@ type SupplierResultsProps = {
   /** Engage tray's Refine control: reopens the define pane. */
   onRefine: () => void;
   /** True once the run wraps up or the buyer clicks Done. */
-  questionnaireComplete: boolean;
   /** Increments on Reset so the rail can drop auto-queued chips. */
   runId: number;
 };
@@ -96,7 +99,6 @@ export function SupplierResults({
   onApplyFilterAnswer,
   onClearMappedAnswers,
   onRefine,
-  questionnaireComplete,
   runId,
 }: SupplierResultsProps) {
   const [page, setPage] = useState(1);
@@ -112,16 +114,20 @@ export function SupplierResults({
   /** Local-only facets (no questionnaire twin) — e.g. company type. */
   const [localFacetPicks, setLocalFacetPicks] = useState<Record<string, string[]>>({});
   const [contactOpen, setContactOpen] = useState(false);
-  const [shortlistOpen, setShortlistOpen] = useState(false);
+  /** Saving a shortlist walks register -> sign in -> pick a list. */
+  const [shortlistStage, setShortlistStage] = useState<
+    null | "register" | "login" | "shortlist"
+  >(null);
   /** The rail's RFI goes to its pre-picked top suppliers, not the selection. */
   const [railRfi, setRailRfi] = useState(false);
   /** Suppliers the buyer added to the rail from card "+ Add" CTAs, in order. */
   const [railAdded, setRailAdded] = useState<string[]>([]);
+  /** Recommendations the buyer took off the rail; the next match fills in. */
+  const [dismissed, setDismissed] = useState<string[]>([]);
   /** Card currently highlighted after a rail-chip click. */
   const [focusedSupplierId, setFocusedSupplierId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const locationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const autoQueued = useRef(false);
   const pendingRevealId = useRef<string | null>(null);
   const [revealNonce, setRevealNonce] = useState(0);
 
@@ -145,8 +151,8 @@ export function SupplierResults({
   }, []);
 
   useEffect(() => {
-    autoQueued.current = false;
     setRailAdded([]);
+    setDismissed([]);
     setFocusedSupplierId(null);
   }, [runId]);
 
@@ -326,36 +332,43 @@ export function SupplierResults({
 
   const matchPills = matchPillsFor(logged);
 
-  /** The rail's list: auto-queued top matches plus card additions. */
-  const railSuppliers = railAdded
-    .map((id) => results.find((supplier) => supplier.id === id))
-    .filter((supplier): supplier is Supplier => supplier != null);
+  /** The rail's recommendations: the top contactable matches for the answers
+      so far, minus any the buyer dismissed. Derived, so a new answer re-ranks
+      them in place. */
+  const recommended = contactableOnly(results)
+    .filter((supplier) => !dismissed.includes(supplier.id))
+    .slice(0, RECOMMENDED_COUNT);
+  const recommendedIds = new Set(recommended.map((supplier) => supplier.id));
+
+  /** The rail's list: recommendations, then the buyer's own card additions. */
+  const railSuppliers = [
+    ...recommended,
+    ...railAdded
+      .filter((id) => !recommendedIds.has(id))
+      .map((id) => results.find((supplier) => supplier.id === id))
+      .filter((supplier): supplier is Supplier => supplier != null),
+  ];
   const railIds = new Set(railSuppliers.map((supplier) => supplier.id));
 
-  /** Card "+ Add" CTA: put the supplier on the rail list (or take it back off). */
-  const toggleRailAdd = (supplier: Supplier) => {
-    setRailAdded((current) =>
-      current.includes(supplier.id)
-        ? current.filter((id) => id !== supplier.id)
-        : [...current, supplier.id],
-    );
-  };
-
   const removeFromRail = (supplierId: string) => {
+    // A dismissed recommendation stays off until the run resets; a manual
+    // add just comes off the list.
+    if (recommendedIds.has(supplierId)) {
+      setDismissed((current) => [...current, supplierId]);
+    }
     setRailAdded((current) => current.filter((id) => id !== supplierId));
   };
 
-  /** Queue the top ranked matches once the questionnaire wraps up. */
-  useEffect(() => {
-    if (!questionnaireComplete || autoQueued.current) return;
-    const topIds = results.slice(0, AUTO_QUEUE_COUNT).map((supplier) => supplier.id);
-    if (topIds.length === 0) return;
-    autoQueued.current = true;
-    setRailAdded((current) => [
-      ...topIds,
-      ...current.filter((id) => !topIds.includes(id)),
-    ]);
-  }, [questionnaireComplete, results]);
+  /** Card "+ Add" CTA: put the supplier on the rail list (or take it back off). */
+  const toggleRailAdd = (supplier: Supplier) => {
+    if (railIds.has(supplier.id)) {
+      removeFromRail(supplier.id);
+      return;
+    }
+    // Adding by hand also forgives an earlier dismissal.
+    setDismissed((current) => current.filter((id) => id !== supplier.id));
+    setRailAdded((current) => [...current, supplier.id]);
+  };
 
   const revealSupplier = (supplierId: string) => {
     const index = results.findIndex((supplier) => supplier.id === supplierId);
@@ -408,8 +421,9 @@ export function SupplierResults({
       ? [...draftPieces, answerValue("part") ?? "Parts"].join(" ")
       : query;
 
-  /** Rail secondary CTA: pick a list before the suppliers are saved to it. */
-  const shortlistRailSuppliers = () => setShortlistOpen(true);
+  /** Rail secondary CTA: saving a list needs an account, so the register wall
+      comes first and the picker waits on the other side of signing in. */
+  const shortlistRailSuppliers = () => setShortlistStage("register");
 
   const saveToShortlist = () => {
     setSaved((set) => {
@@ -417,7 +431,7 @@ export function SupplierResults({
       for (const supplier of railSuppliers) next.add(supplier.id);
       return next;
     });
-    setShortlistOpen(false);
+    setShortlistStage(null);
   };
 
   return (
@@ -532,6 +546,8 @@ export function SupplierResults({
       </div>
       </div>
 
+        <PaneResizer variable="--rail-width" edge="right" label="Resize the engage rail" />
+
         <SelectSuppliersRail
           suppliers={railSuppliers}
           onRemove={removeFromRail}
@@ -541,6 +557,7 @@ export function SupplierResults({
           draftTitle={draftTitle}
           requirementCount={logged.length}
           requirementPreview={requirements}
+          recommendedCount={recommended.length}
         />
       </div>
 
@@ -586,9 +603,20 @@ export function SupplierResults({
         </button>
       </div>
 
+      <RegisterGate
+        open={shortlistStage === "register"}
+        onClose={() => setShortlistStage(null)}
+        onContinue={() => setShortlistStage("login")}
+      />
+
+      <LoginScreen
+        open={shortlistStage === "login"}
+        onDismiss={() => setShortlistStage("shortlist")}
+      />
+
       <ShortlistModal
-        open={shortlistOpen}
-        onClose={() => setShortlistOpen(false)}
+        open={shortlistStage === "shortlist"}
+        onClose={() => setShortlistStage(null)}
         supplierCount={railSuppliers.length}
         onSave={saveToShortlist}
       />

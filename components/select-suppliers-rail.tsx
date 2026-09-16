@@ -22,6 +22,8 @@ type SelectSuppliersRailProps = {
   /** How many chips at the head of the list are recommendations, re-ranked
       as answers land; anything after them the buyer added by hand. */
   recommendedCount: number;
+  /** Takes every recommendation off the rail at once. */
+  onClearRecommended: () => void;
 };
 
 /**
@@ -38,6 +40,7 @@ export function SelectSuppliersRail({
   requirementCount,
   requirementPreview,
   recommendedCount,
+  onClearRecommended,
 }: SelectSuppliersRailProps) {
   const [rfiCollapsed, setRfiCollapsed] = useState(false);
   /** Saved suppliers a request can actually go to — the rest are shortlist only. */
@@ -123,6 +126,9 @@ export function SelectSuppliersRail({
           {recommendedCount > 0 && (
             <li className="rail-group-title">
               <h5 className="mar-0">Recommended suppliers</h5>
+              <button type="button" className="rail-sub rail-group-action" onClick={onClearRecommended}>
+                Clear
+              </button>
             </li>
           )}
           {suppliers.slice(0, recommendedCount).map(chip)}

@@ -124,6 +124,9 @@ export function SupplierResults({
   const [railAdded, setRailAdded] = useState<string[]>([]);
   /** Recommendations the buyer took off the rail; the next match fills in. */
   const [dismissed, setDismissed] = useState<string[]>([]);
+  /** Answer set the buyer cleared every recommendation for. Recommendations
+      stay off until the answers change, then a fresh five come back. */
+  const [clearedFor, setClearedFor] = useState<string | null>(null);
   /** Card currently highlighted after a rail-chip click. */
   const [focusedSupplierId, setFocusedSupplierId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -153,6 +156,7 @@ export function SupplierResults({
   useEffect(() => {
     setRailAdded([]);
     setDismissed([]);
+    setClearedFor(null);
     setFocusedSupplierId(null);
   }, [runId]);
 
@@ -335,9 +339,16 @@ export function SupplierResults({
   /** The rail's recommendations: the top contactable matches for the answers
       so far, minus any the buyer dismissed. Derived, so a new answer re-ranks
       them in place. */
-  const recommended = contactableOnly(results)
-    .filter((supplier) => !dismissed.includes(supplier.id))
-    .slice(0, RECOMMENDED_COUNT);
+  const answersKey = JSON.stringify(logged.map((answer) => [answer.questionId, answer.values]));
+  const recommended =
+    clearedFor === answersKey
+      ? []
+      : contactableOnly(results)
+          .filter((supplier) => !dismissed.includes(supplier.id))
+          .slice(0, RECOMMENDED_COUNT);
+
+  /** "Remove all" on the recommendations: off until the next answer re-ranks. */
+  const clearRecommended = () => setClearedFor(answersKey);
   const recommendedIds = new Set(recommended.map((supplier) => supplier.id));
 
   /** The rail's list: recommendations, then the buyer's own card additions. */
@@ -558,6 +569,7 @@ export function SupplierResults({
           requirementCount={logged.length}
           requirementPreview={requirements}
           recommendedCount={recommended.length}
+          onClearRecommended={clearRecommended}
         />
       </div>
 

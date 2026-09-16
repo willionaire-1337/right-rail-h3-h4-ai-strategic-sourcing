@@ -7,11 +7,11 @@
   /* Tailoft's greens bottom out at green-125, which is still light for body
      copy; this is the ink used on answered options and settled answers. */
   --app-color-green-ink: #0a6b4b;
-  /* A quarter each to the rails, half to the results. Both are drag-resizable,
+  /* A fifth each to the rails, the rest to the results. Both are drag-resizable,
      and the handles overwrite these on the root element as they move. Held in
      vw so the nested rail still measures against the viewport, not its parent. */
-  --define-width: 25vw;
-  --rail-width: 25vw;
+  --define-width: 20vw;
+  --rail-width: 20vw;
   --pane-min: 14vw;
   --pane-max: 40vw;
 }
@@ -1267,7 +1267,7 @@ a.contact-email-cta-primary {
 .pane-left {
   box-sizing: border-box;
   flex: 0 0 auto;
-  width: var(--define-width, 25vw);
+  width: var(--define-width, 20vw);
   min-width: var(--pane-min, 14vw);
   max-width: var(--pane-max, 40vw);
   background: #fff;
@@ -1722,7 +1722,7 @@ body.is-resizing-panes {
    grow the sticky header and eat the results list. */
 .results-header .answer-pill-row {
   align-items: flex-end;
-  gap: var(--l-space-3);
+  gap: var(--l-space-2);
   margin-top: var(--l-space-3);
   flex-wrap: nowrap;
   overflow-x: auto;
@@ -1919,7 +1919,7 @@ body.is-resizing-panes {
 .select-rail {
   box-sizing: border-box;
   flex: 0 0 auto;
-  width: var(--rail-width, 25vw);
+  width: var(--rail-width, 20vw);
   min-width: var(--pane-min, 14vw);
   max-width: var(--pane-max, 40vw);
   border-left: 1px solid var(--l-color-border);
@@ -1985,7 +1985,10 @@ body.is-resizing-panes {
 /* Group heading inside the chip list: a full-width row, not a pill. */
 .select-rail-list li.rail-group-title {
   flex: 1 0 100%;
-  display: block;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--l-space-2);
   padding: 0;
   margin-top: var(--l-space-2);
   border: none;
@@ -1995,6 +1998,19 @@ body.is-resizing-panes {
 
 .select-rail-list li.rail-group-title:first-child {
   margin-top: 0;
+}
+
+/* Group-level action on the heading row: quiet grey at the heading's own
+   size, so it reads as housekeeping rather than a call to action. */
+.rail-group-title .rail-group-action {
+  flex-shrink: 0;
+  padding: 0;
+  font-size: 11px;
+  color: var(--l-color-darkblue-50);
+}
+
+.rail-group-title .rail-group-action:hover {
+  color: var(--l-color-darkblue-100);
 }
 
 .rail-group-title h5 {

@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { SupplierLogo } from "@/components/supplier-logo";
-import { UNCONTACTABLE_NOTE, contactableOnly, isUncontactable, type Supplier } from "@/lib/suppliers";
+import {
+  RAIL_LIMIT,
+  UNCONTACTABLE_NOTE,
+  contactableOnly,
+  isUncontactable,
+  type Supplier,
+} from "@/lib/suppliers";
 
 type SelectSuppliersRailProps = {
   /** Suppliers queued for engagement — auto-queued top matches plus card additions. */
@@ -19,9 +25,9 @@ type SelectSuppliersRailProps = {
   /** The logged spec, one "Label: Value" line per answer, stacked on the
       draft card. */
   requirementPreview: { label: string; value: string }[];
-  /** How many chips at the head of the list are recommendations, re-ranked
-      as answers land; anything after them the buyer added by hand. */
-  recommendedCount: number;
+  /** How many chips at the head of the list the buyer added by hand; the
+      rest are recommendations, re-ranked as answers land. */
+  addedCount: number;
   /** Takes every recommendation off the rail at once. */
   onClearRecommended: () => void;
 };
@@ -39,7 +45,7 @@ export function SelectSuppliersRail({
   draftTitle,
   requirementCount,
   requirementPreview,
-  recommendedCount,
+  addedCount,
   onClearRecommended,
 }: SelectSuppliersRailProps) {
   const [rfiCollapsed, setRfiCollapsed] = useState(false);
@@ -99,7 +105,7 @@ export function SelectSuppliersRail({
           <p className="mar-0">
             {suppliers.length === 0
               ? "Add suppliers to your list"
-              : `${suppliers.length} supplier${suppliers.length === 1 ? "" : "s"} saved`}
+              : `${suppliers.length}/${RAIL_LIMIT} selected`}
           </p>
         </div>
       </div>
@@ -122,8 +128,14 @@ export function SelectSuppliersRail({
       ) : (
         <ul className="select-rail-list">
           {/* Headings are full-width rows in the same list, so both groups
-              share one scrolling column of chips. */}
-          {recommendedCount > 0 && (
+              share one scrolling column of chips. The buyer's own picks lead. */}
+          {addedCount > 0 && (
+            <li className="rail-group-title">
+              <h5 className="mar-0">Added by you</h5>
+            </li>
+          )}
+          {suppliers.slice(0, addedCount).map(chip)}
+          {suppliers.length > addedCount && (
             <li className="rail-group-title">
               <h5 className="mar-0">Recommended suppliers</h5>
               <button type="button" className="rail-sub rail-group-action" onClick={onClearRecommended}>
@@ -131,13 +143,7 @@ export function SelectSuppliersRail({
               </button>
             </li>
           )}
-          {suppliers.slice(0, recommendedCount).map(chip)}
-          {suppliers.length > recommendedCount && (
-            <li className="rail-group-title">
-              <h5 className="mar-0">Added by you</h5>
-            </li>
-          )}
-          {suppliers.slice(recommendedCount).map(chip)}
+          {suppliers.slice(addedCount).map(chip)}
         </ul>
       )}
 

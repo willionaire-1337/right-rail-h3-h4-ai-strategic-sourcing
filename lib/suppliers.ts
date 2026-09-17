@@ -31,6 +31,9 @@ export const SUPPLIERS = suppliersData as Supplier[]
  */
 export const CATEGORY_SUPPLIER_COUNT = 2482
 
+/** Most suppliers the rail holds at once, recommendations included. */
+export const RAIL_LIMIT = 25
+
 /** Shown wherever a supplier Thomas can't route a request to is offered. */
 export const UNCONTACTABLE_NOTE =
   "This supplier cannot be contacted through Thomas, but can be added to your shortlist."

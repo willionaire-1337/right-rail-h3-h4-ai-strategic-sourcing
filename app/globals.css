@@ -3583,6 +3583,58 @@ l-icon[name="envelope"]::before {
 }
 
 /* Dot-joined fact line: location · employees · revenue · Est. year. */
+/* Add-to-list at capacity: the button greys out and the wrapper explains on
+   hover, since a disabled button won't take the pointer itself. */
+.card-add-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.card-add:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.card-add-wrap[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 5;
+  width: max-content;
+  max-width: 240px;
+  padding: 8px 10px;
+  border-radius: var(--l-radius-1);
+  background: var(--l-color-darkblue-100);
+  color: #fff;
+  font-size: 11px;
+  font-weight: var(--l-font-weight-semibold);
+  line-height: 1.35;
+  white-space: normal;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.card-add-wrap[data-tip]:hover::after {
+  opacity: 1;
+}
+
+/* A card the ranking put on the rail: the same light blue as "Added to
+   List", with the label carrying the distinction. Still a toggle — pressing
+   it takes the recommendation off the rail. */
+.card-add.is-recommended,
+.card-add.is-recommended:hover {
+  border-color: var(--l-color-blue-25, #c3dafb);
+  background: var(--l-color-blue-10, #e6f0fd);
+  color: var(--l-color-blue-100, #0e6aed);
+}
+
+.card-add.is-recommended l-icon {
+  color: var(--l-color-blue-100, #0e6aed);
+}
+
 .supplier-facts {
   display: flex;
   flex-wrap: wrap;

@@ -4,12 +4,16 @@ import Image from "next/image";
 import { useLayoutEffect, useRef, useState } from "react";
 import { SupplierLogo } from "@/components/supplier-logo";
 import { BASE_PATH } from "@/lib/base-path";
-import type { Supplier } from "@/lib/suppliers";
+import { RAIL_LIMIT, type Supplier } from "@/lib/suppliers";
 
 type SupplierCardProps = {
   supplier: Supplier;
   /** Whether the supplier is on the Select Suppliers rail list. */
   added: boolean;
+  /** On the rail because the ranking put it there, not because the buyer did. */
+  recommended?: boolean;
+  /** The rail is full, so this card can't be added — only removed. */
+  addDisabled?: boolean;
   onToggleAdd: () => void;
   /** Generic capability labels (max 5) derived from the search and answers. */
   matchPills: string[];
@@ -100,6 +104,8 @@ export function CapabilityRow({ capabilities }: { capabilities: string[] }) {
 export function SupplierCard({
   supplier,
   added,
+  recommended = false,
+  addDisabled = false,
   onToggleAdd,
   matchPills,
 }: SupplierCardProps) {
@@ -134,16 +140,32 @@ export function SupplierCard({
           </a>
         </div>
         <div className="card-actions flex align-items-center gap-2 flex-shrink-0">
+          {/* The wrapper carries the hover note: a disabled button can't
+              take the pointer itself. */}
+          <span
+            className="card-add-wrap"
+            data-tip={addDisabled ? `Your list is full — remove a supplier to add another (${RAIL_LIMIT} max)` : undefined}
+          >
           <button
             kind="primary-outline"
             scale="small"
-            className="card-add"
+            className={recommended ? "card-add is-recommended" : "card-add"}
             aria-pressed={added}
-            aria-label={added ? `${supplier.name} added to selected suppliers` : `Add ${supplier.name} to selected suppliers`}
+            disabled={addDisabled}
+            aria-disabled={addDisabled || undefined}
+            aria-label={
+              recommended
+                ? `${supplier.name} is recommended for you — remove from selected suppliers`
+                : added
+                  ? `${supplier.name} added to selected suppliers`
+                  : `Add ${supplier.name} to selected suppliers`
+            }
             onClick={onToggleAdd}
           >
-            <l-icon name={added ? "check" : "plus"} /> {added ? "Added to List" : "Add to List"}
+            <l-icon name={added ? "check" : "plus"} />{" "}
+            {recommended ? "Recommended" : added ? "Added to List" : "Add to List"}
           </button>
+          </span>
           <button kind="primary" scale="small" className="card-cta" onClick={noop}>
             Visit Website <l-icon name="arrow-up-right-from-square" />
           </button>

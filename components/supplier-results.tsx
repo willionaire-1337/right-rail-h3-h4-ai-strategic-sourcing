@@ -28,7 +28,7 @@ import {
 } from "@/lib/simulation";
 import { planScreening, scoreRecord } from "@/lib/screening";
 import { matchPillsFor } from "@/lib/match-pills";
-import { contactableOnly, type Supplier } from "@/lib/suppliers";
+import { RAIL_LIMIT, contactableOnly, type Supplier } from "@/lib/suppliers";
 
 const PAGE_SIZE = 25;
 /** How many ranked suppliers land on the rail when the questionnaire wraps up. */
@@ -124,9 +124,9 @@ export function SupplierResults({
   const [railAdded, setRailAdded] = useState<string[]>([]);
   /** Recommendations the buyer took off the rail; the next match fills in. */
   const [dismissed, setDismissed] = useState<string[]>([]);
-  /** Answer set the buyer cleared every recommendation for. Recommendations
-      stay off until the answers change, then a fresh five come back. */
-  const [clearedFor, setClearedFor] = useState<string | null>(null);
+  /** The buyer cleared the recommendations. Like a single removal, it holds
+      for the whole run — a new answer doesn't bring them back. */
+  const [cleared, setCleared] = useState(false);
   /** Card currently highlighted after a rail-chip click. */
   const [focusedSupplierId, setFocusedSupplierId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -156,7 +156,7 @@ export function SupplierResults({
   useEffect(() => {
     setRailAdded([]);
     setDismissed([]);
-    setClearedFor(null);
+    setCleared(false);
     setFocusedSupplierId(null);
   }, [runId]);
 
@@ -339,27 +339,27 @@ export function SupplierResults({
   /** The rail's recommendations: the top contactable matches for the answers
       so far, minus any the buyer dismissed. Derived, so a new answer re-ranks
       them in place. */
-  const answersKey = JSON.stringify(logged.map((answer) => [answer.questionId, answer.values]));
-  const recommended =
-    clearedFor === answersKey
-      ? []
-      : contactableOnly(results)
-          .filter((supplier) => !dismissed.includes(supplier.id))
-          .slice(0, RECOMMENDED_COUNT);
+  // Anything the buyer added by hand is theirs, not a recommendation — even
+  // if the ranking would have picked it — so recommendations fill in around it.
+  const recommended = cleared
+    ? []
+    : contactableOnly(results)
+        .filter((supplier) => !dismissed.includes(supplier.id) && !railAdded.includes(supplier.id))
+        .slice(0, RECOMMENDED_COUNT);
 
-  /** "Remove all" on the recommendations: off until the next answer re-ranks. */
-  const clearRecommended = () => setClearedFor(answersKey);
+  /** "Clear" on the recommendations: off for the rest of the run. */
+  const clearRecommended = () => setCleared(true);
   const recommendedIds = new Set(recommended.map((supplier) => supplier.id));
 
-  /** The rail's list: recommendations, then the buyer's own card additions. */
-  const railSuppliers = [
-    ...recommended,
-    ...railAdded
-      .filter((id) => !recommendedIds.has(id))
-      .map((id) => results.find((supplier) => supplier.id === id))
-      .filter((supplier): supplier is Supplier => supplier != null),
-  ];
+  /** The rail's list: the buyer's own card additions first, then the
+      recommendations beneath them. */
+  const added = railAdded
+    .map((id) => results.find((supplier) => supplier.id === id))
+    .filter((supplier): supplier is Supplier => supplier != null);
+  const railSuppliers = [...added, ...recommended];
   const railIds = new Set(railSuppliers.map((supplier) => supplier.id));
+  /** Full rail: cards can still take suppliers off, but not put more on. */
+  const railFull = railSuppliers.length >= RAIL_LIMIT;
 
   const removeFromRail = (supplierId: string) => {
     // A dismissed recommendation stays off until the run resets; a manual
@@ -376,8 +376,9 @@ export function SupplierResults({
       removeFromRail(supplier.id);
       return;
     }
-    // Adding by hand also forgives an earlier dismissal.
-    setDismissed((current) => current.filter((id) => id !== supplier.id));
+    if (railFull) return;
+    // A dismissal stands: re-adding a supplier the buyer took off the
+    // recommendations makes it theirs, under "Added by you".
     setRailAdded((current) => [...current, supplier.id]);
   };
 
@@ -507,6 +508,8 @@ export function SupplierResults({
                 <SupplierCard
                   supplier={supplier}
                   added={railIds.has(supplier.id)}
+                  recommended={recommendedIds.has(supplier.id)}
+                  addDisabled={railFull && !railIds.has(supplier.id)}
                   onToggleAdd={() => toggleRailAdd(supplier)}
                   matchPills={matchPills}
                 />
@@ -568,7 +571,7 @@ export function SupplierResults({
           draftTitle={draftTitle}
           requirementCount={logged.length}
           requirementPreview={requirements}
-          recommendedCount={recommended.length}
+          addedCount={added.length}
           onClearRecommended={clearRecommended}
         />
       </div>

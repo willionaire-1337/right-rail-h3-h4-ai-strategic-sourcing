@@ -105,7 +105,11 @@ export function SelectSuppliersRail({
           <p className="mar-0">
             {suppliers.length === 0
               ? "Add suppliers to your list"
-              : `${suppliers.length}/${RAIL_LIMIT} selected`}
+              : (
+                  <>
+                    <span className="rail-count">{suppliers.length}</span>/{RAIL_LIMIT} selected
+                  </>
+                )}
           </p>
         </div>
       </div>

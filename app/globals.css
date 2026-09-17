@@ -1930,6 +1930,13 @@ body.is-resizing-panes {
   flex-direction: column;
 }
 
+/* The number on the rail's count is the thing the buyer is checking. */
+.rail-count {
+  color: var(--l-color-blue-100);
+  /* Tailoft has no medium step; 500 sits between its regular and semibold. */
+  font-weight: 500;
+}
+
 .rail-header {
   display: flex;
   gap: var(--l-space-3);

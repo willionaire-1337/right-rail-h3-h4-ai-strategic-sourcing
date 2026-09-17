@@ -970,7 +970,49 @@ p,
 
 /* ---- Email content, rendered on the /supplier-email Gmail page. ---- */
 
-/* The buyer's project description, quoted like forwarded text. */
+/* Thomas wordmark + stage label, bottom-aligned on opposite edges. Extra
+   margin below separates this "letterhead" row from the message body, which
+   otherwise shares one flex gap with every other paragraph in .gm-body. */
+.contact-email-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--l-space-3);
+  margin-bottom: var(--l-space-2);
+}
+
+.contact-email-logo {
+  display: block;
+}
+
+.contact-email-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--l-font-size-smallest);
+  font-weight: var(--l-font-weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.contact-email-stage-new {
+  color: var(--l-color-blue-100);
+}
+
+/* tailoft's yellow tokens (l-color-yellow-100/125) are both too light to
+   clear text contrast on white — they're background-only colors in
+   l-alert[kind=warning]. This is a one-off darker amber for legibility. */
+.contact-email-stage-reminder {
+  color: #cc8800;
+}
+
+.contact-email-stage-final {
+  color: var(--l-color-red-125);
+}
+
+/* The buyer's project description, quoted like forwarded text. Curly quotes
+   wrap it via CSS rather than being stored in the description itself, so
+   this doesn't touch the buyer's actual data. */
 .contact-email-desc {
   padding: var(--l-space-2) var(--l-space-3);
   border-left: 3px solid var(--l-color-blue-100);
@@ -979,20 +1021,44 @@ p,
   white-space: pre-wrap;
 }
 
-/* Final-notice warning — same quote treatment, heavier type. */
-.contact-email-alert {
-  padding: var(--l-space-2) var(--l-space-3);
-  border-left: 3px solid var(--l-color-darkblue-100);
-  background: var(--l-color-blue-5, #f2f7fd);
-  border-radius: 0 var(--l-radius-1) var(--l-radius-1) 0;
-  font-weight: var(--l-font-weight-semibold);
+.contact-email-desc p:before {
+  content: "\201C";
 }
 
-.contact-email-reqs {
-  padding-left: var(--l-space-4);
+.contact-email-desc p:after {
+  content: "\201D";
+}
+
+/* Final-notice warning — a real <l-alert kind="warning">, so this only adds
+   the icon gap and color; the tint and shape are tailoft's own. */
+.contact-email-alert-note {
+  gap: var(--l-space-2);
+}
+
+.contact-email-alert-note l-icon {
+  color: var(--l-color-yellow-125);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* Smart-search answers (up to 13 possible) plus the response deadline, as a
+   table instead of tiles — a wrapping row of pills stops working well before
+   13 fields. tailoft styles the <table>/<th>/<td> elements natively; this
+   just gives the whole thing an edge, since tailoft's own table has none. */
+.contact-email-req-table {
+  border: 1px solid var(--l-color-border);
+  border-radius: var(--l-radius-1);
+  overflow: hidden;
+}
+
+.contact-email-req-table table th {
+  width: 44%;
+}
+
+.contact-email-attachments {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--l-space-2);
 }
 
 /* Supplier CTAs split the row evenly, edge to edge. */

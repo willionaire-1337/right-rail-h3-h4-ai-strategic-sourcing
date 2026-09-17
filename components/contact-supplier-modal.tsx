@@ -43,10 +43,12 @@ export type QuoteEmailPayload = {
   quantity?: string;
   needBy: string;
   requirements: ContactRequirement[];
+  /** Filenames only — the prototype has no storage to keep the files themselves. */
+  attachments?: { name: string; size: number }[];
   sentAt: string;
 };
 
-function formatFileSize(bytes: number): string {
+export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -225,6 +227,7 @@ export function ContactSupplierModal({
       description: field("description"),
       needBy: field("needBy"),
       requirements: keptRequirements,
+      attachments: files.length > 0 ? files.map((file) => ({ name: file.name, size: file.size })) : undefined,
       sentAt: new Date().toISOString(),
     };
     localStorage.setItem(QUOTE_EMAIL_STORAGE_KEY, JSON.stringify(payload));

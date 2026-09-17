@@ -1,15 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { GmailMessageFrame, GmailShell, useQuoteEmailPayload } from "@/components/gmail-shell";
 import {
   MOCK_BUYER,
+  formatFileSize,
   type QuoteEmailPayload,
 } from "@/components/contact-supplier-modal";
 import { RequirementDescription } from "@/components/requirement-description";
 import { BASE_PATH } from "@/lib/base-path";
 
 export type SupplierEmailVariant = "original" | "reminder" | "final-notice";
+
+/** Icon, label, and accent color for the stage indicator next to the logo —
+    lets a supplier see where this email sits in the sequence without reading
+    the subject line. */
+const STAGE_META = {
+  original: { icon: "paper-plane", label: "New quote request", className: "contact-email-stage-new" },
+  reminder: { icon: "bell", label: "Reminder", className: "contact-email-stage-reminder" },
+  "final-notice": { icon: "alarm-clock", label: "Final notice", className: "contact-email-stage-final" },
+} as const;
 
 /** Plausible inbox for the supplier receiving the quote request. */
 function supplierInbox(name: string): string {
@@ -56,6 +67,27 @@ type SupplierQuoteEmailProps = {
   variant: SupplierEmailVariant;
 };
 
+/** Thomas wordmark + a stage label, so a supplier sees where this email sits
+    in the sequence without reading the subject line. */
+function EmailHeader({ variant }: { variant: SupplierEmailVariant }) {
+  const stage = STAGE_META[variant];
+  return (
+    <div className="contact-email-header mar-0">
+      <Image
+        src={`${BASE_PATH}/thomas-wordmark.png`}
+        width={80}
+        height={16}
+        alt="Thomas"
+        className="contact-email-logo"
+      />
+      <span className={`contact-email-stage ${stage.className}`}>
+        <l-icon name={stage.icon} aria-hidden="true" />
+        {stage.label}
+      </span>
+    </div>
+  );
+}
+
 /**
  * Supplier-facing quote email. Three beats share this body: the original
  * request, a next-day reminder if they haven't replied, and a final notice
@@ -91,6 +123,7 @@ export function SupplierQuoteEmail({ variant }: SupplierQuoteEmailProps) {
           toLine={`to ${inbox} · reply-to ${MOCK_BUYER.email}`}
           sentAt={shiftDays(payload.sentAt, meta.dayOffset)}
         >
+          <EmailHeader variant={variant} />
           <Opening variant={variant} payload={payload} />
           <ProjectRecap payload={payload} />
           {declined ? (
@@ -135,7 +168,7 @@ export function SupplierQuoteEmail({ variant }: SupplierQuoteEmailProps) {
             </div>
           )}
           <p className="contact-email-reply mar-0">
-            <l-icon name="envelope" aria-hidden="true" />
+            <l-icon name="paper-plane" aria-hidden="true" />
             You can reply to this email directly — your reply goes straight to{" "}
             {MOCK_BUYER.firstName} at {MOCK_BUYER.company}.
           </p>
@@ -159,7 +192,8 @@ function Opening({
         <p className="mar-0">Hi {payload.supplierName} team,</p>
         <p className="mar-0">
           We&apos;re following up on a quote request from <strong>{MOCK_BUYER.name}</strong> at{" "}
-          <strong>{MOCK_BUYER.company}</strong> that we sent yesterday. We haven&apos;t heard
+          <strong>{MOCK_BUYER.company}</strong>{" "}
+          that we sent yesterday. We haven&apos;t heard
           back yet — the project is still open.
         </p>
         <p className="mar-0">Here&apos;s a recap of the request:</p>
@@ -173,13 +207,15 @@ function Opening({
         <p className="mar-0">Hi {payload.supplierName} team,</p>
         <p className="mar-0">
           This is a final notice. <strong>{MOCK_BUYER.name}</strong> at{" "}
-          <strong>{MOCK_BUYER.company}</strong> still hasn&apos;t received a response to their
+          <strong>{MOCK_BUYER.company}</strong>{" "}
+          still hasn&apos;t received a response to their
           quote request for <strong>{payload.projectName}</strong>.
         </p>
-        <p className="contact-email-alert mar-0">
+        <l-alert kind="warning" class="contact-email-alert-note mar-0">
+          <l-icon name="triangle-exclamation" aria-hidden="true" />
           If we don&apos;t hear from you, we&apos;ll send this RFI to other suppliers on Thomas
           who can take the work.
-        </p>
+        </l-alert>
         <p className="mar-0">Here&apos;s the request again:</p>
       </>
     );
@@ -197,6 +233,17 @@ function Opening({
 }
 
 function ProjectRecap({ payload }: { payload: QuoteEmailPayload }) {
+  // Every logged smart-search answer, plus the response deadline — as a table
+  // rather than a bulleted list, since a request can carry up to 13 answers
+  // and a list of tiles stops working well past two or three.
+  const rows = [
+    ...payload.requirements.map((requirement) => ({
+      label: requirement.label,
+      value: requirement.value,
+    })),
+    ...(payload.needBy ? [{ label: "Response needed by", value: formatNeedBy(payload.needBy) }] : []),
+  ];
+
   return (
     <>
       {payload.description && (
@@ -204,19 +251,29 @@ function ProjectRecap({ payload }: { payload: QuoteEmailPayload }) {
           <RequirementDescription className="mar-0" text={payload.description} />
         </blockquote>
       )}
-      {(payload.quantity || payload.needBy) && (
-        <ul className="contact-email-reqs mar-0">
-          {payload.quantity && (
-            <li>
-              <strong>Estimated quantity:</strong> {payload.quantity}
-            </li>
-          )}
-          {payload.needBy && (
-            <li>
-              <strong>Response needed by:</strong> {formatNeedBy(payload.needBy)}
-            </li>
-          )}
-        </ul>
+      {rows.length > 0 && (
+        <div className="contact-email-req-table mar-0">
+          <table>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.label}>
+                  <th scope="row">{row.label}</th>
+                  <td>{row.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {payload.attachments && payload.attachments.length > 0 && (
+        <div className="contact-email-attachments mar-0">
+          {payload.attachments.map((file) => (
+            <l-filepreview key={`${file.name}-${file.size}`}>
+              <span slot="name">{file.name}</span>
+              <span slot="size">{formatFileSize(file.size)}</span>
+            </l-filepreview>
+          ))}
+        </div>
       )}
     </>
   );

@@ -26,17 +26,28 @@ export type LoggedAnswer = {
   skipped?: boolean
 }
 
-/** Always offered last on every ask — logs as skipped so it never filters. */
+/**
+ * Opt-outs offered last on every ask, in this order. Both log as skipped so
+ * they never filter: "I don't know" means the buyer can't say, "Not Relevant"
+ * means the question doesn't apply to their part.
+ */
 export const DONT_KNOW_OPTION = "I don't know"
+export const NOT_RELEVANT_OPTION = "Not Relevant"
+const OPT_OUT_OPTIONS = [DONT_KNOW_OPTION, NOT_RELEVANT_OPTION]
 
 export function isDontKnowOption(value: string): boolean {
   return value === DONT_KNOW_OPTION
 }
 
-/** Append {@link DONT_KNOW_OPTION} after pruning so viability can't drop it. */
-function withDontKnow(options: string[]): string[] {
-  if (options.includes(DONT_KNOW_OPTION)) return options
-  return [...options, DONT_KNOW_OPTION]
+/** Either opt-out — the two behave the same everywhere but in their label. */
+export function isOptOutOption(value: string): boolean {
+  return OPT_OUT_OPTIONS.includes(value)
+}
+
+/** Append the opt-outs after pruning so viability can't drop them. */
+function withOptOuts(options: string[]): string[] {
+  const core = options.filter((option) => !isOptOutOption(option))
+  return [...core, ...OPT_OUT_OPTIONS]
 }
 
 /**
@@ -415,7 +426,7 @@ export function askForQuestion(questionId: string, _answers: LoggedAnswer[] = []
   // Typed-entry questions (location, product search) offer their catalog
   // whole — the buyer searches it rather than reading pruned rows.
   if (question.location || question.search) {
-    return { question, options: withDontKnow(question.options.map((option) => option.value)) }
+    return { question, options: withOptOuts(question.options.map((option) => option.value)) }
   }
   const plan = planField(
     ALL_CANDIDATES,
@@ -426,7 +437,7 @@ export function askForQuestion(questionId: string, _answers: LoggedAnswer[] = []
   const options = plan.skip || plan.options.length === 0
     ? question.options.map((option) => option.value)
     : plan.options
-  return { question, options: withDontKnow(options) }
+  return { question, options: withOptOuts(options) }
 }
 
 /**
@@ -496,7 +507,7 @@ export function nextAsk(answers: LoggedAnswer[]): NextAsk | null {
     if (question.location || question.search) {
       return {
         question,
-        options: withDontKnow(question.options.map((option) => option.value)),
+        options: withOptOuts(question.options.map((option) => option.value)),
       }
     }
     const plan = planField(
@@ -510,7 +521,7 @@ export function nextAsk(answers: LoggedAnswer[]): NextAsk | null {
       (option) => dampedShare([option]) <= 1 - MATERIAL_CUT,
     )
     if (!narrows) continue
-    return { question, options: withDontKnow(plan.options) }
+    return { question, options: withOptOuts(plan.options) }
   }
   return null
 }

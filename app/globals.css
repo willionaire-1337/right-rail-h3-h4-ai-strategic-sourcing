@@ -14,6 +14,11 @@
   --rail-width: 20vw;
   --pane-min: 14vw;
   --pane-max: 40vw;
+  /* Contact dialog: scales with the viewport between these two. The floor is
+     the width it used to be fixed at; the ceiling keeps the form's line
+     lengths readable on a wide screen. */
+  --contact-min: 560px;
+  --contact-max: 760px;
 }
 
 html,
@@ -324,7 +329,10 @@ p,
 .contact-shell {
   position: relative;
   display: flex;
-  width: min(560px, 100%);
+  width: clamp(var(--contact-min), 48vw, var(--contact-max));
+  /* Still has to fit a viewport narrower than the floor plus the scrim's
+     padding — the phone rule below takes over under 700px anyway. */
+  max-width: 100%;
   max-height: 100%;
 }
 
@@ -633,10 +641,76 @@ p,
   line-height: var(--l-font-lineheight-2);
 }
 
-/* Attached files listed under the dropzone. */
-.contact-form l-filepreview {
+/* Attached files: white cards inside the blue dropzone, one per file, each
+   with its type badge, name, size, and remove. Stops the drop/click-to-open
+   area from reading as empty once something is on it. */
+.contact-files {
+  display: flex;
+  flex-direction: column;
+  gap: var(--l-space-2);
+  margin: 0;
+  padding: 0 var(--l-space-4) var(--l-space-4);
+  list-style: none;
+}
+
+.contact-file {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-3);
+  min-width: 0;
+  padding: var(--l-space-2) var(--l-space-2) var(--l-space-2) var(--l-space-3);
   border: 1px solid var(--l-color-border);
   border-radius: var(--l-radius-1);
+  background: #fff;
+  text-align: left;
+}
+
+.contact-file-type {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: var(--l-radius-1);
+  background: var(--l-color-blue-10);
+  color: var(--l-color-blue-100);
+  font-size: 10px;
+  font-weight: var(--l-font-weight-bold);
+  letter-spacing: 0.04em;
+}
+
+.contact-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--l-color-darkblue-100);
+  font-size: 13px;
+  font-weight: var(--l-font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contact-file-size {
+  flex-shrink: 0;
+  color: var(--l-color-darkblue-50);
+  font-size: 12px;
+}
+
+.contact-file-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--l-radius-1);
+  background: none;
+  color: var(--l-color-darkblue-50);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.contact-file-remove:hover {
+  background: var(--l-color-darkblue-5, #f5f7f8);
+  color: var(--l-color-darkblue-100);
 }
 
 .contact-form-row {

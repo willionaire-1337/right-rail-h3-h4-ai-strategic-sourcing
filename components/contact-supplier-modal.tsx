@@ -48,6 +48,12 @@ export type QuoteEmailPayload = {
   sentAt: string;
 };
 
+/** "PDF", "STEP" — the badge on an attached file. */
+function fileExtension(name: string): string {
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(dot + 1).toUpperCase() : "FILE";
+}
+
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
@@ -143,11 +149,16 @@ export function ContactSupplierModal({
     }
   }
 
-  const addFiles = (added: FileList | null | undefined) => {
+  const addFiles = (added: FileList | File[] | null | undefined) => {
     if (!added) return;
+    // Copy the list now. The input's FileList is live: the change handler
+    // clears the input right after this call so the same file can be picked
+    // again, and React runs the state updater later than that — reading the
+    // list inside the updater found it already empty.
+    const incoming = Array.from(added);
     setFiles((current) => {
       const next = [...current];
-      for (const file of added) {
+      for (const file of incoming) {
         if (!next.some((it) => it.name === file.name && it.size === file.size)) next.push(file);
       }
       return next;
@@ -423,21 +434,34 @@ export function ContactSupplierModal({
                         event.target.value = "";
                       }}
                     />
+                    {/* Attached files sit inside the dropzone as white cards:
+                        name, type, size, and a way to take them back off. */}
+                    {files.length > 0 && (
+                      <ul className="contact-files" aria-label="Attached files">
+                        {files.map((file) => (
+                          <li className="contact-file" key={`${file.name}-${file.size}`}>
+                            <span className="contact-file-type" aria-hidden="true">
+                              {fileExtension(file.name)}
+                            </span>
+                            <span className="contact-file-name" title={file.name}>
+                              {file.name}
+                            </span>
+                            <span className="contact-file-size">{formatFileSize(file.size)}</span>
+                            <button
+                              type="button"
+                              className="contact-file-remove"
+                              aria-label={`Remove ${file.name}`}
+                              onClick={() =>
+                                setFiles((current) => current.filter((it) => it !== file))
+                              }
+                            >
+                              <l-icon name="xmark" aria-hidden="true" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </l-fileupload>
-                  {files.map((file) => (
-                    <l-filepreview key={`${file.name}-${file.size}`}>
-                      <span slot="name">{file.name}</span>
-                      <span slot="size">{formatFileSize(file.size)}</span>
-                      <button
-                        slot="remove"
-                        type="button"
-                        aria-label={`Remove ${file.name}`}
-                        onClick={() =>
-                          setFiles((current) => current.filter((it) => it !== file))
-                        }
-                      />
-                    </l-filepreview>
-                  ))}
                 </fieldset>
                 <div className="contact-form-row">
                   <fieldset>

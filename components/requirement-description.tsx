@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 
 const REQUIREMENT_LINE = /^([^:]+):\s*(.+)$/;
 
@@ -92,6 +92,15 @@ export function DescriptionEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   const hiddenRef = useRef<HTMLTextAreaElement>(null);
 
+  // Seed the editor once, by hand. Rendering the seed through React's
+  // innerHTML prop let a rerender (the login wall opening over the dialog)
+  // wipe whatever the buyer had typed; with no React-owned content, their
+  // text is theirs until the dialog unmounts.
+  useEffect(() => {
+    if (editorRef.current) editorRef.current.innerHTML = descriptionToHtml(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       <div
@@ -105,7 +114,6 @@ export function DescriptionEditor({
         aria-describedby={describedBy}
         data-placeholder={placeholder}
         suppressContentEditableWarning
-        dangerouslySetInnerHTML={{ __html: descriptionToHtml(initial) }}
         onInput={() => {
           if (hiddenRef.current && editorRef.current) {
             hiddenRef.current.value = editorPlainText(editorRef.current);

@@ -1,4 +1,4 @@
-import { isDontKnowOption, type LoggedAnswer } from "./simulation"
+import { isOptOutOption, type LoggedAnswer } from "./simulation"
 import { CATEGORY_LABEL } from "./suppliers"
 
 /** Cap on capability pills shown on a result card. */
@@ -62,7 +62,7 @@ const FEATURE_PILLS: Record<string, string> = {
 const QUESTION_ORDER = ["material", "process", "part", "features", "app", "cert"] as const
 
 function pillFor(questionId: string, value: string): string | null {
-  if (isDontKnowOption(value) || /^not sure/i.test(value)) return null
+  if (isOptOutOption(value) || /^not sure/i.test(value)) return null
   if (SKIP_QUESTIONS.has(questionId)) return null
   if (questionId === "material") return MATERIAL_PILLS[value] ?? value
   if (questionId === "process") return PROCESS_PILLS[value] ?? null

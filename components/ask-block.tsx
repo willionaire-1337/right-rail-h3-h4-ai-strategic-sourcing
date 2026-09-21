@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 import { locationSuggestions } from "@/lib/locations";
-import { DONT_KNOW_OPTION, isDontKnowOption, type NextAsk } from "@/lib/simulation";
+import { isOptOutOption, type NextAsk } from "@/lib/simulation";
 
 /** Most rows the search question's dropdown shows at once. */
 const MAX_SEARCH_SUGGESTIONS = 8;
@@ -164,7 +164,7 @@ export function AskBlock({
         : question.search
           ? [
               ...options
-                .filter((option) => !isDontKnowOption(option))
+                .filter((option) => !isOptOutOption(option))
                 .filter((option) => option.toLowerCase().includes(place.trim().toLowerCase()))
                 .slice(0, MAX_SEARCH_SUGGESTIONS)
                 .map((option) => ({ label: option, value: option, kind: undefined })),
@@ -197,12 +197,14 @@ export function AskBlock({
   // Multi-select cards keep a row free below the grid for the log button.
   const fitted = useFittedOptionCount(gridRef, active ? options.length : 0, question.multi ? 56 : 0);
 
-  // Keep "I don't know" on-screen even when other options collapse behind +more.
+  // Keep the opt-outs ("I don't know", "Not Relevant") on-screen even when
+  // the other options collapse behind +more.
   const visible = (() => {
     if (expanded || options.length <= fitted) return options;
-    const core = options.filter((option) => option !== DONT_KNOW_OPTION);
-    if (core.length === options.length) return options.slice(0, fitted);
-    return [...core.slice(0, Math.max(0, fitted - 1)), DONT_KNOW_OPTION];
+    const optOuts = options.filter(isOptOutOption);
+    const core = options.filter((option) => !isOptOutOption(option));
+    if (optOuts.length === 0) return options.slice(0, fitted);
+    return [...core.slice(0, Math.max(0, fitted - optOuts.length)), ...optOuts];
   })();
   const hiddenCount = options.length - visible.length;
 

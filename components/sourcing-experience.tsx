@@ -13,7 +13,7 @@ import {
   browseableQuestionIds,
   impliedAnswers,
   introSummary,
-  isDontKnowOption,
+  isOptOutOption,
   matchSetFor,
   mergeParsedAnswers,
   nextAsk,
@@ -532,8 +532,9 @@ export function SourcingExperience() {
    */
   const selectOption = (value: string) => {
     if (thinking) return;
-    // "I don't know" is an explicit opt-out — same as Skip for matching.
-    if (isDontKnowOption(value)) {
+    // "I don't know" and "Not Relevant" are explicit opt-outs — same as Skip
+    // for matching; only the settled label differs.
+    if (isOptOutOption(value)) {
       answerActive([value], true);
       return;
     }

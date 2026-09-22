@@ -17,7 +17,7 @@ export type Question = {
   /**
    * Answered with a typed place — ZIP code, city, or state — rather than by
    * picking from the option rows; the options carry only the no-preference
-   * opt-out ("National").
+   * opt-out ("USA/Canada").
    */
   location?: boolean
   /**

@@ -510,10 +510,10 @@
     "multi": false,
     "location": true,
     "ask": "Where should suppliers be located?",
-    "hint": "A ZIP, city, or state you prefer — or National for anywhere.",
+    "hint": "A ZIP, city, or state you prefer — or USA/Canada for anywhere.",
     "options": [
       {
-        "value": "National",
+        "value": "USA/Canada",
         "note": "no geographic preference"
       }
     ]

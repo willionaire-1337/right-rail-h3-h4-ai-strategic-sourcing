@@ -926,14 +926,18 @@ p,
   padding: 0 var(--l-space-5);
 }
 
-/* Sits directly under Send, centered on it rather than left in the corner.
-   Drops the link treatment's own padding and pulls up against the bar's gap,
-   so it reads as a tail on the button rather than a third row. */
-/* Scoped past .rail-sub, which sets its own padding later in this sheet. */
-.contact-actions .contact-save-draft {
+/* Sits directly under Send, centered on it rather than left in the corner,
+   in quiet grey so it never competes with the primary. Scoped past .rail-sub,
+   which sets its own padding and colour later in this sheet. */
+.contact-actions .contact-close-link {
   align-self: center;
   padding: 0;
   font-size: 13px;
+  color: var(--l-color-darkblue-50);
+}
+
+.contact-actions .contact-close-link:hover {
+  color: var(--l-color-darkblue-100);
 }
 
 /* Validation messages sit under the field they belong to, in the same red
@@ -3051,7 +3055,7 @@ body.is-resizing-panes {
 
 /* Typed-entry questions (location, product search): the field on its own
    row with the submit CTA stacked underneath — the pane is too narrow for
-   them side by side. The National opt-out still renders as an ordinary
+   them side by side. The USA/Canada opt-out still renders as an ordinary
    option row below. */
 .location-entry {
   display: flex;

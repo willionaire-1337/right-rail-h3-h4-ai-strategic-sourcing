@@ -25,7 +25,7 @@ type AskBlockProps = {
   onSelect: (value: string) => void;
   /** Settles a multi-select question with everything picked so far. */
   onSubmit?: () => void;
-  /** Skips the question — always offered below the options, like "I don't know". */
+  /** Skips the question — always offered below the options, like "Not Relevant". */
   onSkip?: () => void;
   /** Reopens a settled question so the buyer can change what they picked. */
   onEdit?: () => void;
@@ -197,8 +197,8 @@ export function AskBlock({
   // Multi-select cards keep a row free below the grid for the log button.
   const fitted = useFittedOptionCount(gridRef, active ? options.length : 0, question.multi ? 56 : 0);
 
-  // Keep the opt-outs ("I don't know", "Not Relevant") on-screen even when
-  // the other options collapse behind +more.
+  // Keep "Not Relevant" on-screen even when the other options collapse
+  // behind +more.
   const visible = (() => {
     if (expanded || options.length <= fitted) return options;
     const optOuts = options.filter(isOptOutOption);
@@ -419,7 +419,7 @@ export function AskBlock({
           <small className="txt-darkblue-50">Free-form answer — skip to move on.</small>
         ))}
 
-      {/* Skip rides below the options — always on offer, like "I don't know". */}
+      {/* Skip rides below the options — always on offer, like "Not Relevant". */}
       {active && onSkip && (
         <button type="button" className="ask-skip-row" onClick={onSkip}>
           Skip →

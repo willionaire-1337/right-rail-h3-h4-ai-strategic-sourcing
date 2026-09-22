@@ -22,29 +22,23 @@ export type LoggedAnswer = {
   questionId: string
   /** Option values chosen, or a free-form entry as a single value. */
   values: string[]
-  /** True when the buyer skipped or answered "I don't know". */
+  /** True when the buyer skipped or answered "Not Relevant". */
   skipped?: boolean
 }
 
 /**
- * Opt-outs offered last on every ask, in this order. Both log as skipped so
- * they never filter: "I don't know" means the buyer can't say, "Not Relevant"
- * means the question doesn't apply to their part.
+ * The opt-out offered last on every ask. Logs as skipped so it never filters:
+ * the question doesn't apply to the buyer's part.
  */
-export const DONT_KNOW_OPTION = "I don't know"
 export const NOT_RELEVANT_OPTION = "Not Relevant"
-const OPT_OUT_OPTIONS = [DONT_KNOW_OPTION, NOT_RELEVANT_OPTION]
+const OPT_OUT_OPTIONS = [NOT_RELEVANT_OPTION]
 
-export function isDontKnowOption(value: string): boolean {
-  return value === DONT_KNOW_OPTION
-}
-
-/** Either opt-out — the two behave the same everywhere but in their label. */
+/** The opt-out row, as distinct from a real answer. */
 export function isOptOutOption(value: string): boolean {
   return OPT_OUT_OPTIONS.includes(value)
 }
 
-/** Append the opt-outs after pruning so viability can't drop them. */
+/** Append the opt-out after pruning so viability can't drop it. */
 function withOptOuts(options: string[]): string[] {
   const core = options.filter((option) => !isOptOutOption(option))
   return [...core, ...OPT_OUT_OPTIONS]
@@ -195,7 +189,7 @@ const NON_FILTERING_QUESTIONS = new Set<string>(["delivery"])
  */
 export const LOCATION_QUESTION_ID = "loc"
 /** The location question's only option row: no geographic preference. */
-export const LOCATION_NATIONAL = "National"
+export const LOCATION_NATIONAL = "USA/Canada"
 
 /** A location answer that doesn't constrain geography at all. */
 function isNationalLocation(answer: LoggedAnswer): boolean {

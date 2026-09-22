@@ -507,10 +507,10 @@ export function ContactSupplierModal({
                   <button kind="primary" type="submit">
                     {loggedIn ? "Send Inquiry" : "Log in to Send Inquiry"}
                   </button>
-                  {/* Quiet second exit: same link treatment as the rail's
-                      "+ Add to shortlist", under the primary action. */}
-                  <button type="button" className="rail-sub contact-save-draft">
-                    {loggedIn ? "Save Draft" : "Log in to Save Draft"}
+                  {/* Quiet way out under the primary action. Clicking the scrim
+                      or the X closes too; this is the one a buyer reads. */}
+                  <button type="button" className="rail-sub contact-close-link" onClick={onClose}>
+                    Close
                   </button>
                 </div>
             </form>

@@ -2510,7 +2510,9 @@ p.rail-group-note {
 /* No answers yet: quiet white bar, grey text. */
 .rail-rfi-empty .rail-rfi-bar {
   background: #fff;
-  color: var(--l-color-darkblue-50);
+  /* EXPLORATION: was darkblue-50 (~2.8:1 on white, fails WCAG AA) — same
+     fix as .answer-pill-label and .rail-group-title h5. */
+  color: var(--l-color-darkblue-75);
 }
 
 /* Drafting underway: the former body blue, blue text. Stays blue at 5+. */
@@ -2544,6 +2546,22 @@ p.rail-group-note {
   font-size: 12px;
   line-height: 1.5;
   color: var(--l-color-darkblue-75);
+}
+
+/* EXPLORATION: the CTA lives inline in the sentence now, styled as a plain
+   text link, rather than as a separate "Answer questions" button below it. */
+.rail-rfi-inline-cta {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--l-color-blue-100);
+  font-size: inherit;
+  font-weight: var(--l-font-weight-semibold);
+  cursor: pointer;
+}
+
+.rail-rfi-inline-cta:hover {
+  text-decoration: underline;
 }
 
 /* Logged spec on the draft card: plain stacked "Label: Value" lines, values

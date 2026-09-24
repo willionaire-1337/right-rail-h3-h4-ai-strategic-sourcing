@@ -196,14 +196,19 @@ export function SelectSuppliersRail({
           {requirementCount === 0 ? (
             <>
               <p className="rail-rfi-note mar-0">
-                Answer smart filter questions and we&apos;ll draft an RFI from
-                your requirements.
+                {onAnswerQuestions ? (
+                  <button
+                    type="button"
+                    className="rail-rfi-inline-cta"
+                    onClick={onAnswerQuestions}
+                  >
+                    Answer smart filter questions
+                  </button>
+                ) : (
+                  "Answer smart filter questions"
+                )}{" "}
+                and we&apos;ll draft an RFI from your requirements.
               </p>
-              {onAnswerQuestions && (
-                <button type="button" className="rail-rfi-preview" onClick={onAnswerQuestions}>
-                  Answer questions
-                </button>
-              )}
             </>
           ) : (
             <>

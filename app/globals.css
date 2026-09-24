@@ -154,7 +154,9 @@ p,
 .shortlist-form :is(input, select) {
   width: 100%;
   height: 44px;
-  font-size: 15px;
+  /* EXPLORATION: was a hardcoded 15px, not a real Tailoft token — same
+     deviation as the contact modal's fields, fixed the same way. */
+  font-size: var(--l-font-size-small);
 }
 
 /* Filled: this is the dialog's one action, so it carries the primary weight.
@@ -722,14 +724,16 @@ p,
   flex: 1;
 }
 
-/* Quantity and response date sit at the same 15px as the description, so the
-   three free-entry fields read as one set. */
+/* EXPLORATION: was a hardcoded 15px matching the description field below
+   (and a since-removed Quantity field) — not a real Tailoft token. Moved to
+   --l-font-size-small (16px) to match Project name's own default instead,
+   per the unify-and-stay-DS-compliant request. */
 .contact-form-row fieldset input {
-  font-size: 15px;
+  font-size: var(--l-font-size-small);
 }
 
 .contact-form-row fieldset input::placeholder {
-  font-size: 15px;
+  font-size: var(--l-font-size-small);
 }
 
 /* Project description: contenteditable so Label: Value can bold the
@@ -750,7 +754,9 @@ p,
   background: #fff;
   color: var(--l-color-darkblue-90);
   font-family: inherit;
-  font-size: 15px;
+  /* EXPLORATION: was a hardcoded 15px, not a real Tailoft token — moved to
+     --l-font-size-small (16px) to match Project name and the date field. */
+  font-size: var(--l-font-size-small);
   line-height: var(--l-font-lineheight-4);
   white-space: pre-wrap;
   outline: none;

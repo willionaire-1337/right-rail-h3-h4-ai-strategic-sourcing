@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { InsightNote } from "@/components/insight-note";
+import { InsightNote, ShieldLockIcon } from "@/components/insight-note";
 import { LoginScreen } from "@/components/login-screen";
 import { DescriptionEditor } from "@/components/requirement-description";
 import { SupplierLogo } from "@/components/supplier-logo";
@@ -321,9 +321,9 @@ export function ContactSupplierModal({
             {/* EXPLORATION (trust-messaging): routing transparency + response
                 guarantee, the top trust blocker from concept testing (buyers
                 don't know if this reaches the supplier, or how fast). */}
-            <InsightNote icon={<l-icon name="shield-check" aria-hidden="true" />}>
+            <InsightNote className="contact-trust-note" icon={<l-icon name="shield-check" aria-hidden="true" />}>
               Sent as an email and a Thomas dashboard notification to each
-              supplier — most respond within 1–2 business days.
+              supplier. Most respond within 1–2 business days.
             </InsightNote>
 
             {!single && (
@@ -420,7 +420,7 @@ export function ContactSupplierModal({
                         treatment as the rest of the modal, in place of the
                         one-off italic note — wording is exact spec copy
                         (H3/H4 spec §9), only the visual treatment changed. */}
-                    <InsightNote className="contact-reqs-note">
+                    <InsightNote className="contact-reqs-note" icon={false}>
                       Your requirements are automatically attached to your request
                     </InsightNote>
                   </fieldset>
@@ -498,12 +498,6 @@ export function ContactSupplierModal({
                   </fieldset>
                 </div>
                 <div className="contact-actions">
-                  {/* EXPLORATION (trust-messaging): privacy reassurance —
-                      testers didn't know who could see their project details. */}
-                  <InsightNote className="contact-privacy-note">
-                    Your project details are shared only with the suppliers
-                    you&apos;re sending to.
-                  </InsightNote>
                   <label className="contact-consent" data-invalid={errors.consent ? true : undefined}>
                     <input
                       type="checkbox"
@@ -526,6 +520,13 @@ export function ContactSupplierModal({
                   <button kind="primary" type="submit">
                     {loggedIn ? "Send Inquiry" : "Log in to Send Inquiry"}
                   </button>
+                  {/* EXPLORATION (trust-messaging): moved below Send per
+                      Will's feedback — testers didn't know who could see
+                      their project details. */}
+                  <InsightNote className="contact-privacy-note" icon={<ShieldLockIcon />}>
+                    Your project details are shared only with the suppliers
+                    you&apos;re sending to.
+                  </InsightNote>
                   {/* Quiet way out under the primary action. Clicking the scrim
                       or the X closes too; this is the one a buyer reads. */}
                   <button type="button" className="rail-sub contact-close-link" onClick={onClose}>

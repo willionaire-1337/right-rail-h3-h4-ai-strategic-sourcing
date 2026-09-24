@@ -867,6 +867,17 @@ p,
   margin-top: var(--l-space-3);
 }
 
+/* EXPLORATION (trust-messaging): same light-panel treatment as the routing
+   note above, left-aligned (per Manuela, overriding the earlier centered
+   treatment). blue-5 read too faint; bumped to blue-10, the next step up
+   the DS scale — see .insight-note.contact-trust-note. */
+.insight-note.contact-privacy-note {
+  justify-content: flex-start;
+  background: var(--l-color-blue-10, #e6f0fd);
+  padding: var(--l-space-2) var(--l-space-3);
+  border-radius: var(--l-radius-1);
+}
+
 .contact-req-pill {
   display: inline-flex;
   align-items: baseline;
@@ -935,11 +946,14 @@ p,
 /* Sits directly under Send, centered on it rather than left in the corner,
    in quiet grey so it never competes with the primary. Scoped past .rail-sub,
    which sets its own padding and colour later in this sheet. */
+/* EXPLORATION (trust-messaging): darkblue-75 (~6.6:1, passes WCAG AA) in
+   place of the original darkblue-50 (~2.8:1, fails) — keeps Close quieter
+   than .rail-sub's default blue-100 without an illegible grey. */
 .contact-actions .contact-close-link {
   align-self: center;
   padding: 0;
   font-size: 13px;
-  color: var(--l-color-darkblue-50);
+  color: var(--l-color-darkblue-75);
 }
 
 .contact-actions .contact-close-link:hover {
@@ -2232,8 +2246,22 @@ body.is-resizing-panes {
 .insight-note l-icon,
 .insight-note-icon {
   flex-shrink: 0;
-  margin-top: 2px;
+  /* EXPLORATION: was inheriting the note's 13px font-size (l-icon sizes
+     itself via font-size, same as any text glyph) — too small to read
+     clearly next to the text. 16px is closer to the note's own line-height
+     (13px * 1.4 ≈ 18px), a more standard small-icon size. */
+  font-size: 16px;
+  margin-top: 1px;
   color: var(--l-color-blue-100);
+}
+
+/* EXPLORATION (trust-messaging): light blue panel for the routing/guarantee
+   note. Tried blue-5 (matching the drop-area) but it read too faint —
+   bumped to blue-10, the next step up the DS scale. */
+.insight-note.contact-trust-note {
+  background: var(--l-color-blue-10, #e6f0fd);
+  padding: var(--l-space-2) var(--l-space-3);
+  border-radius: var(--l-radius-1);
 }
 
 /* Saved, but Thomas can't route a request to them — muted so the chip reads

@@ -31,6 +31,10 @@ type SelectSuppliersRailProps = {
   addedCount: number;
   /** Takes every recommendation off the rail at once. */
   onClearRecommended: () => void;
+  /** EXPLORATION: reopens the Smart Filter questionnaire (same action as the
+      floating "Open Smart Filters" button) — offered from the empty RFI
+      card so there's a path back in without hunting for that button. */
+  onAnswerQuestions?: () => void;
 };
 
 /**
@@ -48,6 +52,7 @@ export function SelectSuppliersRail({
   requirementPreview,
   addedCount,
   onClearRecommended,
+  onAnswerQuestions,
 }: SelectSuppliersRailProps) {
   const [rfiCollapsed, setRfiCollapsed] = useState(false);
   /** Saved suppliers a request can actually go to — the rest are shortlist only. */
@@ -188,10 +193,17 @@ export function SelectSuppliersRail({
         </button>
         <div id="rail-rfi-body" className="rail-rfi-body">
           {requirementCount === 0 ? (
-            <p className="rail-rfi-note mar-0">
-              Answer smart filter questions and we&apos;ll draft an RFI from
-              your requirements.
-            </p>
+            <>
+              <p className="rail-rfi-note mar-0">
+                Answer smart filter questions and we&apos;ll draft an RFI from
+                your requirements.
+              </p>
+              {onAnswerQuestions && (
+                <button type="button" className="rail-rfi-preview" onClick={onAnswerQuestions}>
+                  Answer questions
+                </button>
+              )}
+            </>
           ) : (
             <>
               <h5 className="rail-rfi-title mar-0">{draftTitle}</h5>

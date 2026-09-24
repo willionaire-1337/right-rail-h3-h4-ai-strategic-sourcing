@@ -573,6 +573,7 @@ export function SupplierResults({
           requirementPreview={requirements}
           addedCount={added.length}
           onClearRecommended={clearRecommended}
+          onAnswerQuestions={onRefine}
         />
       </div>
 

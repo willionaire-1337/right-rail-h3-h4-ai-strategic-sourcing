@@ -1460,6 +1460,8 @@ body.is-resizing-panes {
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+  /* EXPLORATION: smooths the dim/undim toggled by the :has() rule below. */
+  transition: opacity 0.2s ease;
 }
 
 .pane:not(.pane-left) {
@@ -1528,6 +1530,18 @@ body.is-resizing-panes {
 
 .location-search:focus-within {
   border-color: var(--l-color-blue-100);
+  /* EXPLORATION: a real focus ring, not just the border tint — "Answer
+     questions" moves keyboard focus here, and the original change was too
+     subtle to register as "you landed here." */
+  box-shadow: 0 0 0 3px var(--l-color-blue-25, #c3dafb);
+}
+
+/* EXPLORATION: dims the results + rail while the question search box is
+   focused, so the glowing input reads as the one thing to look at. Pure CSS
+   (:has()) rather than app state — dims on any focus of this field, not
+   only the "Answer questions" path, and undims on blur with no extra wiring. */
+.app-main:has(#ask-search-input:focus) .pane:not(.pane-left) {
+  opacity: 0.55;
 }
 
 .location-search input {

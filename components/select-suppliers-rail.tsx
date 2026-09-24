@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { InsightNote } from "@/components/insight-note";
 import { SupplierLogo } from "@/components/supplier-logo";
 import {
   RAIL_LIMIT,
@@ -140,12 +141,27 @@ export function SelectSuppliersRail({
           )}
           {suppliers.slice(0, addedCount).map(chip)}
           {suppliers.length > addedCount && (
-            <li className="rail-group-title">
-              <h5 className="mar-0">Recommended suppliers</h5>
-              <button type="button" className="rail-sub rail-group-action" onClick={onClearRecommended}>
-                Clear
-              </button>
-            </li>
+            <>
+              <li className="rail-group-title">
+                <h5 className="mar-0">Recommended suppliers</h5>
+                <button type="button" className="rail-sub rail-group-action" onClick={onClearRecommended}>
+                  Clear
+                </button>
+              </li>
+              {/* EXPLORATION (trust-messaging): only claim a requirements
+                  match once the buyer has actually logged one — before that,
+                  "recommended" is really just default/sponsored ordering
+                  (contactableOnly(results).slice(0, N) with nothing to rank
+                  on), and saying otherwise would be misleading. No line at
+                  all in that state, rather than a softened one. */}
+              {requirementCount > 0 && (
+                <li className="rail-group-note">
+                  <InsightNote icon={<l-icon name="sparkles" fill aria-hidden="true" />}>
+                    Based on your requirements.
+                  </InsightNote>
+                </li>
+              )}
+            </>
           )}
           {suppliers.slice(addedCount).map(chip)}
         </ul>

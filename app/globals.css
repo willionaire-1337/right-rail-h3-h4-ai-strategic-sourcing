@@ -1915,7 +1915,9 @@ body.is-resizing-panes {
   font-size: 10px;
   font-weight: var(--l-font-weight-semibold);
   letter-spacing: 0.04em;
-  color: var(--l-color-darkblue-50);
+  /* EXPLORATION (trust-messaging): was darkblue-50 (~2.8:1 on white, fails
+     WCAG AA). darkblue-75 (~6.6:1) — same fix as .rail-group-title h5. */
+  color: var(--l-color-darkblue-75);
 }
 
 /* Pill row pinned between the drawer's action row and its scrolling body. */
@@ -2168,7 +2170,9 @@ body.is-resizing-panes {
   font-weight: var(--l-font-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--l-color-darkblue-50);
+  /* EXPLORATION (trust-messaging): was darkblue-50 (~2.8:1 on white, fails
+     WCAG AA) — same fix as .answer-pill-label elsewhere. */
+  color: var(--l-color-darkblue-75);
 }
 
 .select-rail-list li {

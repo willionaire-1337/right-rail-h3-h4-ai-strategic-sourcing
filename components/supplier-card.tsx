@@ -162,7 +162,13 @@ export function SupplierCard({
             }
             onClick={onToggleAdd}
           >
-            <l-icon name={added ? "check" : "plus"} />{" "}
+            {/* EXPLORATION (trust-messaging): sparkles is the app's existing
+                "smart"/AI motif (same icon as "Smart filter your search" and
+                the Refine action) — reused here so Recommended reads as
+                algorithm-suggested at a glance, instead of relying on the
+                buyer to read the label (it previously reused the same
+                checkmark as Added to List). */}
+            <l-icon name={recommended ? "sparkles" : added ? "check" : "plus"} fill={recommended} />{" "}
             {recommended ? "Recommended" : added ? "Added to List" : "Add to List"}
           </button>
           </span>

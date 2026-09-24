@@ -854,11 +854,11 @@ p,
   margin-top: var(--l-space-3);
 }
 
-.contact-reqs-note {
+/* EXPLORATION (trust-messaging): spacing only now — .insight-note supplies
+   the type treatment (was italic 11px darkblue-50). Compound selector so it
+   reliably beats the utility .mar-0 regardless of load order. */
+.insight-note.contact-reqs-note {
   margin-top: var(--l-space-3);
-  font-size: 11px;
-  font-style: italic;
-  color: var(--l-color-darkblue-50);
 }
 
 .contact-req-pill {

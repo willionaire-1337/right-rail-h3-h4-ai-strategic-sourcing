@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { InsightNote } from "@/components/insight-note";
 import { LoginScreen } from "@/components/login-screen";
 import { DescriptionEditor } from "@/components/requirement-description";
 import { SupplierLogo } from "@/components/supplier-logo";
@@ -317,6 +318,14 @@ export function ContactSupplierModal({
               </button>
             </div>
 
+            {/* EXPLORATION (trust-messaging): routing transparency + response
+                guarantee, the top trust blocker from concept testing (buyers
+                don't know if this reaches the supplier, or how fast). */}
+            <InsightNote icon={<l-icon name="shield-check" aria-hidden="true" />}>
+              Sent as an email and a Thomas dashboard notification to each
+              supplier — most respond within 1–2 business days.
+            </InsightNote>
+
             {!single && (
               <div
                 className="contact-recipients"
@@ -407,9 +416,13 @@ export function ContactSupplierModal({
                         </div>
                       ))}
                     </div>
-                    <p className="contact-reqs-note mar-0">
+                    {/* EXPLORATION (trust-messaging): same InsightNote
+                        treatment as the rest of the modal, in place of the
+                        one-off italic note — wording is exact spec copy
+                        (H3/H4 spec §9), only the visual treatment changed. */}
+                    <InsightNote className="contact-reqs-note">
                       Your requirements are automatically attached to your request
-                    </p>
+                    </InsightNote>
                   </fieldset>
                 )}
                 <fieldset>
@@ -485,6 +498,12 @@ export function ContactSupplierModal({
                   </fieldset>
                 </div>
                 <div className="contact-actions">
+                  {/* EXPLORATION (trust-messaging): privacy reassurance —
+                      testers didn't know who could see their project details. */}
+                  <InsightNote className="contact-privacy-note">
+                    Your project details are shared only with the suppliers
+                    you&apos;re sending to.
+                  </InsightNote>
                   <label className="contact-consent" data-invalid={errors.consent ? true : undefined}>
                     <input
                       type="checkbox"

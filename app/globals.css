@@ -2106,6 +2106,10 @@ body.is-resizing-panes {
   background: #fff;
   padding: var(--l-space-4) var(--l-space-5);
   overflow-y: auto;
+  /* EXPLORATION: without this, overflow-x auto-computes to "auto" too (a
+     CSS quirk of setting only one axis) — the panel could scroll
+     horizontally at this width, which isn't needed here. */
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }

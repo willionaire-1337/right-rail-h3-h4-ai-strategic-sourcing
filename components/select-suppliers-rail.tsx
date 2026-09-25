@@ -156,16 +156,6 @@ export function SelectSuppliersRail({
                     Clear
                   </button>
                 </div>
-                {/* EXPLORATION (trust-messaging): only claim a requirements
-                    match once the buyer has actually logged one — before
-                    that, "recommended" is really just default/sponsored
-                    ordering (contactableOnly(results).slice(0, N) with
-                    nothing to rank on), and saying otherwise would be
-                    misleading. No line at all in that state, rather than a
-                    softened one. */}
-                {requirementCount > 0 && (
-                  <p className="rail-group-note mar-0">Based on your requirements.</p>
-                )}
               </div>
             </li>
           )}

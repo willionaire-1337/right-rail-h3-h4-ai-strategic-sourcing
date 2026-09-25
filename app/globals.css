@@ -867,15 +867,10 @@ p,
   margin-top: var(--l-space-3);
 }
 
-/* EXPLORATION (trust-messaging): same light-panel treatment as the routing
-   note above, left-aligned (per Manuela, overriding the earlier centered
-   treatment). blue-5 read too faint; bumped to blue-10, the next step up
-   the DS scale — see .insight-note.contact-trust-note. */
+/* EXPLORATION (trust-messaging): plain text again, no panel — centered
+   under the Send CTA. */
 .insight-note.contact-privacy-note {
-  justify-content: flex-start;
-  background: var(--l-color-blue-10, #e6f0fd);
-  padding: var(--l-space-2) var(--l-space-3);
-  border-radius: var(--l-radius-1);
+  justify-content: center;
 }
 
 .contact-req-pill {
@@ -2241,16 +2236,6 @@ body.is-resizing-panes {
   gap: var(--l-space-2);
 }
 
-/* One point smaller than .insight-note's 13px base, per Will's feedback.
-   Element+class selector so it reliably beats the utility .mar-0 on the
-   same element regardless of stylesheet load order. */
-p.rail-group-note {
-  margin-top: 2px;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--l-color-darkblue-75);
-}
-
 .select-rail-list li {
   display: inline-flex;
   align-items: center;
@@ -2290,6 +2275,9 @@ p.rail-group-note {
    note. Tried blue-5 (matching the drop-area) but it read too faint —
    bumped to blue-10, the next step up the DS scale. */
 .insight-note.contact-trust-note {
+  /* EXPLORATION: centered against both lines of text, rather than pinned
+     to the top of the first one (.insight-note's own default). */
+  align-items: center;
   background: var(--l-color-blue-10, #e6f0fd);
   padding: var(--l-space-2) var(--l-space-3);
   border-radius: var(--l-radius-1);

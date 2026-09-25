@@ -327,6 +327,7 @@ export function AskBlock({
                 aria-hidden="true"
               />
               <input
+                id="ask-search-input"
                 type="text"
                 value={place}
                 aria-label={

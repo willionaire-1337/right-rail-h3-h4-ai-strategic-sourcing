@@ -120,11 +120,19 @@ export function SourcingExperience() {
     timers.current.push(setTimeout(fn, ms));
   }, []);
 
-  /** Engage tray's Refine: jump back into the define stage. */
+  /** Engage tray's Refine: jump back into the define stage. EXPLORATION:
+      also moves keyboard focus into the active question's search input, so
+      "Answer questions" lands the buyer somewhere they can immediately type
+      rather than just uncovering the pane. Waits a tick for the pane to
+      un-hide first — it's `hidden` until agentOpen flips, and a hidden
+      element can't take focus. */
   const openDefine = useCallback(() => {
     setMobileTab("define");
     setAgentOpen(true);
-  }, []);
+    later(50, () => {
+      document.getElementById("ask-search-input")?.focus();
+    });
+  }, [later]);
 
   /** Queue the next question, or wrap up when nothing is left worth asking. */
   const advance = useCallback(

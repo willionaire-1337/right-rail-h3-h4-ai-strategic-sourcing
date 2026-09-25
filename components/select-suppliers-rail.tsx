@@ -30,6 +30,10 @@ type SelectSuppliersRailProps = {
   addedCount: number;
   /** Takes every recommendation off the rail at once. */
   onClearRecommended: () => void;
+  /** EXPLORATION: reopens the Smart Filter questionnaire (same action as the
+      floating "Open Smart Filters" button) — offered from the empty RFI
+      card so there's a path back in without hunting for that button. */
+  onAnswerQuestions?: () => void;
 };
 
 /**
@@ -47,6 +51,7 @@ export function SelectSuppliersRail({
   requirementPreview,
   addedCount,
   onClearRecommended,
+  onAnswerQuestions,
 }: SelectSuppliersRailProps) {
   const [rfiCollapsed, setRfiCollapsed] = useState(false);
   /** Saved suppliers a request can actually go to — the rest are shortlist only. */
@@ -140,11 +145,18 @@ export function SelectSuppliersRail({
           )}
           {suppliers.slice(0, addedCount).map(chip)}
           {suppliers.length > addedCount && (
-            <li className="rail-group-title">
-              <h5 className="mar-0">Recommended suppliers</h5>
-              <button type="button" className="rail-sub rail-group-action" onClick={onClearRecommended}>
-                Clear
-              </button>
+            <li className="rail-group-title rail-group-title-recommended">
+              <span className="rail-group-icon" aria-hidden="true">
+                <l-icon name="sparkles" fill />
+              </span>
+              <div className="rail-group-copy">
+                <div className="rail-group-heading-row">
+                  <h5 className="mar-0">Recommended suppliers</h5>
+                  <button type="button" className="rail-sub rail-group-action" onClick={onClearRecommended}>
+                    Clear
+                  </button>
+                </div>
+              </div>
             </li>
           )}
           {suppliers.slice(addedCount).map(chip)}
@@ -172,10 +184,22 @@ export function SelectSuppliersRail({
         </button>
         <div id="rail-rfi-body" className="rail-rfi-body">
           {requirementCount === 0 ? (
-            <p className="rail-rfi-note mar-0">
-              Answer smart filter questions and we&apos;ll draft an RFI from
-              your requirements.
-            </p>
+            <>
+              <p className="rail-rfi-note mar-0">
+                {onAnswerQuestions ? (
+                  <button
+                    type="button"
+                    className="rail-rfi-inline-cta"
+                    onClick={onAnswerQuestions}
+                  >
+                    Answer smart filter questions
+                  </button>
+                ) : (
+                  "Answer smart filter questions"
+                )}{" "}
+                and we&apos;ll draft an RFI from your requirements.
+              </p>
+            </>
           ) : (
             <>
               <h5 className="rail-rfi-title mar-0">{draftTitle}</h5>

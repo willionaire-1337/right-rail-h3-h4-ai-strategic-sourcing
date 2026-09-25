@@ -154,7 +154,9 @@ p,
 .shortlist-form :is(input, select) {
   width: 100%;
   height: 44px;
-  font-size: 15px;
+  /* EXPLORATION: was a hardcoded 15px, not a real Tailoft token — same
+     deviation as the contact modal's fields, fixed the same way. */
+  font-size: var(--l-font-size-small);
 }
 
 /* Filled: this is the dialog's one action, so it carries the primary weight.
@@ -722,14 +724,16 @@ p,
   flex: 1;
 }
 
-/* Quantity and response date sit at the same 15px as the description, so the
-   three free-entry fields read as one set. */
+/* EXPLORATION: was a hardcoded 15px matching the description field below
+   (and a since-removed Quantity field) — not a real Tailoft token. Moved to
+   --l-font-size-small (16px) to match Project name's own default instead,
+   per the unify-and-stay-DS-compliant request. */
 .contact-form-row fieldset input {
-  font-size: 15px;
+  font-size: var(--l-font-size-small);
 }
 
 .contact-form-row fieldset input::placeholder {
-  font-size: 15px;
+  font-size: var(--l-font-size-small);
 }
 
 /* Project description: contenteditable so Label: Value can bold the
@@ -750,7 +754,9 @@ p,
   background: #fff;
   color: var(--l-color-darkblue-90);
   font-family: inherit;
-  font-size: 15px;
+  /* EXPLORATION: was a hardcoded 15px, not a real Tailoft token — moved to
+     --l-font-size-small (16px) to match Project name and the date field. */
+  font-size: var(--l-font-size-small);
   line-height: var(--l-font-lineheight-4);
   white-space: pre-wrap;
   outline: none;
@@ -854,11 +860,17 @@ p,
   margin-top: var(--l-space-3);
 }
 
-.contact-reqs-note {
+/* EXPLORATION (trust-messaging): spacing only now — .insight-note supplies
+   the type treatment (was italic 11px darkblue-50). Compound selector so it
+   reliably beats the utility .mar-0 regardless of load order. */
+.insight-note.contact-reqs-note {
   margin-top: var(--l-space-3);
-  font-size: 11px;
-  font-style: italic;
-  color: var(--l-color-darkblue-50);
+}
+
+/* EXPLORATION (trust-messaging): plain text again, no panel — centered
+   under the Send CTA. */
+.insight-note.contact-privacy-note {
+  justify-content: center;
 }
 
 .contact-req-pill {
@@ -929,11 +941,14 @@ p,
 /* Sits directly under Send, centered on it rather than left in the corner,
    in quiet grey so it never competes with the primary. Scoped past .rail-sub,
    which sets its own padding and colour later in this sheet. */
+/* EXPLORATION (trust-messaging): darkblue-75 (~6.6:1, passes WCAG AA) in
+   place of the original darkblue-50 (~2.8:1, fails) — keeps Close quieter
+   than .rail-sub's default blue-100 without an illegible grey. */
 .contact-actions .contact-close-link {
   align-self: center;
   padding: 0;
   font-size: 13px;
-  color: var(--l-color-darkblue-50);
+  color: var(--l-color-darkblue-75);
 }
 
 .contact-actions .contact-close-link:hover {
@@ -1460,6 +1475,8 @@ body.is-resizing-panes {
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+  /* EXPLORATION: smooths the dim/undim toggled by the :has() rule below. */
+  transition: opacity 0.2s ease;
 }
 
 .pane:not(.pane-left) {
@@ -1528,6 +1545,18 @@ body.is-resizing-panes {
 
 .location-search:focus-within {
   border-color: var(--l-color-blue-100);
+  /* EXPLORATION: a real focus ring, not just the border tint — "Answer
+     questions" moves keyboard focus here, and the original change was too
+     subtle to register as "you landed here." */
+  box-shadow: 0 0 0 3px var(--l-color-blue-25, #c3dafb);
+}
+
+/* EXPLORATION: dims the results + rail while the question search box is
+   focused, so the glowing input reads as the one thing to look at. Pure CSS
+   (:has()) rather than app state — dims on any focus of this field, not
+   only the "Answer questions" path, and undims on blur with no extra wiring. */
+.app-main:has(#ask-search-input:focus) .pane:not(.pane-left) {
+  opacity: 0.55;
 }
 
 .location-search input {
@@ -1915,7 +1944,9 @@ body.is-resizing-panes {
   font-size: 10px;
   font-weight: var(--l-font-weight-semibold);
   letter-spacing: 0.04em;
-  color: var(--l-color-darkblue-50);
+  /* EXPLORATION (trust-messaging): was darkblue-50 (~2.8:1 on white, fails
+     WCAG AA). darkblue-75 (~6.6:1) — same fix as .rail-group-title h5. */
+  color: var(--l-color-darkblue-75);
 }
 
 /* Pill row pinned between the drawer's action row and its scrolling body. */
@@ -2070,6 +2101,10 @@ body.is-resizing-panes {
   background: #fff;
   padding: var(--l-space-4) var(--l-space-5);
   overflow-y: auto;
+  /* EXPLORATION: without this, overflow-x auto-computes to "auto" too (a
+     CSS quirk of setting only one axis) — the panel could scroll
+     horizontally at this width, which isn't needed here. */
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -2168,7 +2203,37 @@ body.is-resizing-panes {
   font-weight: var(--l-font-weight-semibold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--l-color-darkblue-50);
+  /* EXPLORATION (trust-messaging): was darkblue-50 (~2.8:1 on white, fails
+     WCAG AA) — same fix as .answer-pill-label elsewhere. */
+  color: var(--l-color-darkblue-75);
+}
+
+/* EXPLORATION (trust-messaging): the "Recommended suppliers" heading now
+   carries a shared sparkles icon to its left, sitting beside a two-line
+   stack (heading+Clear on top, the match reason below) rather than the
+   plain single-row layout .rail-group-title otherwise uses. */
+.select-rail-list li.rail-group-title-recommended {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.rail-group-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--l-color-blue-100);
+}
+
+.rail-group-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.rail-group-heading-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--l-space-2);
 }
 
 .select-rail-list li {
@@ -2180,6 +2245,42 @@ body.is-resizing-panes {
   border: 1px solid var(--l-color-border);
   border-radius: var(--l-radius-full, 999px);
   background: #fff;
+}
+
+/* EXPLORATION (trust-messaging): shared "explain something" aside — icon +
+   one line, no colored panel. Deliberately quieter than l-alert, which
+   always reads as a warning. */
+.insight-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--l-font-size-smallest);
+  line-height: 1.4;
+  color: var(--l-color-darkblue-75);
+}
+
+.insight-note l-icon,
+.insight-note-icon {
+  flex-shrink: 0;
+  /* EXPLORATION: was inheriting the note's 13px font-size (l-icon sizes
+     itself via font-size, same as any text glyph) — too small to read
+     clearly next to the text. 16px is closer to the note's own line-height
+     (13px * 1.4 ≈ 18px), a more standard small-icon size. */
+  font-size: 16px;
+  margin-top: 1px;
+  color: var(--l-color-blue-100);
+}
+
+/* EXPLORATION (trust-messaging): light blue panel for the routing/guarantee
+   note. Tried blue-5 (matching the drop-area) but it read too faint —
+   bumped to blue-10, the next step up the DS scale. */
+.insight-note.contact-trust-note {
+  /* EXPLORATION: centered against both lines of text, rather than pinned
+     to the top of the first one (.insight-note's own default). */
+  align-items: center;
+  background: var(--l-color-blue-10, #e6f0fd);
+  padding: var(--l-space-2) var(--l-space-3);
+  border-radius: var(--l-radius-1);
 }
 
 /* Saved, but Thomas can't route a request to them — muted so the chip reads
@@ -2397,7 +2498,9 @@ body.is-resizing-panes {
 /* No answers yet: quiet white bar, grey text. */
 .rail-rfi-empty .rail-rfi-bar {
   background: #fff;
-  color: var(--l-color-darkblue-50);
+  /* EXPLORATION: was darkblue-50 (~2.8:1 on white, fails WCAG AA) — same
+     fix as .answer-pill-label and .rail-group-title h5. */
+  color: var(--l-color-darkblue-75);
 }
 
 /* Drafting underway: the former body blue, blue text. Stays blue at 5+. */
@@ -2431,6 +2534,22 @@ body.is-resizing-panes {
   font-size: 12px;
   line-height: 1.5;
   color: var(--l-color-darkblue-75);
+}
+
+/* EXPLORATION: the CTA lives inline in the sentence now, styled as a plain
+   text link, rather than as a separate "Answer questions" button below it. */
+.rail-rfi-inline-cta {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--l-color-blue-100);
+  font-size: inherit;
+  font-weight: var(--l-font-weight-semibold);
+  cursor: pointer;
+}
+
+.rail-rfi-inline-cta:hover {
+  text-decoration: underline;
 }
 
 /* Logged spec on the draft card: plain stacked "Label: Value" lines, values
